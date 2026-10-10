@@ -2,6 +2,10 @@ import { AppShell, Avatar, Burger, Group, Menu, NavLink, ScrollArea, Text, Toolt
 import { useDisclosure, useLocalStorage } from '@mantine/hooks';
 import {
   IconBuildingSkyscraper,
+  IconFiles,
+  IconId,
+  IconListTree,
+  IconUserCircle,
   IconChevronLeft,
   IconChevronRight,
   IconDatabase,
@@ -36,17 +40,33 @@ export function AppLayout() {
   const navigate = useNavigate();
   const rtl = settings.language === 'ar';
 
-  const main: Item[] = [{ to: '/', label: t('nav.home'), icon: IconHome }];
+  const main: Item[] = [
+    { to: '/', label: t('nav.home'), icon: IconHome },
+    ...(session?.user.employeeId
+      ? [{ to: `/employees/${session.user.employeeId}`, label: t('nav.myProfile'), icon: IconUserCircle }]
+      : []),
+    ...(can('employee.profile.view') && session?.permissions.some((p) => p === 'employee.profile.create' || p === 'employee.lifecycle.manage' || p === 'employee.financial.view') || can('org.company.view')
+      ? [{ to: '/employees', label: t('nav.employees'), icon: IconId, permission: 'employee.profile.view' }]
+      : []),
+  ].filter((i) => !('permission' in i) || !i.permission || can(i.permission));
   const admin: Item[] = [
     { to: '/companies', label: t('nav.companies'), icon: IconBuildingSkyscraper, permission: 'org.company.view' },
     { to: '/users', label: t('nav.users'), icon: IconUsers, permission: 'identity.user.view' },
     { to: '/roles', label: t('nav.roles'), icon: IconShieldCheck, permission: 'access.role.view' },
+    { to: '/lookups', label: t('nav.lookups'), icon: IconListTree, permission: 'lookups.manage' },
+    { to: '/document-categories', label: t('nav.documentCategories'), icon: IconFiles, permission: 'documents.categories.manage' },
     { to: '/settings', label: t('nav.settings'), icon: IconSettings, permission: 'settings.view' },
     { to: '/audit', label: t('nav.audit'), icon: IconListDetails, permission: 'audit.view' },
     { to: '/backups', label: t('nav.backups'), icon: IconDatabase, permission: 'system.backup.view' },
   ].filter((i) => !i.permission || can(i.permission));
 
-  const isActive = (to: string) => (to === '/' ? location.pathname === '/' : location.pathname.startsWith(to));
+  const ownProfile = session?.user.employeeId ? `/employees/${session.user.employeeId}` : null;
+  const isActive = (to: string) =>
+    to === '/'
+      ? location.pathname === '/'
+      : to === '/employees' && location.pathname === ownProfile
+        ? false
+        : location.pathname.startsWith(to);
   const width = collapsed ? 72 : 260;
 
   const renderItem = (item: Item) => {

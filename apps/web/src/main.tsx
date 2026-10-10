@@ -24,6 +24,11 @@ import { SettingsPage } from './pages/SettingsPage';
 import { AuditPage } from './pages/AuditPage';
 import { BackupsPage } from './pages/BackupsPage';
 import { AccountPage } from './pages/AccountPage';
+import { EmployeesListPage } from './pages/employees/EmployeesListPage';
+import { NewEmployeePage } from './pages/employees/NewEmployeePage';
+import { EmployeeProfilePage } from './pages/employees/EmployeeProfilePage';
+import { LookupsPage } from './pages/LookupsPage';
+import { DocumentCategoriesPage } from './pages/DocumentCategoriesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +54,11 @@ const router = createBrowserRouter([
       { path: 'audit', element: <AuditPage /> },
       { path: 'backups', element: <BackupsPage /> },
       { path: 'account', element: <AccountPage /> },
+      { path: 'employees', element: <EmployeesListPage /> },
+      { path: 'employees/new', element: <NewEmployeePage /> },
+      { path: 'employees/:id', element: <EmployeeProfilePage /> },
+      { path: 'lookups', element: <LookupsPage /> },
+      { path: 'document-categories', element: <DocumentCategoriesPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

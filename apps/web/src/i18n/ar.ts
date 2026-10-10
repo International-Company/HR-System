@@ -1,4 +1,5 @@
 import type { Messages } from './en';
+import { p2Ar } from './p2-ar';
 
 /** نصوص الواجهة العربية — يجب أن تطابق مفاتيح en.ts تماماً. */
 export const ar: Messages = {
@@ -41,6 +42,10 @@ export const ar: Messages = {
     modules: 'الوحدات',
     audit: 'سجل التدقيق',
     backups: 'النسخ الاحتياطي',
+    employees: 'الموظفون',
+    myProfile: 'ملفي الشخصي',
+    lookups: 'القوائم الأساسية',
+    documentCategories: 'تصنيفات المستندات',
     account: 'حسابي',
     logout: 'تسجيل الخروج',
     administration: 'الإدارة',
@@ -255,4 +260,5 @@ export const ar: Messages = {
     thisDevice: 'هذا الجهاز',
     lastSeen: 'آخر نشاط',
   },
+  ...p2Ar,
 };

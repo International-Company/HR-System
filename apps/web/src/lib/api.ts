@@ -56,6 +56,25 @@ export async function api<T = unknown>(
   return data as T;
 }
 
+/** Multipart upload (file + fields). The browser sets the multipart boundary itself. */
+export async function upload<T>(path: string, form: FormData): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`/api/v1${path}`, {
+      method: 'POST',
+      headers: csrfToken ? { 'X-CSRF-Token': csrfToken, Accept: 'application/json' } : { Accept: 'application/json' },
+      credentials: 'same-origin',
+      body: form,
+    });
+  } catch {
+    throw new ApiError(0, null);
+  }
+  const text = await res.text();
+  const data: unknown = text ? JSON.parse(text) : undefined;
+  if (!res.ok) throw new ApiError(res.status, (data as ProblemDetails) ?? null);
+  return data as T;
+}
+
 export const get = <T>(path: string) => api<T>(path);
 export const post = <T>(path: string, body?: unknown) => api<T>(path, { method: 'POST', body: body ?? {} });
 export const patch = <T>(path: string, body: unknown) => api<T>(path, { method: 'PATCH', body });

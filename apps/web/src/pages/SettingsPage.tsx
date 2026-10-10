@@ -186,6 +186,12 @@ export function SettingsPage() {
                 allowDeselect={false}
               />
             ))}
+            {row<{ prefix: string; padding: number }>('employee.numberFormat', t('emp.number'), (v, set) => (
+              <Group grow>
+                <TextInput label={t('emp.numberPrefix')} value={v.prefix} onChange={(e) => set({ ...v, prefix: e.currentTarget.value })} dir="ltr" maxLength={10} />
+                <NumberInput label={t('emp.numberDigits')} min={1} max={10} value={v.padding} onChange={(x) => set({ ...v, padding: Number(x) || 1 })} />
+              </Group>
+            ))}
             {row<string>('general.defaultCurrency', t('settings.currency'), (v, set) => (
               <TextInput value={v} onChange={(e) => set(e.currentTarget.value.toUpperCase())} maxLength={3} dir="ltr" />
             ))}

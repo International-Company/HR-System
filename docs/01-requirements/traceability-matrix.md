@@ -9,11 +9,11 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | ORG-02 | org, all | P1+ | R, A | `rls.*`, NEG-02 | ✅ P1 |
 | ORG-03 | org, access | P1 | A, E | `authz.group-admin.*` | ✅ P1 |
 | ORG-04 | access, settings | P1 | A, I | `authz.company-scope.*` | ✅ P1 |
-| ORG-05 | employees | P2 | I, D, A | `employee.transfer.*` | ⏳ |
+| ORG-05 | employees | P2 | I, D, A | `employee.transfer.*` | ✅ P2 |
 | ORG-06 | settings | P1 | U, I | `settings.override.*` | ✅ P1 |
 | ORG-07 | settings | P1 | I, A | `modules.enablement.*` | ✅ P1 |
 | ORG-08 | settings | P1 | I, D | `modules.disable-keeps-data`, NEG-13 | ✅ P1 |
-| ORG-09 | org, employees | P2 | I | `employee.no-department` | ⏳ |
+| ORG-09 | org, employees | P2 | I | `employee.no-department` | ✅ P2 |
 | ORG-10 | org | P1 | I | `org.locations.*` | ✅ P1 |
 | RBAC-01 | access | P1 | I | `roles.seeded` | ✅ P1 |
 | RBAC-02 | access | P1 | I, E | `roles.custom.*` | ✅ P1 |
@@ -22,14 +22,14 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | RBAC-05 | access | P1 | A (every route in matrix) | `authz.route-coverage` | ✅ P1 |
 | RBAC-06 | access, search, reporting, files, notify | P1–P11 | A, R | NEG-01…NEG-13 | ⏳ |
 | RBAC-07 | access | P1 | Doc, A | authorization-model.md, generated catalogue | ✅ P1 |
-| EMP-01…EMP-04 | employees | P2 | I, E | `employee.profile.*` | ⏳ |
-| EMP-05 | employees | P2 | X | `exclusion.employee-fields` | ⏳ |
-| EMP-06 | employees | P2 | D, I | `employee-number.*` (unique, immutable, format change new-only) | ⏳ |
-| EMP-07 | employees | P2 (+P8) | I, E | `lifecycle.*` | ⏳ |
-| EMP-08 | employees | P2 | D | `history.no-overlap`, `as-of.*` | ⏳ |
-| EMP-09 | employees | P2 | A | NEG-03, `financial-fields.*` | ⏳ |
-| EMP-10 | employees, payroll | P2/P7 | A | NEG-01, `self.salary` | ⏳ |
-| EMP-11 | employees, documents | P2 | I | `employee.documents` | ⏳ |
+| EMP-01…EMP-04 | employees | P2 | I, E | `employee.profile.*` | ✅ P2 |
+| EMP-05 | employees | P2 | X | `exclusion.employee-fields` | ✅ P2 |
+| EMP-06 | employees | P2 | D, I | `employee-number.*` (unique, immutable, format change new-only) | ✅ P2 |
+| EMP-07 | employees | P2 (+P8) | I, E | `lifecycle.*` | 🔄 P2 (termination/rehire in P8) |
+| EMP-08 | employees | P2 | D | `history.no-overlap`, `as-of.*` | ✅ P2 |
+| EMP-09 | employees | P2 | A | NEG-03, `financial-fields.*` | ✅ P2 |
+| EMP-10 | employees, payroll | P2/P7 | A | NEG-01, `self.salary` | ✅ P2 |
+| EMP-11 | employees, documents | P2 | I | `employee.documents` | ✅ P2 |
 | REC-01…REC-05 | recruitment | P9 | I, E | `recruitment.*` | ⏳ |
 | REC-06 | recruitment, employees | P9 | I, D | `recruitment.convert` | ⏳ |
 | REC-07 | recruitment, documents | P9 | I, X | `recruitment.no-hardcoded-docs` | ⏳ |
@@ -80,10 +80,10 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | CON-07 | contracts | P6 | I | `contract.status-retention` | ⏳ |
 | CON-08, CON-09 | contracts, notify | P6 | I | `contract.alerts.*` | ⏳ |
 | CON-10, CON-11 | contracts | P6/P11 | E, A | `contract.display`, `contract.search` | ⏳ |
-| DOC-01…DOC-03 | documents | P2 | I, S | `documents.*`, NEG-15 | ⏳ |
-| DOC-04 | documents, notify | P2 | X | `exclusion.doc-expiry-alerts` | ⏳ |
-| DOC-05 | documents | P2 | X | review | ⏳ |
-| DOC-06 | files | P2 | I | `storage-port.*` (adapter contract tests) | ⏳ |
+| DOC-01…DOC-03 | documents | P2 | I, S | `documents.*`, NEG-15 | ✅ P2 |
+| DOC-04 | documents, notify | P2 | X | `exclusion.doc-expiry-alerts` | ✅ P2 |
+| DOC-05 | documents | P2 | X | review | ✅ P2 |
+| DOC-06 | files | P2 | I | `storage-port.*` (adapter contract tests) | ✅ P2 |
 | TRM-01…TRM-04 | separation | P8 | I, A | `separation.*` | ⏳ |
 | TRM-05 | separation, identity | P8 | I, A | NEG-05, `exit-policy.*` | ⏳ |
 | TRM-06 | separation | P8 | D | `separation.history-kept` | ⏳ |

@@ -1,3 +1,5 @@
+import { p2En } from './p2-en';
+
 /** English UI strings. ar.ts must provide exactly the same keys (checked by a test). */
 export const en = {
   app: {
@@ -39,6 +41,10 @@ export const en = {
     modules: 'Modules',
     audit: 'Audit log',
     backups: 'Backups',
+    employees: 'Employees',
+    myProfile: 'My profile',
+    lookups: 'Master lists',
+    documentCategories: 'Document categories',
     account: 'My account',
     logout: 'Sign out',
     administration: 'Administration',
@@ -253,6 +259,7 @@ export const en = {
     thisDevice: 'This device',
     lastSeen: 'Last active',
   },
+  ...p2En,
 };
 
 export type Messages = typeof en;
