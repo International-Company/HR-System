@@ -61,6 +61,16 @@ const envSchema = z.object({
     .default('b1'),
   /** Development/test only: write backups to a local directory instead of S3. */
   BACKUP_LOCAL_DIR: z.string().optional(),
+
+  /** Document storage (Railway Storage Bucket, D-05). Contents are app-encrypted. */
+  FILES_S3_ENDPOINT: z.url().optional(),
+  FILES_S3_REGION: z.string().optional(),
+  FILES_S3_BUCKET: z.string().optional(),
+  FILES_S3_ACCESS_KEY_ID: z.string().optional(),
+  FILES_S3_SECRET_ACCESS_KEY: z.string().optional(),
+  FILES_S3_PREFIX: z.string().default('files'),
+  /** Development/test only: store documents in a local directory. */
+  FILES_LOCAL_DIR: z.string().optional(),
 });
 
 export type RawConfig = z.infer<typeof envSchema>;
@@ -95,6 +105,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     if (!cfg.DB_APP_PASSWORD) problems.push('DB_APP_PASSWORD is required (least-privilege role)');
     if (!cfg.cookieSecure) problems.push('COOKIE_SECURE must be true');
     if (cfg.BACKUP_LOCAL_DIR) problems.push('BACKUP_LOCAL_DIR is not allowed outside development/test');
+    if (cfg.FILES_LOCAL_DIR) problems.push('FILES_LOCAL_DIR is not allowed outside development/test');
   }
   if (problems.length) throw new Error(`Invalid configuration:\n  - ${problems.join('\n  - ')}`);
   return cfg;

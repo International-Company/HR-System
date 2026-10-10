@@ -43,7 +43,34 @@ const backupSchema = z.object({
   dailyAt: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
 });
 
+// Employee numbers are group-wide and never contain mutable attributes such as the company
+// (C-01). Changing the format only affects numbers created afterwards.
+const employeeNumberSchema = z.object({
+  prefix: z
+    .string()
+    .max(10)
+    .regex(/^[A-Za-z0-9-]*$/),
+  padding: z.number().int().min(1).max(10),
+});
+const documentLimitsSchema = z.object({
+  maxUploadMb: z.number().int().min(1).max(50),
+});
+
 export const SETTINGS = {
+  'employee.numberFormat': {
+    schema: employeeNumberSchema,
+    default: { prefix: 'EMP-', padding: 6 },
+    companyOverride: false,
+    permission: 'settings.manage.general',
+    public: false,
+  },
+  'documents.limits': {
+    schema: documentLimitsSchema,
+    default: { maxUploadMb: 20 },
+    companyOverride: false,
+    permission: 'settings.manage.general',
+    public: false,
+  },
   'general.language': {
     schema: languageSchema,
     default: 'ar' as z.infer<typeof languageSchema>,

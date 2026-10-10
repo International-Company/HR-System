@@ -50,6 +50,8 @@ export interface SessionInfo {
     displayName: string;
     email: string | null;
     mfaEnabled: boolean;
+    /** Linked employee record, if any (enables "My profile"). */
+    employeeId: string | null;
   };
   permissions: string[];
   roles: { key: string; scopeType: ScopeType; companyId: string | null }[];

@@ -4,7 +4,8 @@
  * New phases add their permissions here.
  */
 
-export type Sensitivity = 'normal' | 'security';
+/** normal | security (account/system control) | financial | identity | medical (personal data classes). */
+export type Sensitivity = 'normal' | 'security' | 'financial' | 'identity' | 'medical';
 
 export interface PermissionDef {
   key: string;
@@ -105,6 +106,46 @@ export const PERMISSIONS = [
     groupOnly: true,
   }),
   p('audit.verify', 'audit', 'Verify audit integrity', 'التحقق من سلامة سجل التدقيق', {
+    groupOnly: true,
+  }),
+
+  // Employees (Phase 2)
+  p('employee.profile.view', 'employees', 'View employee profiles', 'عرض ملفات الموظفين'),
+  p('employee.profile.create', 'employees', 'Hire / create employees', 'تعيين / إنشاء موظفين'),
+  p('employee.profile.edit', 'employees', 'Edit personal data and qualifications', 'تعديل البيانات الشخصية والمؤهلات'),
+  p('employee.lifecycle.manage', 'employees', 'Transfers, job changes, status changes', 'النقل وتغيير الوظيفة والحالة'),
+  p('employee.financial.view', 'employees', 'View salary and bank data', 'عرض الراتب والبيانات البنكية', {
+    sensitivity: 'financial',
+  }),
+  p('employee.financial.edit', 'employees', 'Change salary and bank data', 'تعديل الراتب والبيانات البنكية', {
+    sensitivity: 'financial',
+  }),
+  p('employee.identity.view', 'employees', 'View national ID / passport numbers', 'عرض أرقام الهوية / الجواز', {
+    sensitivity: 'identity',
+  }),
+  p(
+    'employee.history.crosscompany.view',
+    'employees',
+    'View employment history from other companies',
+    'عرض السجل الوظيفي في الشركات الأخرى',
+  ),
+  p('employee.account.link', 'employees', 'Link user accounts to employees', 'ربط حسابات المستخدمين بالموظفين', {
+    sensitivity: 'security',
+    groupOnly: true,
+  }),
+  p('lookups.manage', 'employees', 'Manage job titles and other lists', 'إدارة المسميات الوظيفية والقوائم'),
+
+  // Documents (Phase 2)
+  p('documents.view', 'documents', 'View documents', 'عرض المستندات'),
+  p('documents.upload', 'documents', 'Upload and replace documents', 'رفع واستبدال المستندات'),
+  p('documents.delete', 'documents', 'Delete and restore documents', 'حذف واستعادة المستندات'),
+  p('documents.view.restricted', 'documents', 'View restricted documents', 'عرض المستندات المقيدة', {
+    sensitivity: 'identity',
+  }),
+  p('documents.view.medical', 'documents', 'View medical documents', 'عرض المستندات الطبية', {
+    sensitivity: 'medical',
+  }),
+  p('documents.categories.manage', 'documents', 'Manage document categories', 'إدارة تصنيفات المستندات', {
     groupOnly: true,
   }),
 

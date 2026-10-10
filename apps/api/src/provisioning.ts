@@ -3,7 +3,7 @@ import type { AppConfig } from './config.js';
 import type { Database } from './db/database.js';
 import { migrate } from './db/migrator.js';
 import { syncCatalog } from './access/catalog-sync.js';
-import { companyGroup, role, roleAssignment, userAccount } from './db/schema.js';
+import { companyGroup, employee, role, roleAssignment, userAccount } from './db/schema.js';
 import { uuidv7 } from './common/ids.js';
 import { PasswordService } from './auth/password.service.js';
 import { AuditService } from './audit/audit.service.js';
@@ -106,9 +106,10 @@ export async function bootstrap(
 /** QA-05: a production deployment must never contain seed/test accounts. */
 export async function assertNoSeedAccounts(database: Database, cfg: AppConfig): Promise<void> {
   if (!cfg.isProduction) return;
-  const rows = await database.system((tx) =>
-    tx.select({ id: userAccount.id }).from(userAccount).where(eq(userAccount.isSeed, true)).limit(1),
-  );
+  const rows = await database.system(async (tx) => [
+    ...(await tx.select({ id: userAccount.id }).from(userAccount).where(eq(userAccount.isSeed, true)).limit(1)),
+    ...(await tx.select({ id: employee.id }).from(employee).where(eq(employee.isSeed, true)).limit(1)),
+  ]);
   if (rows.length) {
     throw new Error('Refusing to start: seed/test accounts exist in a production database');
   }

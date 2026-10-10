@@ -1,4 +1,4 @@
-import { PERMISSION_KEYS, type PermissionKey, type ScopeType } from './permissions.js';
+import { PERMISSIONS, type PermissionKey, type ScopeType } from './permissions.js';
 
 /**
  * Seeded system roles (RBAC-01). System roles are locked: their permissions are
@@ -12,14 +12,19 @@ export interface SystemRoleDef {
   permissions: readonly PermissionKey[];
 }
 
+/** Personal-data permissions are granted explicitly, never implied by system administration. */
+const ADMIN_PERMISSIONS: PermissionKey[] = PERMISSIONS.filter(
+  (p) => p.sensitivity === 'normal' || p.sensitivity === 'security',
+).map((p) => p.key);
+
 export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
   {
     key: 'system_admin',
     name: { ar: 'مدير النظام', en: 'System Administrator' },
     defaultScope: 'GROUP',
-    // Separation of duties: future sensitive HR/payroll permissions are NOT
-    // automatically included here; they are granted explicitly.
-    permissions: PERMISSION_KEYS,
+    // Separation of duties: salary, identity and medical data are NOT included;
+    // they are granted explicitly (for example by also assigning the HR role).
+    permissions: ADMIN_PERMISSIONS,
   },
   {
     key: 'hr',
@@ -35,6 +40,18 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'access.role.view',
       'access.assignment.view',
       'settings.view',
+      'employee.profile.view',
+      'employee.profile.create',
+      'employee.profile.edit',
+      'employee.lifecycle.manage',
+      'employee.financial.view',
+      'employee.financial.edit',
+      'employee.identity.view',
+      'lookups.manage',
+      'documents.view',
+      'documents.upload',
+      'documents.delete',
+      'documents.view.restricted',
     ],
   },
   {
@@ -47,36 +64,52 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'org.location.view',
       'identity.user.view',
       'settings.view',
+      'employee.profile.view',
+      'employee.financial.view',
+      'documents.view',
     ],
   },
   {
     key: 'company_manager',
     name: { ar: 'مدير شركة', en: 'Company Manager' },
     defaultScope: 'COMPANY',
-    permissions: ['org.company.view', 'org.department.view', 'org.location.view'],
+    permissions: [
+      'org.company.view',
+      'org.department.view',
+      'org.location.view',
+      'employee.profile.view',
+      'documents.view',
+    ],
   },
   {
     key: 'department_manager',
     name: { ar: 'مدير قسم', en: 'Department Manager' },
     defaultScope: 'DEPARTMENT',
-    permissions: ['org.company.view', 'org.department.view'],
+    permissions: ['org.company.view', 'org.department.view', 'employee.profile.view'],
   },
   {
     key: 'employee',
     name: { ar: 'موظف', en: 'Employee' },
     defaultScope: 'SELF',
-    permissions: [],
+    // SELF scope: own profile, own current salary and own documents in employee-visible
+    // categories (EMP-10).
+    permissions: ['employee.profile.view', 'documents.view'],
   },
   {
     key: 'finance',
     name: { ar: 'محاسب / مالية', en: 'Accountant / Finance' },
     defaultScope: 'COMPANY',
-    permissions: ['org.company.view', 'org.department.view'],
+    permissions: [
+      'org.company.view',
+      'org.department.view',
+      'employee.profile.view',
+      'employee.financial.view',
+    ],
   },
   {
     key: 'timekeeping',
     name: { ar: 'مسؤول الحضور والانصراف', en: 'Attendance / Timekeeping Officer' },
     defaultScope: 'COMPANY',
-    permissions: ['org.company.view', 'org.department.view', 'org.location.view'],
+    permissions: ['org.company.view', 'org.department.view', 'org.location.view', 'employee.profile.view'],
   },
 ];

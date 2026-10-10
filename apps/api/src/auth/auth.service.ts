@@ -181,6 +181,7 @@ export class AuthService {
         displayName: row.u.displayName,
         email: row.u.email,
         mfaEnabled: !!row.u.totpEnabledAt,
+        employeeId: row.u.employeeId,
       },
       permissions: principal.permissions(),
       roles: rowsOf<{ key: string; scope_type: string; company_id: string | null }>(roles).map((r) => ({

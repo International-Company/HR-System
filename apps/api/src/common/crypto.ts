@@ -41,6 +41,7 @@ const MAGIC = Buffer.from('E1');
  */
 export class Encryptor {
   private readonly keys: Map<string, Buffer>;
+  private readonly bidxKey: Buffer;
 
   constructor(
     private readonly currentKeyId: string,
@@ -50,6 +51,20 @@ export class Encryptor {
     if (currentKey.length !== 32) throw new Error('Encryption key must be 32 bytes');
     this.keys = new Map(Object.entries(oldKeys));
     this.keys.set(currentKeyId, currentKey);
+    // Separate key for blind indexes, derived from the master key.
+    this.bidxKey = Buffer.from(hkdfSync('sha256', currentKey, 'hrms-bidx-v1', 'blind-index', 32));
+  }
+
+  get keyId(): string {
+    return this.currentKeyId;
+  }
+
+  /**
+   * Deterministic keyed hash for exact-match lookups of encrypted values (e.g. duplicate
+   * national IDs) without decrypting. Rotating the master key requires re-indexing.
+   */
+  blindIndex(domain: string, value: string): Buffer {
+    return createHmac('sha256', this.bidxKey).update(`${domain}:${value}`).digest();
   }
 
   static fromConfig(cfg: {

@@ -3,7 +3,7 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import type { AppConfig } from './config.js';
 import type { Database } from './db/database.js';
 import { Encryptor } from './common/crypto.js';
-import { BACKUP_STORAGE, CONFIG, DATABASE, ENCRYPTOR } from './common/tokens.js';
+import { BACKUP_STORAGE, CONFIG, DATABASE, ENCRYPTOR, FILE_STORAGE } from './common/tokens.js';
 import { ProblemFilter } from './common/problem.filter.js';
 import { AuditService } from './audit/audit.service.js';
 import { AuditController } from './audit/audit.controller.js';
@@ -25,12 +25,18 @@ import { UsersController } from './users/users.controller.js';
 import { HealthController } from './health/health.controller.js';
 import { BackupService } from './backup/backup.service.js';
 import { BackupController } from './backup/backup.controller.js';
-import { storageFromConfig, type StoragePort } from './backup/storage.js';
+import { filesStorageFromConfig, storageFromConfig, type StoragePort } from './backup/storage.js';
+import { LookupsController, LookupsService } from './employees/lookups.service.js';
+import { EmployeesService } from './employees/employees.service.js';
+import { EmployeesController } from './employees/employees.controller.js';
+import { DocumentsService } from './documents/documents.service.js';
+import { DocumentsController } from './documents/documents.controller.js';
 
 export interface AppDeps {
   config: AppConfig;
   database: Database;
   backupStorage?: StoragePort | null;
+  fileStorage?: StoragePort | null;
 }
 
 /** Shared providers (used by the web app and the worker). */
@@ -42,6 +48,10 @@ export function coreProviders(deps: AppDeps) {
     {
       provide: BACKUP_STORAGE,
       useValue: deps.backupStorage !== undefined ? deps.backupStorage : storageFromConfig(deps.config),
+    },
+    {
+      provide: FILE_STORAGE,
+      useValue: deps.fileStorage !== undefined ? deps.fileStorage : filesStorageFromConfig(deps.config),
     },
     AuditService,
     PolicyService,
@@ -67,6 +77,9 @@ export class AppModule {
         SettingsController,
         AuditController,
         BackupController,
+        LookupsController,
+        EmployeesController,
+        DocumentsController,
       ],
       providers: [
         ...coreProviders(deps),
@@ -74,6 +87,9 @@ export class AppModule {
         RolesService,
         OrgService,
         UsersService,
+        LookupsService,
+        EmployeesService,
+        DocumentsService,
         { provide: APP_GUARD, useClass: AuthGuard },
         { provide: APP_FILTER, useClass: ProblemFilter },
       ],

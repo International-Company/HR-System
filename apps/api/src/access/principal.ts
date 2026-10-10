@@ -9,7 +9,7 @@ export interface Grant {
 
 export type CompanyScope =
   | { all: true }
-  | { all: false; companyIds: string[]; departmentIds: string[] };
+  | { all: false; companyIds: string[]; departmentIds: string[]; self: boolean };
 
 /**
  * The authenticated user's effective access, computed per request from active role
@@ -21,6 +21,8 @@ export class Principal {
     readonly username: string,
     readonly sessionId: string,
     readonly state: SessionState,
+    /** Linked employee record, used for SELF-scoped grants. */
+    readonly employeeId: string | null,
     readonly roleKeys: ReadonlySet<string>,
     private readonly grants: ReadonlyMap<string, readonly Grant[]>,
     private readonly assignmentCompanyIds: readonly string[],
@@ -45,11 +47,22 @@ export class Principal {
     if (grants.some((g) => g.scopeType === 'GROUP')) return { all: true };
     const companyIds = new Set<string>();
     const departmentIds = new Set<string>();
+    let self = false;
     for (const g of grants) {
       if (g.scopeType === 'COMPANY' && g.companyId) companyIds.add(g.companyId);
       if (g.scopeType === 'DEPARTMENT' && g.departmentId) departmentIds.add(g.departmentId);
+      if (g.scopeType === 'SELF') self = true;
     }
-    return { all: false, companyIds: [...companyIds], departmentIds: [...departmentIds] };
+    return { all: false, companyIds: [...companyIds], departmentIds: [...departmentIds], self };
+  }
+
+  /** SELF-scoped grant applies only to the principal's own employee record. */
+  canSelf(perm: PermissionKey, employeeId: string): boolean {
+    return (
+      !!this.employeeId &&
+      this.employeeId === employeeId &&
+      (this.grants.get(perm)?.some((g) => g.scopeType === 'SELF') ?? false)
+    );
   }
 
   /** Company-level reach (GROUP or COMPANY scope). Department grants do not count. */
@@ -79,6 +92,7 @@ export class Principal {
       group: this.hasGroupAssignment,
       companyIds: this.assignmentCompanyIds,
       userId: this.userId,
+      employeeId: this.employeeId,
     };
   }
 }

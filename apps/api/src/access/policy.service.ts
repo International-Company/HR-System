@@ -45,7 +45,7 @@ export class PolicyService {
    * session state can depend on them (MFA required for certain roles).
    */
   async loadPrincipal(
-    user: { id: string; username: string },
+    user: { id: string; username: string; employeeId: string | null },
     sessionId: string,
     resolveState: (roleKeys: ReadonlySet<string>) => SessionState,
   ): Promise<Principal> {
@@ -94,6 +94,7 @@ export class PolicyService {
       user.username,
       sessionId,
       state,
+      user.employeeId,
       roleKeys,
       grants,
       [...companyIds],

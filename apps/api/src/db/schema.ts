@@ -5,12 +5,15 @@
 import {
   bigint,
   boolean,
+  char,
   customType,
   date,
   inet,
   integer,
   jsonb,
+  numeric,
   pgTable,
+  pgView,
   primaryKey,
   text,
   timestamp,
@@ -229,6 +232,189 @@ export const backupRun = pgTable('backup_run', {
   error: text('error'),
 });
 
+// --- Phase 2: employees & documents -----------------------------------------------
+
+export const lookupValue = pgTable('lookup_value', {
+  id: uuid('id').primaryKey(),
+  kind: text('kind')
+    .$type<'job_title' | 'employment_category' | 'contract_type' | 'allowance_type' | 'deduction_type'>()
+    .notNull(),
+  companyId: uuid('company_id'),
+  code: citext('code').notNull(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  status: text('status').$type<'active' | 'inactive'>().notNull().default('active'),
+  ...audited,
+});
+
+export const employeeNumberSequence = pgTable('employee_number_sequence', {
+  singleton: boolean('singleton').primaryKey(),
+  nextValue: bigint('next_value', { mode: 'number' }).notNull(),
+});
+
+export const employee = pgTable('employee', {
+  id: uuid('id').primaryKey(),
+  employeeNo: text('employee_no').notNull(),
+  fullNameAr: text('full_name_ar').notNull(),
+  fullNameEn: text('full_name_en').notNull(),
+  idType: text('id_type').$type<'national_id' | 'passport'>(),
+  idNumberEnc: bytea('id_number_enc'),
+  idNumberBidx: bytea('id_number_bidx'),
+  birthDate: date('birth_date', { mode: 'string' }),
+  gender: text('gender').$type<'male' | 'female'>(),
+  nationality: text('nationality'),
+  maritalStatus: text('marital_status').$type<'single' | 'married' | 'divorced' | 'widowed'>(),
+  phone: text('phone'),
+  email: citext('email'),
+  hireDate: date('hire_date', { mode: 'string' }).notNull(),
+  actualStartDate: date('actual_start_date', { mode: 'string' }),
+  probationEndDate: date('probation_end_date', { mode: 'string' }),
+  status: text('status')
+    .$type<'probation' | 'active' | 'suspended' | 'long_leave' | 'terminated'>()
+    .notNull()
+    .default('active'),
+  photoDocumentId: uuid('photo_document_id'),
+  isSeed: boolean('is_seed').notNull().default(false),
+  ...audited,
+});
+
+const assignmentColumns = () => ({
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  departmentId: uuid('department_id'),
+  jobTitleId: uuid('job_title_id'),
+  managerEmployeeId: uuid('manager_employee_id'),
+  workLocationId: uuid('work_location_id'),
+  employmentCategoryId: uuid('employment_category_id'),
+  contractTypeId: uuid('contract_type_id'),
+  contractStart: date('contract_start', { mode: 'string' }),
+  contractEnd: date('contract_end', { mode: 'string' }),
+  validFrom: date('valid_from', { mode: 'string' }).notNull(),
+  validTo: date('valid_to', { mode: 'string' }),
+  changeReason: text('change_reason'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+});
+
+export const employmentAssignment = pgTable('employment_assignment', assignmentColumns());
+
+/** Current (or upcoming) assignment per employee (security_invoker view). */
+export const employeeCurrentAssignment = pgView('employee_current_assignment', assignmentColumns()).existing();
+
+export const compensation = pgTable('compensation', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  baseSalary: numeric('base_salary', { precision: 18, scale: 4 }).notNull(),
+  currency: char('currency', { length: 3 }).notNull(),
+  paymentMethod: text('payment_method').$type<'bank_transfer' | 'cash' | 'cheque'>().notNull(),
+  validFrom: date('valid_from', { mode: 'string' }).notNull(),
+  validTo: date('valid_to', { mode: 'string' }),
+  changeReason: text('change_reason'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+});
+
+export const compensationItem = pgTable('compensation_item', {
+  id: uuid('id').primaryKey(),
+  compensationId: uuid('compensation_id').notNull(),
+  kind: text('kind').$type<'allowance' | 'deduction'>().notNull(),
+  typeId: uuid('type_id').notNull(),
+  calc: text('calc').$type<'fixed' | 'percent_of_base'>().notNull().default('fixed'),
+  amount: numeric('amount', { precision: 18, scale: 4 }).notNull(),
+});
+
+export const bankAccount = pgTable('bank_account', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  bankName: text('bank_name').notNull(),
+  accountNoEnc: bytea('account_no_enc'),
+  ibanEnc: bytea('iban_enc'),
+  isPrimary: boolean('is_primary').notNull().default(true),
+  status: text('status').$type<'active' | 'inactive'>().notNull().default('active'),
+  ...audited,
+});
+
+export const qualification = pgTable('qualification', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  level: text('level')
+    .$type<'secondary' | 'diploma' | 'bachelor' | 'master' | 'doctorate' | 'professional' | 'other'>()
+    .notNull(),
+  specialization: text('specialization'),
+  institution: text('institution'),
+  country: text('country'),
+  graduationYear: integer('graduation_year'),
+  status: text('status').$type<'active' | 'deleted'>().notNull().default('active'),
+  ...audited,
+});
+
+export const lifecycleEvent = pgTable('lifecycle_event', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id'),
+  type: text('type').notNull(),
+  effectiveDate: date('effective_date', { mode: 'string' }).notNull(),
+  details: jsonb('details').$type<Record<string, unknown>>().notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+});
+
+export const documentCategory = pgTable('document_category', {
+  id: uuid('id').primaryKey(),
+  code: citext('code').notNull(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  allowedTypes: text('allowed_types').array().notNull(),
+  maxSizeMb: integer('max_size_mb').notNull(),
+  sensitivity: text('sensitivity').$type<'normal' | 'restricted' | 'medical'>().notNull(),
+  employeeVisible: boolean('employee_visible').notNull(),
+  allowReplace: boolean('allow_replace').notNull(),
+  allowDelete: boolean('allow_delete').notNull(),
+  hasExpiry: boolean('has_expiry').notNull(),
+  retentionYears: integer('retention_years'),
+  status: text('status').$type<'active' | 'inactive'>().notNull().default('active'),
+  ...audited,
+});
+
+export const storedObject = pgTable('stored_object', {
+  id: uuid('id').primaryKey(),
+  provider: text('provider').notNull(),
+  objectKey: text('object_key').notNull(),
+  mime: text('mime').notNull(),
+  sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+  sha256: bytea('sha256').notNull(),
+  encKeyId: text('enc_key_id').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+});
+
+export const document = pgTable('document', {
+  id: uuid('id').primaryKey(),
+  companyId: uuid('company_id').notNull(),
+  categoryId: uuid('category_id').notNull(),
+  objectId: uuid('object_id').notNull(),
+  title: text('title').notNull(),
+  originalName: text('original_name').notNull(),
+  expiryDate: date('expiry_date', { mode: 'string' }),
+  status: text('status').$type<'active' | 'superseded' | 'deleted'>().notNull().default('active'),
+  supersedesId: uuid('supersedes_id'),
+  deletedAt: tstz('deleted_at'),
+  deletedBy: uuid('deleted_by'),
+  ...audited,
+});
+
+export const documentLink = pgTable(
+  'document_link',
+  {
+    documentId: uuid('document_id').notNull(),
+    entityType: text('entity_type').$type<'employee'>().notNull(),
+    entityId: uuid('entity_id').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.documentId, t.entityType, t.entityId] })],
+);
+
 export const schema = {
   companyGroup,
   company,
@@ -246,4 +432,17 @@ export const schema = {
   moduleCompanyState,
   auditEvent,
   backupRun,
+  lookupValue,
+  employeeNumberSequence,
+  employee,
+  employmentAssignment,
+  compensation,
+  compensationItem,
+  bankAccount,
+  qualification,
+  lifecycleEvent,
+  documentCategory,
+  storedObject,
+  document,
+  documentLink,
 };

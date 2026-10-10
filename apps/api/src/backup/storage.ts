@@ -117,3 +117,17 @@ export function storageFromConfig(cfg: AppConfig): StoragePort | null {
   }
   return null;
 }
+
+/** Document storage (Railway bucket in deployed environments, a local folder in development). */
+export function filesStorageFromConfig(cfg: AppConfig): StoragePort | null {
+  if (cfg.FILES_LOCAL_DIR) return new LocalDirStorage(cfg.FILES_LOCAL_DIR);
+  if (cfg.FILES_S3_BUCKET && cfg.FILES_S3_ACCESS_KEY_ID && cfg.FILES_S3_SECRET_ACCESS_KEY) {
+    return new S3Storage(cfg.FILES_S3_BUCKET, {
+      ...(cfg.FILES_S3_ENDPOINT ? { endpoint: cfg.FILES_S3_ENDPOINT } : {}),
+      region: cfg.FILES_S3_REGION ?? 'auto',
+      accessKeyId: cfg.FILES_S3_ACCESS_KEY_ID,
+      secretAccessKey: cfg.FILES_S3_SECRET_ACCESS_KEY,
+    });
+  }
+  return null;
+}

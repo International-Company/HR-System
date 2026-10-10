@@ -1,8 +1,24 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
 import type { AppConfig } from './config.js';
 import type { Database } from './db/database.js';
-import { company, companyGroup, department, role, roleAssignment, settingValue, userAccount, workLocation } from './db/schema.js';
+import {
+  company,
+  companyGroup,
+  compensation,
+  compensationItem,
+  department,
+  employee,
+  employmentAssignment,
+  lifecycleEvent,
+  lookupValue,
+  role,
+  roleAssignment,
+  settingValue,
+  userAccount,
+  workLocation,
+} from './db/schema.js';
+import { Encryptor } from './common/crypto.js';
 import { uuidv7 } from './common/ids.js';
 import { PasswordService } from './auth/password.service.js';
 
@@ -15,6 +31,7 @@ export interface SeedResult {
   companies: Record<string, string>;
   departments: Record<string, string>;
   users: Record<string, string>;
+  employees: Record<string, string>;
 }
 
 const COMPANIES = [
@@ -135,6 +152,91 @@ export async function seed(
         });
       }
     }
-    return { password, companies, departments, users };
+
+    // --- Phase 2 demo employees (synthetic) ---------------------------------------------
+    const encryptor = Encryptor.fromConfig(cfg);
+    const lookups = await tx.select().from(lookupValue);
+    const lookupId = (kind: string, code: string) => lookups.find((l) => l.kind === kind && l.code === code)?.id ?? null;
+    const titleIds: Record<string, string> = {};
+    for (const [code, ar, en] of [
+      ['ACC', 'محاسب', 'Accountant'],
+      ['SALES_REP', 'مندوب مبيعات', 'Sales representative'],
+      ['MGR', 'مدير', 'Manager'],
+      ['HR_SPEC', 'أخصائي موارد بشرية', 'HR specialist'],
+    ] as const) {
+      const existing = lookups.find((l) => l.kind === 'job_title' && l.code === code);
+      titleIds[code] =
+        existing?.id ??
+        (await tx.insert(lookupValue).values({ id: uuidv7(), kind: 'job_title', companyId: null, code, nameAr: ar, nameEn: en }).returning())[0]!.id;
+    }
+    const allowanceType =
+      lookups.find((l) => l.kind === 'allowance_type' && l.code === 'TRANSPORT')?.id ??
+      (await tx
+        .insert(lookupValue)
+        .values({ id: uuidv7(), kind: 'allowance_type', companyId: null, code: 'TRANSPORT', nameAr: 'بدل نقل', nameEn: 'Transport allowance' })
+        .returning())[0]!.id;
+
+    const employees: Record<string, string> = {};
+    const DEMO_EMPLOYEES = [
+      { key: 'sales.manager', ar: 'خالد العمري', en: 'Khalid Al-Omari', company: 'DEMO-A', dept: 'SALES', title: 'MGR', salary: '5200', idNo: 'DEMO1000001', hire: '2022-03-01' },
+      { key: 'employee.a', ar: 'سارة الحسن', en: 'Sara Al-Hassan', company: 'DEMO-A', dept: 'SALES', title: 'SALES_REP', salary: '3100', idNo: 'DEMO1000002', hire: '2023-06-15', manager: 'sales.manager' },
+      { key: 'emp.fin', ar: 'محمد يوسف', en: 'Mohammed Yousef', company: 'DEMO-A', dept: 'FIN', title: 'ACC', salary: '3800', idNo: 'DEMO1000003', hire: '2021-01-10' },
+      { key: 'emp.ops', ar: 'ليلى منصور', en: 'Layla Mansour', company: 'DEMO-B', dept: 'OPS', title: 'HR_SPEC', salary: '3500', idNo: 'DEMO1000004', hire: '2024-02-01' },
+      { key: 'emp.c', ar: 'عمر شريف', en: 'Omar Sharif', company: 'DEMO-C', dept: null, title: 'MGR', salary: '6100', idNo: 'DEMO1000005', hire: '2020-09-01' },
+    ] as const;
+    for (const d of DEMO_EMPLOYEES) {
+      const bidx = encryptor.blindIndex('employee-id', `national_id:${d.idNo}`);
+      const [existing] = await tx.select({ id: employee.id }).from(employee).where(eq(employee.idNumberBidx, bidx));
+      if (existing) {
+        employees[d.key] = existing.id;
+        continue;
+      }
+      const id = uuidv7();
+      const no = await tx.execute<{ n: string }>(sql`select next_employee_no('EMP-', 6) as n`);
+      const companyId = companies[d.company]!;
+      await tx.insert(employee).values({
+        id,
+        employeeNo: (no as unknown as { rows: { n: string }[] }).rows[0]!.n,
+        fullNameAr: d.ar,
+        fullNameEn: d.en,
+        idType: 'national_id',
+        idNumberEnc: encryptor.encrypt(d.idNo, `employee-id:${id}`),
+        idNumberBidx: bidx,
+        hireDate: d.hire,
+        status: 'active',
+        isSeed: true,
+      });
+      await tx.insert(employmentAssignment).values({
+        id: uuidv7(),
+        employeeId: id,
+        companyId,
+        departmentId: d.dept ? departments[`${d.company}/${d.dept}`]! : null,
+        jobTitleId: titleIds[d.title]!,
+        managerEmployeeId: 'manager' in d ? employees[d.manager]! : null,
+        employmentCategoryId: lookupId('employment_category', 'full_time'),
+        contractTypeId: lookupId('contract_type', 'open_ended'),
+        validFrom: d.hire,
+        changeReason: 'hire',
+      });
+      const compId = uuidv7();
+      await tx.insert(compensation).values({
+        id: compId,
+        employeeId: id,
+        companyId,
+        baseSalary: d.salary,
+        currency: 'EUR',
+        paymentMethod: 'bank_transfer',
+        validFrom: d.hire,
+        changeReason: 'hire',
+      });
+      await tx.insert(compensationItem).values({ id: uuidv7(), compensationId: compId, kind: 'allowance', typeId: allowanceType, calc: 'fixed', amount: '150' });
+      await tx.insert(lifecycleEvent).values({ id: uuidv7(), employeeId: id, companyId, type: 'hire', effectiveDate: d.hire, details: { seed: true } });
+      employees[d.key] = id;
+    }
+    // Link demo accounts to their employee records (SELF access).
+    for (const username of ['sales.manager', 'employee.a'] as const) {
+      await tx.update(userAccount).set({ employeeId: employees[username]! }).where(eq(userAccount.username, username));
+    }
+    return { password, companies, departments, users, employees };
   });
 }

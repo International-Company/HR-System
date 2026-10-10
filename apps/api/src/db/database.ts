@@ -17,9 +17,11 @@ export interface RlsScope {
   group: boolean;
   companyIds: readonly string[];
   userId: string | null;
+  /** The caller's own employee record (SELF access), if linked. */
+  employeeId?: string | null;
 }
 
-export const SYSTEM_SCOPE: RlsScope = { group: true, companyIds: [], userId: null };
+export const SYSTEM_SCOPE: RlsScope = { group: true, companyIds: [], userId: null, employeeId: null };
 
 /** Raw SQL access for migrations and maintenance (runs with the owner's privileges). */
 export interface SqlRunner {
@@ -50,7 +52,8 @@ export class Database {
       await tx.execute(sql`select
         set_config('app.group_scope', ${scope.group ? 'on' : 'off'}, true),
         set_config('app.company_ids', ${toPgUuidArray(scope.companyIds)}, true),
-        set_config('app.user_id', ${scope.userId ?? ''}, true)`);
+        set_config('app.user_id', ${scope.userId ?? ''}, true),
+        set_config('app.employee_id', ${scope.employeeId ?? ''}, true)`);
       return fn(tx as Tx);
     });
   }

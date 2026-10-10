@@ -1,4 +1,7 @@
 import { randomBytes } from 'node:crypto';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
 import pg from 'pg';
 import request from 'supertest';
@@ -9,7 +12,10 @@ import { createApp } from '../src/create-app.js';
 import { provision } from '../src/provisioning.js';
 import { seed, type SeedResult } from '../src/seed.js';
 import { AuthService } from '../src/auth/auth.service.js';
-import type { StoragePort } from '../src/backup/storage.js';
+import { eq } from 'drizzle-orm';
+import { role, roleAssignment, userAccount } from '../src/db/schema.js';
+import { uuidv7 } from '../src/common/ids.js';
+import { LocalDirStorage, type StoragePort } from '../src/backup/storage.js';
 
 export const TEST_PASSWORD = 'Correct-Horse-Battery-9';
 export const API = '/api/v1';
@@ -19,6 +25,8 @@ export interface TestEnv {
   database: Database;
   config: AppConfig;
   seeded: SeedResult;
+  /** Local directory holding (encrypted) uploaded documents. */
+  filesDir: string;
   /** Log in a seeded persona; returns an agent carrying the session cookie and CSRF token. */
   login(username: string, password?: string): Promise<Session>;
   anon(): TestAgent;
@@ -80,8 +88,9 @@ export async function setup(
     password: TEST_PASSWORD,
     relaxMfa: opts.relaxMfa ?? true,
   });
+  const filesDir = mkdtempSync(join(tmpdir(), 'hrms-files-'));
   const app = await createApp(
-    { config, database, backupStorage: opts.backupStorage ?? null },
+    { config, database, backupStorage: opts.backupStorage ?? null, fileStorage: new LocalDirStorage(filesDir) },
     { logger: false },
   );
   const server = app.getHttpServer();
@@ -101,12 +110,14 @@ export async function setup(
     database,
     config,
     seeded,
+    filesDir,
     login,
     anon: () => request.agent(server),
     close: async () => {
       await app.close();
       await database.close();
       if (dropDb) await dropDb();
+      rmSync(filesDir, { recursive: true, force: true });
     },
   };
 }
@@ -144,3 +155,19 @@ export async function asAppRole<T>(
     }),
   );
 }
+
+/** Give a seeded user an extra role assignment directly (test setup only). */
+export async function grant(env: TestEnv, username: string, roleKey: string, scope: 'GROUP' | 'COMPANY', company?: string) {
+  await env.database.system(async (tx) => {
+    const [u] = await tx.select().from(userAccount).where(eq(userAccount.username, username));
+    const [r] = await tx.select().from(role).where(eq(role.key, roleKey));
+    await tx.insert(roleAssignment).values({
+      id: uuidv7(),
+      userId: u!.id,
+      roleId: r!.id,
+      scopeType: scope,
+      companyId: company ? env.seeded.companies[company]! : null,
+    });
+  });
+}
+
