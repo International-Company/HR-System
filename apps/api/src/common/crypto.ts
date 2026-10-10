@@ -3,9 +3,34 @@ import {
   createDecipheriv,
   createHash,
   createHmac,
+  hkdfSync,
   randomBytes,
   timingSafeEqual,
 } from 'node:crypto';
+
+/**
+ * Turn a configured secret into a 256-bit key. Accepts either exactly 32 bytes in base64,
+ * or any long random string (>= 40 chars, e.g. from a password manager), from which the
+ * key is derived with HKDF-SHA256. The derivation is fixed: changing it would make
+ * existing encrypted data unreadable.
+ */
+export function keyMaterial(secret: string, purpose: 'data-encryption' | 'backup-encryption'): Buffer {
+  if (/^[A-Za-z0-9+/]{43}=$/.test(secret)) {
+    const raw = Buffer.from(secret, 'base64');
+    if (raw.length === 32) return raw;
+  }
+  if (secret.length < 40) throw new Error('Encryption secret must be at least 40 characters');
+  return Buffer.from(hkdfSync('sha256', secret, 'hrms-key-v1', purpose, 32));
+}
+
+export function isUsableKeySecret(secret: string): boolean {
+  try {
+    keyMaterial(secret, 'data-encryption');
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const MAGIC = Buffer.from('E1');
 
@@ -35,11 +60,11 @@ export class Encryptor {
     const old: Record<string, Buffer> = {};
     if (cfg.DATA_ENCRYPTION_OLD_KEYS) {
       const parsed = JSON.parse(cfg.DATA_ENCRYPTION_OLD_KEYS) as Record<string, string>;
-      for (const [id, b64] of Object.entries(parsed)) old[id] = Buffer.from(b64, 'base64');
+      for (const [id, secret] of Object.entries(parsed)) old[id] = keyMaterial(secret, 'data-encryption');
     }
     return new Encryptor(
       cfg.DATA_ENCRYPTION_KEY_ID,
-      Buffer.from(cfg.DATA_ENCRYPTION_KEY, 'base64'),
+      keyMaterial(cfg.DATA_ENCRYPTION_KEY, 'data-encryption'),
       old,
     );
   }

@@ -1,6 +1,6 @@
 # Railway Deployment, Release & Rollback Plan
 
-Status: **Proposed.** Covers ARC-01, ARC-02, ARC-04 and OPS-01. **No deployment happens without the owner's approval. The owner performs the GitHub ↔ Railway linking.**
+Status: **Implemented for Phase 1** (`Dockerfile`, `railway/web.json`, `railway/worker.json`). Owner's step-by-step guide: [railway-setup-guide-ar.md](railway-setup-guide-ar.md). Covers ARC-01, ARC-02, ARC-04 and OPS-01. **No deployment happens without the owner's approval. The owner performs the GitHub ↔ Railway linking.**
 
 ## 1. Railway project layout
 
@@ -11,8 +11,8 @@ Status: **Proposed.** Covers ARC-01, ARC-02, ARC-04 and OPS-01. **No deployment 
 
 - Region: **EU West (Amsterdam)** for every service and bucket (DL-008). **The bucket region cannot be changed after creation.**
 - PostgreSQL volume sized at **≥ 2.5× the database size** for the restore slots (D-16b). A volume-usage alert is at 70%.
-- Databases on the server: `hrms_control`, `hrms_blue`, `hrms_green`. Roles: `hrms_migrator` (owner), `hrms_app` (no BYPASSRLS), `hrms_ops` (worker only: restore slots). To verify in a Phase 1 spike: the Railway PostgreSQL template allows creating extra databases and roles.
-- Build: a Dockerfile in the repo (multi-stage, Node 24, Playwright Chromium only in the image used by the worker). This keeps builds reproducible instead of relying on auto-detection.
+- Databases on the server (from Phase 3, DL-019): `hrms_control`, `hrms_blue`, `hrms_green`; Phase 1 uses Railway's default database. Roles: `hrms_migrator` (owner), `hrms_app` (no BYPASSRLS), `hrms_ops` (worker only: restore slots). To verify in a Phase 1 spike: the Railway PostgreSQL template allows creating extra databases and roles.
+- Build: the repository `Dockerfile` (multi-stage, Node 24, PostgreSQL 18 client tools for backups). Each service points to its config file: `railway/web.json` (pre-deploy migration + health check) and `railway/worker.json`. Chromium for PDFs is added when PDF generation arrives (Phase 6/7). This keeps builds reproducible instead of relying on auto-detection.
 - `web` start: `node apps/api/dist/main.js`. `worker` start: same image with `WORKER=1`.
 - **Pre-deploy command** (web only): `node apps/api/dist/migrate.js`. It runs migrations before traffic switches. If it fails, the deploy is aborted and the old version keeps running.
 - **Health check path:** `/health/ready` (DB reachable, migrations at the expected version, storage reachable). `/health/live` for liveness.

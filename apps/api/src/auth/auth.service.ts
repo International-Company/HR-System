@@ -302,7 +302,7 @@ export class AuthService {
     const user = await this.loadUser(principal.userId);
     if (!user.totpSecretEnc) throw ApiError.conflict('MFA is not enabled');
 
-    let ok = false;
+    let ok: boolean;
     let method = 'totp';
     let usedStep: number | null = null;
     if ('code' in input) {

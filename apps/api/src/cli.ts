@@ -6,6 +6,7 @@ import { openDatabase } from './db/database.js';
 import { provision } from './provisioning.js';
 import { seed } from './seed.js';
 import { DecryptStream } from './backup/stream-crypto.js';
+import { keyMaterial } from './common/crypto.js';
 
 /**
  * Maintenance commands. Railway pre-deploy runs `node dist/cli.js migrate`.
@@ -46,7 +47,7 @@ async function main() {
       const [input, output] = args;
       if (!input || !output) throw new Error('Usage: backup:decrypt <in> <out>');
       if (!config.BACKUP_ENCRYPTION_KEY) throw new Error('BACKUP_ENCRYPTION_KEY is not set');
-      const keys = new Map([[config.BACKUP_ENCRYPTION_KEY_ID, Buffer.from(config.BACKUP_ENCRYPTION_KEY, 'base64')]]);
+      const keys = new Map([[config.BACKUP_ENCRYPTION_KEY_ID, keyMaterial(config.BACKUP_ENCRYPTION_KEY, 'backup-encryption')]]);
       await pipeline(createReadStream(input), new DecryptStream(keys), createWriteStream(output));
       console.log(`Decrypted to ${output}. Restore with: pg_restore --no-owner --dbname <db> ${output}`);
       return;

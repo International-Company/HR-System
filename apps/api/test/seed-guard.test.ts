@@ -35,6 +35,18 @@ describe('field encryption (D-06)', () => {
     expect(() => new Encryptor('k3', randomBytes(32)).decrypt(blob, 'bank:1')).toThrow(/Unknown encryption key/);
   });
 
+  it('derives keys from long random secrets, separately per purpose', async () => {
+    const { keyMaterial } = await import('../src/common/crypto.js');
+    const b64 = randomBytes(32).toString('base64');
+    expect(keyMaterial(b64, 'data-encryption').equals(Buffer.from(b64, 'base64'))).toBe(true);
+    const phrase = 'x7Gq9!vLm2#pR8sT4wZ1aB6cD3eF5hJ0kN-uYq2Wz';
+    const a = keyMaterial(phrase, 'data-encryption');
+    expect(a).toHaveLength(32);
+    expect(keyMaterial(phrase, 'data-encryption').equals(a)).toBe(true);
+    expect(keyMaterial(phrase, 'backup-encryption').equals(a)).toBe(false);
+    expect(() => keyMaterial('too-short-secret', 'data-encryption')).toThrow();
+  });
+
   it('generates time-ordered UUIDv7 identifiers', () => {
     const a = uuidv7();
     const b = uuidv7();

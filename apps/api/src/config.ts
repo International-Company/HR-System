@@ -1,12 +1,14 @@
 import { z } from 'zod';
+import { isUsableKeySecret } from './common/crypto.js';
 
 const bool = z
   .enum(['true', 'false', '1', '0'])
   .transform((v) => v === 'true' || v === '1');
 
-const base64Key32 = z
+/** 32 bytes base64, or any random string of 40+ characters (key derived with HKDF). */
+const keySecret = z
   .string()
-  .refine((v) => Buffer.from(v, 'base64').length === 32, 'must be 32 bytes, base64-encoded');
+  .refine(isUsableKeySecret, 'must be 32 bytes base64-encoded, or a random string of at least 40 characters');
 
 const envSchema = z.object({
   APP_ENV: z.enum(['development', 'test', 'staging', 'production']).default('development'),
@@ -26,7 +28,7 @@ const envSchema = z.object({
   PGLITE_DIR: z.string().min(1).optional(),
 
   SESSION_SECRET: z.string().min(32),
-  DATA_ENCRYPTION_KEY: base64Key32,
+  DATA_ENCRYPTION_KEY: keySecret,
   DATA_ENCRYPTION_KEY_ID: z
     .string()
     .regex(/^[A-Za-z0-9_-]{1,32}$/)
@@ -52,7 +54,7 @@ const envSchema = z.object({
   BACKUP_S3_ACCESS_KEY_ID: z.string().optional(),
   BACKUP_S3_SECRET_ACCESS_KEY: z.string().optional(),
   BACKUP_S3_PREFIX: z.string().default('hrms'),
-  BACKUP_ENCRYPTION_KEY: base64Key32.optional(),
+  BACKUP_ENCRYPTION_KEY: keySecret.optional(),
   BACKUP_ENCRYPTION_KEY_ID: z
     .string()
     .regex(/^[A-Za-z0-9_-]{1,32}$/)

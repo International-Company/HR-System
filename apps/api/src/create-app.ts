@@ -50,6 +50,7 @@ export async function createApp(
       },
       strictTransportSecurity: cfg.cookieSecure ? { maxAge: 31536000, includeSubDomains: true } : false,
       referrerPolicy: { policy: 'same-origin' },
+      frameguard: { action: 'deny' },
     }),
   );
   app.use((_req: Request, res: Response, next: NextFunction) => {

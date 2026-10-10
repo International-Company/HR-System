@@ -18,10 +18,10 @@ async function roundTrip(data: Buffer, chunk = 7): Promise<Buffer> {
   const chunks = [];
   for (let i = 0; i < data.length; i += chunk) chunks.push(data.subarray(i, i + chunk));
   const encrypted: Buffer[] = [];
-  await pipeline(Readable.from(chunks), enc, async function* (src) {
+  await pipeline(Readable.from(chunks), enc, async (src: AsyncIterable<unknown>) => {
     for await (const c of src) encrypted.push(c as Buffer);
   });
-  await pipeline(Readable.from(encrypted), new DecryptStream(new Map([['b1', key]])), async function* (src) {
+  await pipeline(Readable.from(encrypted), new DecryptStream(new Map([['b1', key]])), async (src: AsyncIterable<unknown>) => {
     for await (const c of src) out.push(c as Buffer);
   });
   return Buffer.concat(out);
@@ -39,13 +39,13 @@ describe('backup encryption stream', () => {
     const key = randomBytes(32);
     const enc = new EncryptStream(key, 'b1');
     const parts: Buffer[] = [];
-    await pipeline(Readable.from([Buffer.from('secret payroll data')]), enc, async function* (src) {
+    await pipeline(Readable.from([Buffer.from('secret payroll data')]), enc, async (src: AsyncIterable<unknown>) => {
       for await (const c of src) parts.push(c as Buffer);
     });
     const blob = Buffer.concat(parts);
     const tampered = Buffer.from(blob);
     tampered[tampered.length - 20]! ^= 1;
-    const sink = async function* (src: AsyncIterable<unknown>) {
+    const sink = async (src: AsyncIterable<unknown>) => {
       for await (const _ of src) void _;
     };
     await expect(pipeline(Readable.from([tampered]), new DecryptStream(new Map([['b1', key]])), sink)).rejects.toThrow();

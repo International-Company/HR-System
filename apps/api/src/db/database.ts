@@ -78,6 +78,10 @@ export async function openDatabase(cfg: AppConfig): Promise<Database> {
     const { PGlite } = await import('@electric-sql/pglite');
     const { btree_gist } = await import('@electric-sql/pglite/contrib/btree_gist');
     const { citext } = await import('@electric-sql/pglite/contrib/citext');
+    if (!cfg.PGLITE_DIR.includes('://')) {
+      const { mkdir } = await import('node:fs/promises');
+      await mkdir(cfg.PGLITE_DIR, { recursive: true });
+    }
     const client = await PGlite.create(cfg.PGLITE_DIR, { extensions: { btree_gist, citext } });
     return fromPglite(client, cfg.DB_APP_ROLE);
   }

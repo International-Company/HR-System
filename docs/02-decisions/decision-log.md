@@ -23,6 +23,12 @@ Once a decision is approved, architecture-level decisions also get an ADR file i
 
 | DL-015 | 2026-10-10 | Owner: "everything is fine" — all remaining proposed decisions (D-02…D-15, D-17…D-19) approved, Q-29 accepted (project-local npm packages), off-site backups on Backblaze B2 EU (Q-19), start Phase 1. The owner has a Railway subscription | Approved (owner) | Planning package accepted | Phase 1 started. Q-28 (member state) still open, not needed for P1 | Supersedes "Proposed" status of DL-002…DL-007 |
 
+| DL-016 | 2026-10-10 | Versions in use: Node 24, NestJS 12 (ESM), TypeScript 7, React 19, Mantine 9, Drizzle 0.45, Vite 8, Vitest 5, Zod 4. Container ships PostgreSQL 18 client tools (works with 17 and 18 servers) | Implemented | Latest stable releases at Phase 1 start | Upgrades follow the weekly dependency routine | Refines DL-009 |
+| DL-017 | 2026-10-10 | Background jobs: Croner schedules + database row claiming (`FOR UPDATE SKIP LOCKED`) and advisory locks, instead of pg-boss | Implemented (minor, within D-01) | Phase 1 jobs are few and periodic; avoids another dependency. pg-boss can be adopted in Phase 3 if the notification outbox needs a durable queue | Worker code only | Changes D-01 detail |
+| DL-018 | 2026-10-10 | Encryption keys may be any random string of 40+ characters (derived with HKDF-SHA256) or 32 bytes base64 | Implemented | The owner can create keys with a password manager, without local tools (Q-25) | The derivation is permanent; documented in the setup guide | — |
+| DL-019 | 2026-10-10 | Blue/green database slots for the in-app restore are built with the restore feature in Phase 3, not in Phase 1 | Implemented as plan change | Only the restore needs them; Phase 1 keeps a single database and proves restorability with automated restore tests into a scratch database | Roadmap P1/P3 | Refines DL-010 |
+| DL-020 | 2026-10-10 | Account, role and assignment administration is group-only in Phase 1; nobody can change their own roles or status; the last System Administrator cannot be removed | Implemented | Prevents privilege escalation and lock-out | May be relaxed for HR in Phase 2 (user ↔ employee linking) via change control | — |
+
 ## How to add an entry
 
 1. Next sequential ID. 2. ISO date. 3. One-sentence decision. 4. Status. 5. Why (with alternatives considered). 6. What changes (modules, cost, data, tests). 7. Links to the entries it supersedes or that supersede it.

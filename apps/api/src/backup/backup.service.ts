@@ -16,6 +16,7 @@ import { currentSchemaVersion } from '../db/migrator.js';
 import { backupRun } from '../db/schema.js';
 import { ApiError } from '../common/errors.js';
 import { uuidv7 } from '../common/ids.js';
+import { keyMaterial } from '../common/crypto.js';
 import type { Principal } from '../access/principal.js';
 import { AuditService } from '../audit/audit.service.js';
 import { SettingsService } from '../settings/settings.service.js';
@@ -227,7 +228,7 @@ export class BackupService {
     const objectKey = `${this.config.BACKUP_S3_PREFIX}/db/${day}/${stamp}-${runRow.kind}-${runRow.id}.dump.enc`;
 
     const enc = new EncryptStream(
-      Buffer.from(this.config.BACKUP_ENCRYPTION_KEY!, 'base64'),
+      keyMaterial(this.config.BACKUP_ENCRYPTION_KEY!, 'backup-encryption'),
       this.config.BACKUP_ENCRYPTION_KEY_ID,
     );
     const child = spawn('pg_dump', ['--format=custom', '--compress=6', '--no-owner'], {
@@ -285,7 +286,7 @@ export class BackupService {
     const owner = new pg.Client({ connectionString: url });
     await owner.connect();
     try {
-      const keys = new Map([[this.config.BACKUP_ENCRYPTION_KEY_ID, Buffer.from(this.config.BACKUP_ENCRYPTION_KEY!, 'base64')]]);
+      const keys = new Map([[this.config.BACKUP_ENCRYPTION_KEY_ID, keyMaterial(this.config.BACKUP_ENCRYPTION_KEY!, 'backup-encryption')]]);
       await pipeline(await this.storage!.get(latest.object_key), new DecryptStream(keys), createWriteStream(file));
 
       await owner.query(`drop database if exists ${SCRATCH_DB}`);
