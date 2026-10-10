@@ -1,0 +1,89 @@
+import { Module, type DynamicModule } from '@nestjs/common';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import type { AppConfig } from './config.js';
+import type { Database } from './db/database.js';
+import { Encryptor } from './common/crypto.js';
+import { BACKUP_STORAGE, CONFIG, DATABASE, ENCRYPTOR } from './common/tokens.js';
+import { ProblemFilter } from './common/problem.filter.js';
+import { AuditService } from './audit/audit.service.js';
+import { AuditController } from './audit/audit.controller.js';
+import { PolicyService } from './access/policy.service.js';
+import { RolesService } from './access/roles.service.js';
+import { RolesController } from './access/roles.controller.js';
+import { SettingsService } from './settings/settings.service.js';
+import { ModulesService } from './settings/modules.service.js';
+import { SettingsController } from './settings/settings.controller.js';
+import { PasswordService } from './auth/password.service.js';
+import { SessionService } from './auth/session.service.js';
+import { AuthService } from './auth/auth.service.js';
+import { AuthController } from './auth/auth.controller.js';
+import { AuthGuard } from './auth/auth.guard.js';
+import { OrgService } from './org/org.service.js';
+import { OrgController } from './org/org.controller.js';
+import { UsersService } from './users/users.service.js';
+import { UsersController } from './users/users.controller.js';
+import { HealthController } from './health/health.controller.js';
+import { BackupService } from './backup/backup.service.js';
+import { BackupController } from './backup/backup.controller.js';
+import { storageFromConfig, type StoragePort } from './backup/storage.js';
+
+export interface AppDeps {
+  config: AppConfig;
+  database: Database;
+  backupStorage?: StoragePort | null;
+}
+
+/** Shared providers (used by the web app and the worker). */
+export function coreProviders(deps: AppDeps) {
+  return [
+    { provide: CONFIG, useValue: deps.config },
+    { provide: DATABASE, useValue: deps.database },
+    { provide: ENCRYPTOR, useValue: Encryptor.fromConfig(deps.config) },
+    {
+      provide: BACKUP_STORAGE,
+      useValue: deps.backupStorage !== undefined ? deps.backupStorage : storageFromConfig(deps.config),
+    },
+    AuditService,
+    PolicyService,
+    SettingsService,
+    ModulesService,
+    PasswordService,
+    SessionService,
+    BackupService,
+  ];
+}
+
+@Module({})
+export class AppModule {
+  static register(deps: AppDeps): DynamicModule {
+    return {
+      module: AppModule,
+      controllers: [
+        HealthController,
+        AuthController,
+        OrgController,
+        UsersController,
+        RolesController,
+        SettingsController,
+        AuditController,
+        BackupController,
+      ],
+      providers: [
+        ...coreProviders(deps),
+        AuthService,
+        RolesService,
+        OrgService,
+        UsersService,
+        { provide: APP_GUARD, useClass: AuthGuard },
+        { provide: APP_FILTER, useClass: ProblemFilter },
+      ],
+    };
+  }
+}
+
+@Module({})
+export class WorkerModule {
+  static register(deps: AppDeps): DynamicModule {
+    return { module: WorkerModule, providers: coreProviders(deps) };
+  }
+}
