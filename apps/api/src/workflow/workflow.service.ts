@@ -12,6 +12,7 @@ import { DATABASE } from '../common/tokens.js';
 import type { Database, Tx } from '../db/database.js';
 import {
   employee,
+  roleAssignment,
   userAccount,
   workflowDefinition,
   workflowDelegation,
@@ -498,6 +499,27 @@ export class WorkflowService {
   }
 
   // --- delegation ----------------------------------------------------------------------------
+
+  /** Possible delegates: active colleagues in the user's companies (names only). */
+  async delegateCandidates(principal: Principal): Promise<{ id: string; displayName: string }[]> {
+    const scope = principal.rls();
+    return this.database.tx(scope, async (tx) => {
+      const rows = await tx
+        .selectDistinct({ id: userAccount.id, displayName: userAccount.displayName })
+        .from(userAccount)
+        .innerJoin(roleAssignment, eq(roleAssignment.userId, userAccount.id))
+        .where(
+          and(
+            eq(userAccount.status, 'active'),
+            isNull(roleAssignment.endedAt),
+            scope.group ? undefined : inArray(roleAssignment.companyId, scope.companyIds.length ? [...scope.companyIds] : ['00000000-0000-0000-0000-000000000000']),
+          ),
+        )
+        .orderBy(asc(userAccount.displayName))
+        .limit(300);
+      return rows.filter((r) => r.id !== principal.userId);
+    });
+  }
 
   async myDelegations(principal: Principal): Promise<DelegationDto[]> {
     return this.database.tx(principal.rls(), async (tx) => {

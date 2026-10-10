@@ -1,4 +1,5 @@
 import { p2En } from './p2-en';
+import { p3En } from './p3-en';
 
 /** English UI strings. ar.ts must provide exactly the same keys (checked by a test). */
 export const en = {
@@ -45,6 +46,11 @@ export const en = {
     myProfile: 'My profile',
     lookups: 'Master lists',
     documentCategories: 'Document categories',
+    tasks: 'Approvals',
+    notifications: 'Notifications',
+    schedules: 'Work schedules',
+    holidays: 'Holidays',
+    workflows: 'Approval routes',
     account: 'My account',
     logout: 'Sign out',
     administration: 'Administration',
@@ -260,6 +266,7 @@ export const en = {
     lastSeen: 'Last active',
   },
   ...p2En,
+  ...p3En,
 };
 
 export type Messages = typeof en;

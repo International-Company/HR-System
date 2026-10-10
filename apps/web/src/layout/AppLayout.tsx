@@ -2,6 +2,10 @@ import { AppShell, Avatar, Burger, Group, Menu, NavLink, ScrollArea, Text, Toolt
 import { useDisclosure, useLocalStorage } from '@mantine/hooks';
 import {
   IconBuildingSkyscraper,
+  IconCalendarEvent,
+  IconChecklist,
+  IconClockHour4,
+  IconRoute,
   IconFiles,
   IconId,
   IconListTree,
@@ -22,6 +26,7 @@ import { NavLink as RouterLink, Outlet, useLocation, useNavigate } from 'react-r
 import { useTranslation } from 'react-i18next';
 import type { ComponentType } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { NotificationBell } from '../pages/NotificationsPages';
 
 interface Item {
   to: string;
@@ -48,12 +53,16 @@ export function AppLayout() {
     ...(can('employee.profile.view') && session?.permissions.some((p) => p === 'employee.profile.create' || p === 'employee.lifecycle.manage' || p === 'employee.financial.view') || can('org.company.view')
       ? [{ to: '/employees', label: t('nav.employees'), icon: IconId, permission: 'employee.profile.view' }]
       : []),
+    { to: '/tasks', label: t('nav.tasks'), icon: IconChecklist },
   ].filter((i) => !('permission' in i) || !i.permission || can(i.permission));
   const admin: Item[] = [
     { to: '/companies', label: t('nav.companies'), icon: IconBuildingSkyscraper, permission: 'org.company.view' },
     { to: '/users', label: t('nav.users'), icon: IconUsers, permission: 'identity.user.view' },
     { to: '/roles', label: t('nav.roles'), icon: IconShieldCheck, permission: 'access.role.view' },
     { to: '/lookups', label: t('nav.lookups'), icon: IconListTree, permission: 'lookups.manage' },
+    { to: '/schedules', label: t('nav.schedules'), icon: IconClockHour4, permission: 'schedules.view' },
+    { to: '/holidays', label: t('nav.holidays'), icon: IconCalendarEvent, permission: 'schedules.view' },
+    { to: '/workflow-definitions', label: t('nav.workflows'), icon: IconRoute, permission: 'workflow.definitions.manage' },
     { to: '/document-categories', label: t('nav.documentCategories'), icon: IconFiles, permission: 'documents.categories.manage' },
     { to: '/settings', label: t('nav.settings'), icon: IconSettings, permission: 'settings.view' },
     { to: '/audit', label: t('nav.audit'), icon: IconListDetails, permission: 'audit.view' },
@@ -112,6 +121,8 @@ export function AppLayout() {
               {t('app.title')}
             </Text>
           </Group>
+          <Group gap="xs" wrap="nowrap">
+          <NotificationBell />
           <Menu position="bottom-end" width={220} withArrow>
             <Menu.Target>
               <UnstyledButton aria-label={t('nav.account')}>
@@ -136,6 +147,7 @@ export function AppLayout() {
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
+          </Group>
         </Group>
       </AppShell.Header>
 

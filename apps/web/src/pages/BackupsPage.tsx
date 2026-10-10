@@ -7,6 +7,7 @@ import type { BackupRunDto } from '@hrms/shared';
 import { get, post } from '../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { EmptyRow, ErrorAlert, PageHeader, StatusBadge, notifyError } from '../components/common';
+import { RestoreSection } from './RestoreSection';
 
 interface BackupStatus {
   configured: boolean;
@@ -62,9 +63,6 @@ export function BackupsPage() {
           {t('backups.notConfigured')}
         </Alert>
       )}
-      <Alert color="blue" variant="light" mb="md">
-        {t('backups.restoreNote')}
-      </Alert>
       <Paper>
         <Table.ScrollContainer minWidth={760}>
           <Table>
@@ -105,6 +103,7 @@ export function BackupsPage() {
           {d?.encrypted ? 'AES-256-GCM' : ''}
         </Text>
       </Group>
+      {can('system.backup.restore') && <RestoreSection backups={d?.runs ?? []} />}
     </>
   );
 }

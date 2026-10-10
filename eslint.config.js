@@ -7,6 +7,10 @@ export default tseslint.config(
   { ignores: ['**/dist/**', '**/node_modules/**', 'docs/**', '.pglite/**', '**/coverage/**'] },
   js.configs.recommended,
   {
+    files: ['apps/web/public/sw.js'],
+    languageOptions: { sourceType: 'script', globals: globals.serviceworker },
+  },
+  {
     files: ['**/*.cjs'],
     languageOptions: { sourceType: 'commonjs', globals: globals.node },
   },

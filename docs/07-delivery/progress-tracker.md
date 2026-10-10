@@ -10,7 +10,7 @@ Last updated: 2026-10-10
 | P0 Audit & planning | ✅ Approved (DL-015) | n/a | — |
 | P1 Foundation | 🔄 Implementation complete; deployment-dependent acceptance items pending | 74 API + 2 web tests passing locally (embedded PostgreSQL); real-PostgreSQL CI run pending | ❓ Owner: GitHub repository URL, Railway staging setup, Backblaze B2 bucket (guide: [railway-setup-guide-ar.md](../08-operations/railway-setup-guide-ar.md)) |
 | P2 Employees & documents | 🔄 Implementation complete (DL-021) | 101 API tests (26 new) + 2 web tests passing locally; live HTTP smoke test passed | ❓ Owner: Railway bucket for documents (guide 3.7); review of Phase 2 defaults (DL-022); staging walkthrough |
-| P3 Workflow, notifications, schedules, in-app restore | ⏳ | — | Q-07, Q-08, Q-15, Q-28 |
+| P3 Workflow, notifications, schedules, in-app restore | 🔄 Implementation complete (DL-026) | 118 API tests passing locally (+2 server-only in CI, incl. full restore); 2 web tests; live HTTP smoke test passed | ❓ First CI run; restore drill on staging after Backblaze is configured; review of defaults (DL-029) |
 | P4 Attendance | ⏳ | — | Q-04, Q-09, Q-17 |
 | P5 Leave | ⏳ | — | Q-28 |
 | P6 Contracts | ⏳ | — | Q-14, Q-22, Q-28 |
@@ -69,3 +69,14 @@ Last updated: 2026-10-10
 | Master lists | Job titles, employment categories, contract types, allowance and deduction types; group-wide or per company |
 | Documents | Configurable categories (types, size, sensitivity, employee visibility, replace/delete rules, expiry field, retention), encrypted storage, content-type sniffing, superseded versions on replace, soft delete/restore, profile photos; no expiry notifications (DOC-04) |
 | Web | Employees list with filters, new-employee form, profile with tabs (personal, employment & history, salary, bank, qualifications, documents, account), master lists and document categories admin, "My profile" for linked employees |
+
+## Phase 3 acceptance criteria (roadmap.md)
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Workflow routes by relationship and role, delegates, records every decision; self-approval blocked | ✅ | `workflow.test.ts` (7 tests) |
+| 2 | Notifications re-checked on open; personal only | ✅ | `notifications-restore.test.ts`; links open in-app pages that enforce access |
+| 3 | Push works (Chrome/Edge/Android, installed iOS PWA) | ✅ code + fake-sender tests / ⏳ real-device check on staging |
+| 4 | Schedule history "as of" a date; holidays group/company | ✅ | `calendar.test.ts` (5 tests) |
+| 5 | No e-mail is sent | ✅ | DisabledMailer test |
+| 6 | Restore: preview, MFA, failed checks leave production untouched, switch + undo, audit survives, only System Administrator | ✅ unit (PGlite) / ⏳ full swap test runs in CI and staging drill |

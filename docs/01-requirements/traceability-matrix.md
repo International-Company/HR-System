@@ -34,9 +34,9 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | REC-06 | recruitment, employees | P9 | I, D | `recruitment.convert` | ⏳ |
 | REC-07 | recruitment, documents | P9 | I, X | `recruitment.no-hardcoded-docs` | ⏳ |
 | REC-08 | recruitment | P9 | — | Pending Q-11 | ❓ |
-| SCH-01, SCH-02 | calendar | P3 | U, I, D | `schedule.*`, `schedule.as-of` | ⏳ |
-| SCH-03 | calendar | P3 | X | `exclusion.shift-roster` | ⏳ |
-| SCH-04 | calendar | P3 | I | `holidays.group-company` | ⏳ |
+| SCH-01, SCH-02 | calendar | P3 | U, I, D | `schedule.*`, `schedule.as-of` | ✅ P3 |
+| SCH-03 | calendar | P3 | X | `exclusion.shift-roster` | ✅ P3 |
+| SCH-04 | calendar | P3 | I | `holidays.group-company` | ✅ P3 |
 | ATT-01, ATT-02 | attendance | P4 | I, S | `punch.ip-allowlist`, NEG-06, proxy spoof spike | ⏳ |
 | ATT-03 | identity, attendance | P4 | I, E | `webauthn.*` | ⏳ |
 | ATT-04 | identity, attendance | P4 | I, S | `pin.*`, NEG-14 | ⏳ |
@@ -54,7 +54,7 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | ATT-16 | attendance | P4/P5 | U | `conflict-policies.*` | ⏳ |
 | ATT-17 | attendance | P4 | U | `holiday-work.not-overtime` | ⏳ |
 | LEV-01, LEV-02 | leave | P5 | U (golden cases), D | `leave.accrual.*`, `ledger.sum` | ⏳ |
-| LEV-03 | leave, workflow | P5 | I, A | `leave.chain`, NEG-10 | ⏳ |
+| LEV-03 | leave, workflow | P5 | I, A | `leave.chain`, NEG-10 | 🔄 route + engine done (P3); leave requests P5 |
 | LEV-04 | leave | P5 | X | `exclusion.half-day` | ⏳ |
 | LEV-05 | leave, attendance | P5 | U, I | `inday-permission.*` | ⏳ |
 | LEV-06 | leave | P5 | U, I | `leave.policies.*` | ⏳ |
@@ -89,11 +89,11 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | TRM-06 | separation | P8 | D | `separation.history-kept` | ⏳ |
 | TRM-07 | separation, employees | P8 | I, D | `rehire.same-number` | ⏳ |
 | TRM-08 | — | P8 | X | `exclusion.clearance` | ⏳ |
-| NOT-01, NOT-02 | notify | P3 | I, A, E | `notifications.*` | ⏳ |
-| NOT-03 | notify | P3 | E (manual on devices) | `push.*` | ⏳ |
+| NOT-01, NOT-02 | notify | P3 | I, A, E | `notifications.*` | ✅ P3 |
+| NOT-03 | notify | P3 | E (manual on devices) | `push.*` | ✅ P3 |
 | NOT-04 | notify + modules | P3–P8 | I | `events.<module>` | ⏳ |
-| NOT-05 | notify | P3 | I | `mail.disabled-no-send` | ⏳ |
-| NOT-06 | notify | P3 | X | `exclusion.sms-whatsapp` | ⏳ |
+| NOT-05 | notify | P3 | I | `mail.disabled-no-send` | ✅ P3 |
+| NOT-06 | notify | P3 | X | `exclusion.sms-whatsapp` | ✅ P3 |
 | RPT-01…RPT-04 | reporting | P11 | I, E | `reports.*` | ⏳ |
 | RPT-05 | reporting | P11 | A | NEG-04 | ⏳ |
 | SRCH-01, SRCH-02 | search | P11 | I, A | NEG-11 | ⏳ |
@@ -112,7 +112,7 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | AUD-01…AUD-03 | audit | P1 | I | `audit.*` | ✅ P1 |
 | AUD-04 | audit | P1 | D, S | NEG-09, `audit.hash-chain` | ✅ P1 |
 | BKP-01…BKP-05 | ops | P1/P12 | Restore drill | restore-log entries | ⏳ |
-| BKP-06 | ops, access, audit | P3 | I, A, D, E (staging switch + undo) | `restore.preview`, `restore.step-up-mfa`, `restore.audit-carry-forward`, `restore.undo`, `restore.permission-not-in-custom-roles` | ⏳ |
+| BKP-06 | ops, access, audit | P3 | I, A, D, E (staging switch + undo) | `restore.preview`, `restore.step-up-mfa`, `restore.audit-carry-forward`, `restore.undo`, `restore.permission-not-in-custom-roles` | ✅ P3 |
 | PRIV-01…PRIV-03 | employees, settings | TBD | — | Pending change-request approval | ❓ |
 | ARC-01…ARC-06 | ops/docs | P0–P1 | Doc, deploy | this package; staging deploy | 🔄 |
 | GOV-01…GOV-05 | delivery | P0+ | Doc | roadmap, tracker, decision log | ✅ drafted |

@@ -55,6 +55,11 @@ export class WorkflowController {
     await this.workflow.updateSteps(p, assertUuid(id, 'Workflow'), parse(workflowStepsInput, body));
   }
 
+  @Get('delegates')
+  delegates(@CurrentPrincipal() p: Principal) {
+    return this.workflow.delegateCandidates(p);
+  }
+
   @Get('delegations')
   delegations(@CurrentPrincipal() p: Principal) {
     return this.workflow.myDelegations(p);

@@ -1,5 +1,6 @@
 import type { Messages } from './en';
 import { p2Ar } from './p2-ar';
+import { p3Ar } from './p3-ar';
 
 /** نصوص الواجهة العربية — يجب أن تطابق مفاتيح en.ts تماماً. */
 export const ar: Messages = {
@@ -46,6 +47,11 @@ export const ar: Messages = {
     myProfile: 'ملفي الشخصي',
     lookups: 'القوائم الأساسية',
     documentCategories: 'تصنيفات المستندات',
+    tasks: 'الموافقات',
+    notifications: 'الإشعارات',
+    schedules: 'جداول الدوام',
+    holidays: 'العطل الرسمية',
+    workflows: 'مسارات الموافقة',
     account: 'حسابي',
     logout: 'تسجيل الخروج',
     administration: 'الإدارة',
@@ -261,4 +267,5 @@ export const ar: Messages = {
     lastSeen: 'آخر نشاط',
   },
   ...p2Ar,
+  ...p3Ar,
 };

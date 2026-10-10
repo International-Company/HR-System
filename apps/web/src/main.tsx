@@ -29,6 +29,12 @@ import { NewEmployeePage } from './pages/employees/NewEmployeePage';
 import { EmployeeProfilePage } from './pages/employees/EmployeeProfilePage';
 import { LookupsPage } from './pages/LookupsPage';
 import { DocumentCategoriesPage } from './pages/DocumentCategoriesPage';
+import { TasksPage } from './pages/TasksPage';
+import { NotificationsPage } from './pages/NotificationsPages';
+import { SchedulesPage } from './pages/SchedulesPage';
+import { HolidaysPage } from './pages/HolidaysPage';
+import { WorkflowDefinitionsPage } from './pages/WorkflowDefinitionsPage';
+import { registerServiceWorker } from './lib/push';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +65,11 @@ const router = createBrowserRouter([
       { path: 'employees/:id', element: <EmployeeProfilePage /> },
       { path: 'lookups', element: <LookupsPage /> },
       { path: 'document-categories', element: <DocumentCategoriesPage /> },
+      { path: 'tasks', element: <TasksPage /> },
+      { path: 'notifications', element: <NotificationsPage /> },
+      { path: 'schedules', element: <SchedulesPage /> },
+      { path: 'holidays', element: <HolidaysPage /> },
+      { path: 'workflow-definitions', element: <WorkflowDefinitionsPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
@@ -99,6 +110,9 @@ function Root() {
     </DirectionProvider>
   );
 }
+
+// Service worker for Web Push only (no offline caching of HR data).
+void registerServiceWorker();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

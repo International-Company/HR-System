@@ -18,7 +18,11 @@ RPO ≤ 24 h by default. The admin can enable more frequent backups (for example
 
 ## 3. In-app restore — design
 
-### 3.1 How it can work safely
+### 3.1 How it works (as implemented, DL-027)
+
+> Implementation note: instead of permanent blue/green slots and a control database, the system restores into a **scratch database**, verifies it, and on confirmation **renames** the databases. The previous database is kept as `<db>_pre_<timestamp>` (the most recent copy is retained; older ones are removed daily). The guarantees below are unchanged.
+
+### 3.1a Original design (superseded)
 
 The application cannot overwrite the database it is running on. So the PostgreSQL server hosts:
 
