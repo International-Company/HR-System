@@ -16,6 +16,7 @@ import { eq } from 'drizzle-orm';
 import { role, roleAssignment, userAccount } from '../src/db/schema.js';
 import { uuidv7 } from '../src/common/ids.js';
 import { LocalDirStorage, type StoragePort } from '../src/backup/storage.js';
+import type { PushSender } from '../src/notifications/notifications.service.js';
 
 export const TEST_PASSWORD = 'Correct-Horse-Battery-9';
 export const API = '/api/v1';
@@ -59,7 +60,12 @@ export function testEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv {
  *  - TEST_DATABASE_URL set (CI): a new database on a real PostgreSQL server.
  */
 export async function setup(
-  opts: { env?: Record<string, string>; backupStorage?: StoragePort | null; relaxMfa?: boolean } = {},
+  opts: {
+    env?: Record<string, string>;
+    backupStorage?: StoragePort | null;
+    relaxMfa?: boolean;
+    pushSender?: PushSender;
+  } = {},
 ): Promise<TestEnv> {
   let dropDb: (() => Promise<void>) | null = null;
   let env: NodeJS.ProcessEnv;
@@ -90,7 +96,14 @@ export async function setup(
   });
   const filesDir = mkdtempSync(join(tmpdir(), 'hrms-files-'));
   const app = await createApp(
-    { config, database, backupStorage: opts.backupStorage ?? null, fileStorage: new LocalDirStorage(filesDir) },
+    {
+      config,
+      database,
+      backupStorage: opts.backupStorage ?? null,
+      fileStorage: new LocalDirStorage(filesDir),
+      // Tests never contact real push services.
+      pushSender: opts.pushSender ?? { send: async () => 'ok' as const },
+    },
     { logger: false },
   );
   const server = app.getHttpServer();

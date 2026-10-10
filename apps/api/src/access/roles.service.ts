@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, eq, inArray } from 'drizzle-orm';
-import { PERMISSIONS, PERMISSION_BY_KEY, type RoleDto } from '@hrms/shared';
+import { PERMISSIONS, PERMISSION_BY_KEY, SYSTEM_ROLE_ONLY_PERMISSIONS, type RoleDto } from '@hrms/shared';
 import type { z } from 'zod';
 import type { roleCreateInput, roleUpdateInput } from '@hrms/shared';
 import { DATABASE } from '../common/tokens.js';
@@ -141,6 +141,10 @@ export class RolesService {
     const unknown = unique.filter((k) => !PERMISSION_BY_KEY.has(k));
     if (unknown.length) {
       throw ApiError.validation([{ path: 'permissions', message: `Unknown permissions: ${unknown.join(', ')}` }]);
+    }
+    const reserved = unique.filter((k) => SYSTEM_ROLE_ONLY_PERMISSIONS.includes(k));
+    if (reserved.length) {
+      throw ApiError.validation([{ path: 'permissions', message: `Reserved for the System Administrator role: ${reserved.join(', ')}` }]);
     }
     return unique.sort();
   }

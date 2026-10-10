@@ -89,12 +89,12 @@ export async function openDatabase(cfg: AppConfig): Promise<Database> {
     return fromPglite(client, cfg.DB_APP_ROLE);
   }
   const ownerUrl = cfg.DATABASE_URL!;
-  const ownerPool = new pg.Pool({ connectionString: ownerUrl, max: 2 });
+  const ownerPool = guard(new pg.Pool({ connectionString: ownerUrl, max: 2 }));
   if (cfg.DB_APP_PASSWORD) {
     const appUrl = new URL(ownerUrl);
     appUrl.username = cfg.DB_APP_ROLE;
     appUrl.password = cfg.DB_APP_PASSWORD;
-    const appPool = new pg.Pool({ connectionString: appUrl.toString(), max: cfg.DB_POOL_MAX });
+    const appPool = guard(new pg.Pool({ connectionString: appUrl.toString(), max: cfg.DB_POOL_MAX }));
     return new Database(
       drizzleNodePg({ client: appPool, schema }) as unknown as Db,
       poolRunner(ownerPool),
@@ -106,7 +106,7 @@ export async function openDatabase(cfg: AppConfig): Promise<Database> {
     );
   }
   // Development fallback: owner connection + SET LOCAL ROLE.
-  const pool = new pg.Pool({ connectionString: ownerUrl, max: cfg.DB_POOL_MAX });
+  const pool = guard(new pg.Pool({ connectionString: ownerUrl, max: cfg.DB_POOL_MAX }));
   return new Database(
     drizzleNodePg({ client: pool, schema }) as unknown as Db,
     poolRunner(pool),
@@ -116,6 +116,18 @@ export async function openDatabase(cfg: AppConfig): Promise<Database> {
       await ownerPool.end();
     },
   );
+}
+
+/**
+ * Idle connections can be terminated by the server (restarts, failover, the in-app restore
+ * switch). Without a listener node-postgres would crash the process; the pool simply opens
+ * a fresh connection on the next query.
+ */
+function guard(pool: pg.Pool): pg.Pool {
+  pool.on('error', (err) => {
+    console.error(`Database connection dropped: ${err.message}`);
+  });
+  return pool;
 }
 
 export function fromPglite(client: PGlite, appRole: string): Database {

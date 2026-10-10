@@ -16,6 +16,7 @@ import {
   pgView,
   primaryKey,
   text,
+  time,
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
@@ -415,6 +416,182 @@ export const documentLink = pgTable(
   (t) => [primaryKey({ columns: [t.documentId, t.entityType, t.entityId] })],
 );
 
+// --- Phase 3: workflow, notifications, calendar, restore -----------------------------
+
+export const workflowDefinition = pgTable('workflow_definition', {
+  id: uuid('id').primaryKey(),
+  key: text('key').notNull(),
+  subjectType: text('subject_type').notNull(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  locked: boolean('locked').notNull().default(false),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+  updatedBy: uuid('updated_by'),
+  version: integer('version').notNull().default(1),
+});
+
+export const workflowStep = pgTable('workflow_step', {
+  id: uuid('id').primaryKey(),
+  definitionId: uuid('definition_id').notNull(),
+  seq: integer('seq').notNull(),
+  approverRule: text('approver_rule').$type<'direct_manager' | 'role_in_company' | 'specific_user'>().notNull(),
+  roleKey: text('role_key'),
+  userId: uuid('user_id'),
+  skipIfUnresolved: boolean('skip_if_unresolved').notNull().default(true),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+});
+
+export const workflowInstance = pgTable('workflow_instance', {
+  id: uuid('id').primaryKey(),
+  definitionId: uuid('definition_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  subjectType: text('subject_type').notNull(),
+  subjectId: uuid('subject_id').notNull(),
+  subjectEmployeeId: uuid('subject_employee_id'),
+  requesterUserId: uuid('requester_user_id').notNull(),
+  summary: jsonb('summary').$type<Record<string, unknown>>().notNull(),
+  status: text('status').$type<'pending' | 'approved' | 'rejected' | 'cancelled'>().notNull().default('pending'),
+  currentSeq: integer('current_seq').notNull().default(1),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  completedAt: tstz('completed_at'),
+});
+
+export const workflowTask = pgTable('workflow_task', {
+  id: uuid('id').primaryKey(),
+  instanceId: uuid('instance_id').notNull(),
+  seq: integer('seq').notNull(),
+  assigneeUserId: uuid('assignee_user_id'),
+  delegatedFromUserId: uuid('delegated_from_user_id'),
+  status: text('status').$type<'pending' | 'approved' | 'rejected' | 'skipped' | 'cancelled'>().notNull().default('pending'),
+  decidedAt: tstz('decided_at'),
+  decidedBy: uuid('decided_by'),
+  comment: text('comment'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+});
+
+export const workflowDelegation = pgTable('workflow_delegation', {
+  id: uuid('id').primaryKey(),
+  fromUserId: uuid('from_user_id').notNull(),
+  toUserId: uuid('to_user_id').notNull(),
+  validFrom: date('valid_from', { mode: 'string' }).notNull(),
+  validTo: date('valid_to', { mode: 'string' }).notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  revokedAt: tstz('revoked_at'),
+});
+
+export const notification = pgTable('notification', {
+  id: uuid('id').primaryKey(),
+  companyId: uuid('company_id'),
+  eventType: text('event_type').notNull(),
+  titleAr: text('title_ar').notNull(),
+  titleEn: text('title_en').notNull(),
+  bodyAr: text('body_ar').notNull().default(''),
+  bodyEn: text('body_en').notNull().default(''),
+  link: text('link'),
+  entityType: text('entity_type'),
+  entityId: uuid('entity_id'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+});
+
+export const notificationRecipient = pgTable(
+  'notification_recipient',
+  {
+    notificationId: uuid('notification_id').notNull(),
+    userId: uuid('user_id').notNull(),
+    readAt: tstz('read_at'),
+    pushSentAt: tstz('push_sent_at'),
+  },
+  (t) => [primaryKey({ columns: [t.notificationId, t.userId] })],
+);
+
+export const pushSubscription = pgTable('push_subscription', {
+  id: uuid('id').primaryKey(),
+  userId: uuid('user_id').notNull(),
+  endpoint: text('endpoint').notNull(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  userAgent: text('user_agent'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  lastSuccessAt: tstz('last_success_at'),
+  failureCount: integer('failure_count').notNull().default(0),
+  revokedAt: tstz('revoked_at'),
+});
+
+export const systemSecret = pgTable('system_secret', {
+  key: text('key').primaryKey(),
+  valueEnc: bytea('value_enc').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+});
+
+export const workSchedule = pgTable('work_schedule', {
+  id: uuid('id').primaryKey(),
+  companyId: uuid('company_id'),
+  code: citext('code').notNull(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  graceInMinutes: integer('grace_in_minutes').notNull().default(0),
+  graceOutMinutes: integer('grace_out_minutes').notNull().default(0),
+  status: text('status').$type<'active' | 'inactive'>().notNull().default('active'),
+  ...audited,
+});
+
+export const scheduleDay = pgTable(
+  'schedule_day',
+  {
+    scheduleId: uuid('schedule_id').notNull(),
+    isoWeekday: integer('iso_weekday').notNull(),
+    isWorkday: boolean('is_workday').notNull(),
+    startTime: time('start_time'),
+    endTime: time('end_time'),
+    breaks: jsonb('breaks').$type<{ startTime: string; endTime: string; paid: boolean }[]>().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.scheduleId, t.isoWeekday] })],
+);
+
+export const scheduleAssignment = pgTable('schedule_assignment', {
+  id: uuid('id').primaryKey(),
+  scheduleId: uuid('schedule_id').notNull(),
+  targetType: text('target_type').$type<'company' | 'department' | 'employee'>().notNull(),
+  companyId: uuid('company_id').notNull(),
+  departmentId: uuid('department_id'),
+  employeeId: uuid('employee_id'),
+  validFrom: date('valid_from', { mode: 'string' }).notNull(),
+  validTo: date('valid_to', { mode: 'string' }),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+  endedAt: tstz('ended_at'),
+  endedBy: uuid('ended_by'),
+});
+
+export const holiday = pgTable('holiday', {
+  id: uuid('id').primaryKey(),
+  companyId: uuid('company_id'),
+  date: date('date', { mode: 'string' }).notNull(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+});
+
+export const restoreRequest = pgTable('restore_request', {
+  id: uuid('id').primaryKey(),
+  backupRunId: uuid('backup_run_id').notNull(),
+  status: text('status')
+    .$type<'awaiting_approval' | 'requested' | 'preparing' | 'ready' | 'switching' | 'completed' | 'failed' | 'cancelled'>()
+    .notNull(),
+  requestedBy: uuid('requested_by').notNull(),
+  approvedBy: uuid('approved_by'),
+  switchConfirmedBy: uuid('switch_confirmed_by'),
+  scratchDatabase: text('scratch_database'),
+  preRestoreBackupId: uuid('pre_restore_backup_id'),
+  details: jsonb('details').$type<Record<string, unknown>>().notNull(),
+  error: text('error'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+});
+
 export const schema = {
   companyGroup,
   company,
@@ -445,4 +622,18 @@ export const schema = {
   storedObject,
   document,
   documentLink,
+  workflowDefinition,
+  workflowStep,
+  workflowInstance,
+  workflowTask,
+  workflowDelegation,
+  notification,
+  notificationRecipient,
+  pushSubscription,
+  systemSecret,
+  workSchedule,
+  scheduleDay,
+  scheduleAssignment,
+  holiday,
+  restoreRequest,
 };

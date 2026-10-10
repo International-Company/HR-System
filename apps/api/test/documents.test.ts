@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { API, grant, setup, type Session, type TestEnv } from './helpers.js';
@@ -158,10 +159,11 @@ describe('documents (DOC-01..06)', () => {
     expect(row!.allowDelete).toBe(false);
   });
 
-  it('no document-expiry notification exists (DOC-04 exclusion)', async () => {
-    const tables = await env.database.owner.query<{ table_name: string }>(
-      `select table_name from information_schema.tables where table_schema = 'public' and table_name ilike '%notif%'`,
-    );
-    expect(tables).toEqual([]);
+  it('no document-expiry notification exists anywhere in the code (DOC-04 exclusion)', () => {
+    const srcDir = fileURLToPath(new URL('../src', import.meta.url));
+    const offenders = walk(srcDir)
+      .filter((f) => f.endsWith('.ts'))
+      .filter((f) => /eventType:\s*[`'"][^`'"]*expir/i.test(readFileSync(f, 'utf8')));
+    expect(offenders).toEqual([]);
   });
 });

@@ -5,3 +5,4 @@ export * from './modules.js';
 export * from './schemas.js';
 export * from './api-types.js';
 export * from './employees.js';
+export * from './workflow-calendar.js';

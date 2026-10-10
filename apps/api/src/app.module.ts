@@ -31,12 +31,20 @@ import { EmployeesService } from './employees/employees.service.js';
 import { EmployeesController } from './employees/employees.controller.js';
 import { DocumentsService } from './documents/documents.service.js';
 import { DocumentsController } from './documents/documents.controller.js';
+import { NotificationsService, PUSH_SENDER, WebPushSender, type PushSender } from './notifications/notifications.service.js';
+import { NotificationsController } from './notifications/notifications.controller.js';
+import { WorkflowService } from './workflow/workflow.service.js';
+import { WorkflowController } from './workflow/workflow.controller.js';
+import { CalendarService } from './calendar/calendar.service.js';
+import { CalendarController } from './calendar/calendar.controller.js';
+import { RestoreService } from './backup/restore.service.js';
 
 export interface AppDeps {
   config: AppConfig;
   database: Database;
   backupStorage?: StoragePort | null;
   fileStorage?: StoragePort | null;
+  pushSender?: PushSender;
 }
 
 /** Shared providers (used by the web app and the worker). */
@@ -53,6 +61,7 @@ export function coreProviders(deps: AppDeps) {
       provide: FILE_STORAGE,
       useValue: deps.fileStorage !== undefined ? deps.fileStorage : filesStorageFromConfig(deps.config),
     },
+    { provide: PUSH_SENDER, useValue: deps.pushSender ?? new WebPushSender() },
     AuditService,
     PolicyService,
     SettingsService,
@@ -60,6 +69,9 @@ export function coreProviders(deps: AppDeps) {
     PasswordService,
     SessionService,
     BackupService,
+    NotificationsService,
+    RestoreService,
+    WorkflowService,
   ];
 }
 
@@ -80,6 +92,9 @@ export class AppModule {
         LookupsController,
         EmployeesController,
         DocumentsController,
+        NotificationsController,
+        WorkflowController,
+        CalendarController,
       ],
       providers: [
         ...coreProviders(deps),
@@ -90,6 +105,7 @@ export class AppModule {
         LookupsService,
         EmployeesService,
         DocumentsService,
+        CalendarService,
         { provide: APP_GUARD, useClass: AuthGuard },
         { provide: APP_FILTER, useClass: ProblemFilter },
       ],

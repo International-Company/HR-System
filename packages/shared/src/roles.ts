@@ -52,6 +52,10 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'documents.upload',
       'documents.delete',
       'documents.view.restricted',
+      'workflow.instances.view',
+      'schedules.view',
+      'schedules.manage',
+      'holidays.manage',
     ],
   },
   {
@@ -67,6 +71,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'employee.profile.view',
       'employee.financial.view',
       'documents.view',
+      'workflow.instances.view',
+      'schedules.view',
     ],
   },
   {
@@ -79,6 +85,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'org.location.view',
       'employee.profile.view',
       'documents.view',
+      'workflow.instances.view',
+      'schedules.view',
     ],
   },
   {
@@ -110,6 +118,13 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
     key: 'timekeeping',
     name: { ar: 'مسؤول الحضور والانصراف', en: 'Attendance / Timekeeping Officer' },
     defaultScope: 'COMPANY',
-    permissions: ['org.company.view', 'org.department.view', 'org.location.view', 'employee.profile.view'],
+    permissions: [
+      'org.company.view',
+      'org.department.view',
+      'org.location.view',
+      'employee.profile.view',
+      'schedules.view',
+      'schedules.manage',
+    ],
   },
 ];

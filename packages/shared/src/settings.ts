@@ -52,6 +52,10 @@ const employeeNumberSchema = z.object({
     .regex(/^[A-Za-z0-9-]*$/),
   padding: z.number().int().min(1).max(10),
 });
+const restoreSchema = z.object({
+  /** When true and another active System Administrator exists, a second one must approve. */
+  requireSecondApprover: z.boolean(),
+});
 const documentLimitsSchema = z.object({
   maxUploadMb: z.number().int().min(1).max(50),
 });
@@ -139,6 +143,13 @@ export const SETTINGS = {
     default: { requiredForRoles: ['system_admin', 'hr', 'finance', 'senior_management'] },
     companyOverride: false,
     permission: 'settings.manage.security',
+    public: false,
+  },
+  'backup.restore': {
+    schema: restoreSchema,
+    default: { requireSecondApprover: true },
+    companyOverride: false,
+    permission: 'settings.manage.backup',
     public: false,
   },
   'backup.policy': {

@@ -8,6 +8,8 @@ import { openDatabase } from './db/database.js';
 import { WorkerModule } from './app.module.js';
 import { BackupService } from './backup/backup.service.js';
 import { AuditService } from './audit/audit.service.js';
+import { NotificationsService } from './notifications/notifications.service.js';
+import { RestoreService } from './backup/restore.service.js';
 import { assertNoSeedAccounts } from './provisioning.js';
 
 /**
@@ -24,6 +26,8 @@ async function main() {
   const log = new Logger('Worker');
   const backups = ctx.get(BackupService);
   const audit = ctx.get(AuditService);
+  const notifications = ctx.get(NotificationsService);
+  const restores = ctx.get(RestoreService);
 
   const guarded = (name: string, fn: () => Promise<void>) => async () => {
     try {
@@ -34,6 +38,19 @@ async function main() {
   };
 
   const jobs = [
+    // Web Push delivery of new notifications, every 15 seconds.
+    new Cron('*/15 * * * * *', { protect: true }, guarded('push', async () => {
+      await notifications.dispatchPush();
+    })),
+    // In-app restore: prepare requested restores / perform confirmed switches (BKP-06).
+    new Cron('*/15 * * * * *', { protect: true }, guarded('restore', async () => {
+      await restores.processNext();
+    })),
+    // Keep only the most recent pre-restore database copy, daily 05:00 UTC.
+    new Cron('0 5 * * *', { protect: true }, guarded('restore-prune', async () => {
+      const dropped = await restores.pruneOldCopies();
+      if (dropped.length) log.log(`Dropped old pre-restore copies: ${dropped.join(', ')}`);
+    })),
     // Backup requests (manual, scheduled, restore tests) are picked up every minute.
     new Cron('* * * * *', { protect: true }, guarded('backups', async () => {
       await backups.ensureScheduled();

@@ -149,6 +149,17 @@ export const PERMISSIONS = [
     groupOnly: true,
   }),
 
+  // Workflow (Phase 3). Deciding one's own tasks needs no permission: tasks are personal.
+  p('workflow.instances.view', 'workflow', 'View approval requests of the company', 'عرض طلبات الموافقة في الشركة'),
+  p('workflow.definitions.manage', 'workflow', 'Configure approval workflows', 'ضبط مسارات الموافقة', {
+    groupOnly: true,
+  }),
+
+  // Calendar (Phase 3)
+  p('schedules.view', 'calendar', 'View work schedules', 'عرض جداول الدوام'),
+  p('schedules.manage', 'calendar', 'Manage and assign work schedules', 'إدارة جداول الدوام وإسنادها'),
+  p('holidays.manage', 'calendar', 'Manage official holidays', 'إدارة العطل الرسمية'),
+
   // System backup
   p('system.backup.view', 'system', 'View backups', 'عرض النسخ الاحتياطية', {
     sensitivity: 'security',
@@ -158,7 +169,15 @@ export const PERMISSIONS = [
     sensitivity: 'security',
     groupOnly: true,
   }),
+  // BKP-06: restoring replaces ALL data. System Administrator role only; refused in custom roles.
+  p('system.backup.restore', 'system', 'Restore the system from a backup', 'استعادة النظام من نسخة احتياطية', {
+    sensitivity: 'security',
+    groupOnly: true,
+  }),
 ] as const satisfies readonly PermissionDef[];
+
+/** Permissions that can never be placed in custom roles. */
+export const SYSTEM_ROLE_ONLY_PERMISSIONS: readonly string[] = ['system.backup.restore'];
 
 export type PermissionKey = (typeof PERMISSIONS)[number]['key'];
 

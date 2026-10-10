@@ -54,7 +54,7 @@ export function pgEnv(url: string, database?: string): NodeJS.ProcessEnv {
   };
 }
 
-function run(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<void> {
+export function run(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { env, stdio: ['ignore', 'ignore', 'pipe'] });
     let stderr = '';
@@ -95,6 +95,17 @@ export class BackupService {
     @Inject(AuditService) private readonly audit: AuditService,
     @Inject(SettingsService) private readonly settings: SettingsService,
   ) {}
+
+  /** Decrypting stream factory for this deployment's backup key. */
+  decryptStream(): DecryptStream {
+    return new DecryptStream(
+      new Map([[this.config.BACKUP_ENCRYPTION_KEY_ID, keyMaterial(this.config.BACKUP_ENCRYPTION_KEY!, 'backup-encryption')]]),
+    );
+  }
+
+  get storagePort(): StoragePort | null {
+    return this.storage;
+  }
 
   get configured(): boolean {
     return !!(this.storage && this.config.BACKUP_ENCRYPTION_KEY && this.config.DATABASE_URL);
@@ -189,7 +200,7 @@ export class BackupService {
     return true;
   }
 
-  private async finish(
+  async finish(
     runRow: RunRow,
     status: 'succeeded' | 'failed',
     result: { objectKey?: string; sizeBytes?: number; sha256?: Buffer; schemaVersion?: string | null; details?: Record<string, unknown> },
@@ -220,9 +231,11 @@ export class BackupService {
     });
   }
 
-  private async executeBackup(runRow: RunRow) {
+  /** Run a backup for an existing backup_run row (also used before a restore switch). */
+  async executeBackup(runRow: RunRow) {
     const url = this.config.DATABASE_URL!;
     const schemaVersion = await currentSchemaVersion(this.database.owner);
+    const [maxAudit] = await this.database.owner.query<{ m: string | null }>('select max(id)::text as m from audit_event');
     const stamp = runRow.createdAt.toISOString().replace(/[:.]/g, '-');
     const day = runRow.createdAt.toISOString().slice(0, 10).replace(/-/g, '/');
     const objectKey = `${this.config.BACKUP_S3_PREFIX}/db/${day}/${stamp}-${runRow.kind}-${runRow.id}.dump.enc`;
@@ -264,7 +277,13 @@ export class BackupService {
       Readable.from([Buffer.from(JSON.stringify(manifest, null, 2))]),
       'application/json',
     );
-    return { objectKey, sizeBytes: enc.bytesOut, sha256: sha, schemaVersion, details: { destination: this.storage!.description } };
+    return {
+      objectKey,
+      sizeBytes: enc.bytesOut,
+      sha256: sha,
+      schemaVersion,
+      details: { destination: this.storage!.description, auditMaxIdAtStart: maxAudit?.m ?? null },
+    };
   }
 
   /**
