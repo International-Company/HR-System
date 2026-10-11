@@ -1,0 +1,41 @@
+name: ZAP baseline scan
+
+# Passive OWASP ZAP baseline scan (spider + passive rules, no attacks) of a deployed environment.
+# Manual only. Run it only while the repository is private: logs and artifacts of a public
+# repository are visible to everyone.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Base URL to scan (staging or pilot)
+        required: true
+        default: https://hrmsweb-production-3699.up.railway.app
+
+permissions:
+  contents: read
+
+jobs:
+  zap:
+    name: ZAP baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Refuse to publish results from a public repository
+        if: ${{ !github.event.repository.private }}
+        run: |
+          echo "The repository is public; make it private before scanning." >&2
+          exit 1
+      - name: Baseline scan
+        env:
+          TARGET: ${{ inputs.target }}
+        run: |
+          case "$TARGET" in https://*) ;; *) echo "Target must be an https URL" >&2; exit 1 ;; esac
+          mkdir -p zap && chmod 777 zap
+          docker run --rm -v "$PWD/zap:/zap/wrk" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t "$TARGET" -m 5 -I -r report.html -J report.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: zap-report
+          path: zap/
+          retention-days: 30
