@@ -116,7 +116,7 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | PRIV-01…PRIV-03 | employees, settings | TBD | — | Pending change-request approval | ❓ |
 | ARC-01…ARC-06 | ops/docs | P0–P1 | Doc, deploy | this package; staging deploy | 🔄 |
 | GOV-01…GOV-05 | delivery | P0+ | Doc | roadmap, tracker, decision log | ✅ drafted |
-| QA-01…QA-05 | quality | P1+ | CI gates | testing-strategy.md; `route-coverage.test.ts`, `security-fixes.test.ts` | 🔄 (CI workflow pending GitHub Actions) |
+| QA-01…QA-05 | quality | P1+ | CI gates | `.github/workflows/ci.yml` (green 2026-10-11); `route-coverage.test.ts`, `security-fixes.test.ts` | ✅ |
 | QA-06 | quality | P13 | UAT | pilot-uat-plan.md | ⏳ |
 | OPS-01…OPS-03 | ops | P0/P14 | Doc | deployment + cost docs | ✅ drafted |
 | UX-01…UX-04 | web | P1+ | E, a11y scan, owner review | labels scan (P12), RTL/LTR in every phase | 🔄 (screen-reader check in P13) |
