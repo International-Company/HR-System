@@ -40,6 +40,7 @@ import { PayrollPage, PayrollRunPage, PayslipPage, PayslipsPage } from './pages/
 import { SeparationDetailPage, SeparationsPage } from './pages/separation/SeparationPages';
 import { ApplicationPage, RecruitmentPage, VacancyPage } from './pages/recruitment/RecruitmentPages';
 import { EvaluationPage } from './pages/evaluation/EvaluationPages';
+import { ReportsPage } from './pages/reports/ReportsPage';
 import { registerServiceWorker } from './lib/push';
 
 const queryClient = new QueryClient({
@@ -94,6 +95,7 @@ const router = createBrowserRouter([
       { path: 'recruitment/vacancies/:id', element: <VacancyPage /> },
       { path: 'recruitment/applications/:id', element: <ApplicationPage /> },
       { path: 'evaluation', element: <EvaluationPage /> },
+      { path: 'reports', element: <ReportsPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

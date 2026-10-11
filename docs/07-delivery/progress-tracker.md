@@ -18,7 +18,7 @@ Last updated: 2026-10-10
 | P8 Separation & rehire | 🔄 Implementation complete (DL-049) | 208 API tests passing locally (+2 server-only in CI) incl. 5 separation tests; migration 0008 applied to an existing database | ❓ Review of defaults (DL-051); end-of-service method depends on Q-28 |
 | P9 Recruitment | 🔄 Implementation complete (DL-053) | 214 API tests passing locally (+2 server-only in CI) incl. 6 recruitment tests; migration 0009 applied to an existing database | ❓ Q-11 public portal (DL-054); retention of candidate data (C-20); optional malware scanning for candidate uploads (security plan) |
 | P10 Commitment evaluation | 🔄 Implementation complete (DL-056) | 227 API tests passing locally (+2 server-only in CI) incl. 6 golden cases and 6 integration tests; migration 0010 applied to an existing database | ❓ Review of weights and bands (DL-057); works-council consultation if required in the member state (Q-28) |
-| P11 Reports, search, dashboards | ⏳ | — | — |
+| P11 Reports, search, dashboards | 🔄 Implementation complete (DL-058) | 234 API tests passing locally (+2 server-only in CI) incl. 7 report/search/dashboard tests; migration 0011 applied to an existing database | ❓ Review of report catalogue and default dashboards with HR |
 | P12 Hardening | ⏳ | — | — |
 | P13 Pilot / UAT | ⏳ | — | Q-23; retention periods (C-20); GDPR owner items |
 | P14 Release | ⏳ | — | Owner approval; Railway Pro plan confirmation |
@@ -214,3 +214,19 @@ Last updated: 2026-10-10
 | Visibility | HR/managers by company or department; employees see their own final results when allowed |
 | Payroll link | Optional band bonus added to payroll for final monthly results |
 | Web | Commitment evaluation page (calculate, finalise, recalculate with reason, component bars), Commitment tab in the profile, evaluation settings (weights, bands, period, visibility, salary impact) |
+
+## Phase 11 acceptance criteria (roadmap.md)
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | NEG-04 (report for another company) and NEG-11 (search across companies) pass | ✅ | `reports.test.ts` |
+| 2 | Exports are audited and formula-injection-safe | ✅ | `reports.test.ts` (audit event; `'=` prefix in CSV; values never written as formulas) |
+| 3 | Scheduled reports deliver to the notification centre | ✅ | `reports.test.ts` (file, notification, owner only) |
+
+## Phase 11 deliverables
+
+| Area | Delivered |
+|---|---|
+| Reports | Builder (dataset, columns, filters), 12 datasets covering the RPT-04 catalogue, saved reports, Excel/CSV export, print/PDF view, scheduled in-app delivery, delivered files |
+| Search | Header search across employees, contracts, candidates and vacancies, within scope |
+| Dashboards | Widget catalogue (my attendance, my leave, my approvals, headcount, attendance today, on leave today, pending approvals, contracts ending, open vacancies, payroll status, system health); layouts per role in Settings |

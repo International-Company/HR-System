@@ -94,10 +94,10 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | NOT-04 | notify + modules | P3–P8 | I | `events.<module>` | ⏳ |
 | NOT-05 | notify | P3 | I | `mail.disabled-no-send` | ✅ P3 |
 | NOT-06 | notify | P3 | X | `exclusion.sms-whatsapp` | ✅ P3 |
-| RPT-01…RPT-04 | reporting | P11 | I, E | `reports.*` | ⏳ |
-| RPT-05 | reporting | P11 | A | NEG-04 | ⏳ |
-| SRCH-01, SRCH-02 | search | P11 | I, A | NEG-11 | ⏳ |
-| DASH-01, DASH-02 | dashboards | P11 | I, E | `dashboards.*` | ⏳ |
+| RPT-01…RPT-04 | reporting | P11 | I, E | `reports.*` | ✅ `reports.test.ts` |
+| RPT-05 | reporting | P11 | A | NEG-04 | ✅ `reports.test.ts` (NEG-04, department scope, hidden fields) |
+| SRCH-01, SRCH-02 | search | P11 | I, A | NEG-11 | ✅ `reports.test.ts` (NEG-11) |
+| DASH-01, DASH-02 | dashboards | P11 | I, E | `dashboards.*` | ✅ `reports.test.ts` (role widgets, admin layouts) |
 | SET-01, SET-02 | settings | P1+ | I, A | `settings.*` | ✅ P1 |
 | I18N-01, I18N-02 | web | P1 | E (AR+EN snapshots) | `i18n.*` | ✅ P1 |
 | I18N-03 | settings | P1 | U | `time.zone-format` | ✅ P1 |
