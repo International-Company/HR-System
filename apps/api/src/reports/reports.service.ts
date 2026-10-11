@@ -18,6 +18,8 @@ import { localDate } from '../attendance/time.js';
 import { RUNNERS, type Row } from './datasets.js';
 
 const MAX_ROWS = 5000;
+/** Byte-order mark so spreadsheet programs read the CSV as UTF-8. */
+const BOM = String.fromCharCode(0xfeff);
 const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 /** Text that a spreadsheet would read as a formula is prefixed so it stays text. */
@@ -121,7 +123,7 @@ export class ReportsService {
         return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
       };
       const lines = [result.columns.map((c) => esc(label(c))).join(','), ...result.rows.map((r) => result.columns.map((c) => esc(r[c.key] ?? null)).join(','))];
-      return { body: Buffer.from(`﻿${lines.join('\r\n')}\r\n`, 'utf8'), mime: 'text/csv; charset=utf-8', fileName: `${base}.csv` };
+      return { body: Buffer.from(`${BOM}${lines.join('\r\n')}\r\n`, 'utf8'), mime: 'text/csv; charset=utf-8', fileName: `${base}.csv` };
     }
     const wb = new ExcelJS.Workbook();
     wb.creator = 'HRMS';
