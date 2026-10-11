@@ -20,7 +20,7 @@ Last updated: 2026-10-11
 | P10 Commitment evaluation | 🔄 Implementation complete (DL-056) | 227 API tests passing locally (+2 server-only in CI) incl. 6 golden cases and 6 integration tests; migration 0010 applied to an existing database | ❓ Review of weights and bands (DL-057); works-council consultation if required in the member state (Q-28) |
 | P11 Reports, search, dashboards | ✅ Merged and deployed (DL-058) | 234 API tests passing locally (+2 server-only in CI) incl. 7 report/search/dashboard tests; migration 0011 applied to an existing database | ❓ Review of report catalogue and default dashboards with HR |
 | P12 Hardening | 🔄 Implementation complete (DL-062) | 248 API tests passing locally (+2 server-only in CI) incl. route sweep, 9 security regression tests and performance baselines; migration 0012 | ❓ Restore drill needs Backblaze (DL-068); owner acceptance of residual risks R1–R6 (DL-067) |
-| P13 Pilot / UAT | ⏳ | — | Q-23; retention periods (C-20); GDPR owner items |
+| P13 Pilot / UAT | ⏳ Prepared: [test scripts](../06-quality/pilot-test-scripts-ar.md), [onboarding checklist](../06-quality/pilot-onboarding-checklist-ar.md), defect issue form | CI green on GitHub Actions (DL-069) | ❓ Owner approval to start; Q-23, Q-28; retention periods (C-20); GDPR owner items; private repository |
 | P14 Release | ⏳ | — | Owner approval; Railway Pro plan confirmation |
 
 ## Phase 1 acceptance criteria (roadmap.md)

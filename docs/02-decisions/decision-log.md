@@ -79,6 +79,8 @@ Once a decision is approved, architecture-level decisions also get an ADR file i
 | DL-066 | 2026-10-11 | Push subscriptions accepted only for the browsers' push services (Google, Mozilla, Apple, Microsoft), checked on subscribe and before sending | Implemented | Prevents requests from the worker to internal hosts | Notifications | — |
 | DL-067 | 2026-10-11 | Accepted residual risks R1–R6 (security-review-p12.md §2): admin-created linked account (audited), in-memory login limiter (single instance), no own counter for password change/restore step-up, salary in contract text, scheduled reports run as owner, no malware scanning | Proposed (owner to accept) | Low risk; mitigations listed | Owner review | — |
 | DL-068 | 2026-10-11 | ZAP scan, external penetration test and the restore drill are deferred: no local tools (Q-25), off-site backup (Backblaze) not yet configured | Proposed (owner) | Owner's environment constraints | P12 criterion "restore drill meets RPO/RTO" open until Backblaze is set up | — |
+| DL-069 | 2026-10-11 | CI runs on GitHub Actions for every push and pull request (typecheck, lint, build, tests on embedded PostgreSQL and real PostgreSQL 17/18 including the backup/restore server test, secret scan, container build). Six secret-scan hits reviewed as test fixtures and recorded by fingerprint in `.gitleaksignore` | Implemented | QA-01…QA-05; first green run 2026-10-11 | All future changes gated by CI | — |
+| DL-070 | 2026-10-11 | The OWASP ZAP baseline scan is a manual workflow that refuses to run while the repository is public (logs and reports would be public) | Implemented | Avoid publishing scan results | Run after the repository is made private (owner) | — |
 
 ## How to add an entry
 
