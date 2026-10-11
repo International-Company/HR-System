@@ -7,6 +7,8 @@ import {
   IconClockHour4,
   IconFingerprint,
   IconBeach,
+  IconFileCertificate,
+  IconTemplate,
   IconCalendarStats,
   IconClipboardCheck,
   IconWifi,
@@ -67,6 +69,7 @@ export function AppLayout() {
     ...(can('leave.request.manage') || can('leave.types.manage') || (can('leave.request.view') && !!session?.roles.some((r) => r.scopeType !== 'SELF'))
       ? [{ to: '/leave/manage', label: t('nav.leaveManage'), icon: IconCalendarStats }]
       : []),
+    ...(can('contracts.view') || can('contracts.manage') || can('contracts.sign') ? [{ to: '/contracts', label: t('nav.contracts'), icon: IconFileCertificate }] : []),
     { to: '/tasks', label: t('nav.tasks'), icon: IconChecklist },
   ].filter((i) => !('permission' in i) || !i.permission || can(i.permission));
   const admin: Item[] = [
@@ -80,6 +83,7 @@ export function AppLayout() {
       ? [{ to: '/attendance/admin', label: t('nav.attendanceAdmin'), icon: IconWifi }]
       : []),
     { to: '/workflow-definitions', label: t('nav.workflows'), icon: IconRoute, permission: 'workflow.definitions.manage' },
+    { to: '/contracts/setup', label: t('nav.contractSetup'), icon: IconTemplate, permission: 'contracts.templates.manage' },
     { to: '/document-categories', label: t('nav.documentCategories'), icon: IconFiles, permission: 'documents.categories.manage' },
     { to: '/settings', label: t('nav.settings'), icon: IconSettings, permission: 'settings.view' },
     { to: '/audit', label: t('nav.audit'), icon: IconListDetails, permission: 'audit.view' },
@@ -92,7 +96,7 @@ export function AppLayout() {
       ? location.pathname === '/'
       : to === '/employees' && location.pathname === ownProfile
         ? false
-        : to === '/attendance' || to === '/leave' ? location.pathname === to : location.pathname.startsWith(to);
+        : to === '/attendance' || to === '/leave' || to === '/contracts' ? location.pathname === to || (to === '/contracts' && /^\/contracts\/(?!setup)/.test(location.pathname)) : location.pathname.startsWith(to);
   const width = collapsed ? 72 : 260;
 
   const renderItem = (item: Item) => {

@@ -12,6 +12,7 @@ import { NotificationsService } from './notifications/notifications.service.js';
 import { RestoreService } from './backup/restore.service.js';
 import { AttendanceService } from './attendance/attendance.service.js';
 import { LeaveService } from './leave/leave.service.js';
+import { ContractsService } from './contracts/contracts.service.js';
 import { assertNoSeedAccounts } from './provisioning.js';
 
 /**
@@ -32,6 +33,7 @@ async function main() {
   const restores = ctx.get(RestoreService);
   const attendance = ctx.get(AttendanceService);
   const leave = ctx.get(LeaveService);
+  const contracts = ctx.get(ContractsService);
 
   const guarded = (name: string, fn: () => Promise<void>) => async () => {
     try {
@@ -49,6 +51,10 @@ async function main() {
     // Leave: accrual, carryover and expiry entries, daily shortly after midnight.
     new Cron('40 0 * * *', { protect: true }, guarded('leave-accrual', async () => {
       await leave.dailyAccrual();
+    })),
+    // Contracts: automatic renewals, expiry and expiry/probation alerts, daily.
+    new Cron('50 0 * * *', { protect: true }, guarded('contracts', async () => {
+      await contracts.daily();
     })),
     // Web Push delivery of new notifications, every 15 seconds.
     new Cron('*/15 * * * * *', { protect: true }, guarded('push', async () => {

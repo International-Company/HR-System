@@ -65,6 +65,9 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'leave.request.view',
       'leave.request.manage',
       'leave.balance.adjust',
+      'contracts.view',
+      'contracts.manage',
+      'contracts.manual_edit',
     ],
   },
   {
@@ -84,6 +87,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'schedules.view',
       'attendance.record.view',
       'leave.request.view',
+      'contracts.view',
     ],
   },
   {
@@ -100,6 +104,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'schedules.view',
       'attendance.record.view',
       'leave.request.view',
+      'contracts.view',
+      'contracts.sign',
     ],
   },
   {
@@ -121,6 +127,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'attendance.record.view',
       'leave.request.create',
       'leave.request.view',
+      'contracts.view',
     ],
   },
   {
