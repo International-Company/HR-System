@@ -108,6 +108,7 @@ export const ar: Messages = {
     CSRF_INVALID: 'رمز الجلسة قديم. أعد تحميل الصفحة.',
     SESSION_STATE: 'أكمل خطوات تسجيل الدخول أولاً.',
     MODULE_DISABLED: 'هذه الوحدة معطّلة.',
+    INSUFFICIENT_BALANCE: 'الرصيد لا يكفي لهذا الطلب.',
     INTERNAL: 'حدث خطأ غير متوقع. حاول مرة أخرى.',
     network: 'تعذّر الاتصال بالخادم.',
     reasons: {

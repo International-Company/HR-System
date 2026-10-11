@@ -56,6 +56,17 @@ const restoreSchema = z.object({
   /** When true and another active System Administrator exists, a second one must approve. */
   requireSecondApprover: z.boolean(),
 });
+/** In-day permissions (LEV-05). Company-overridable. */
+const leavePermissionsSchema = z.object({
+  enabled: z.boolean(),
+  /** Input granularity: whole hours, minutes, or both. */
+  unit: z.enum(['hours', 'minutes', 'both']),
+  maxMinutesPerDay: z.number().int().min(15).max(720),
+  /** 0 = no monthly limit. */
+  maxMinutesPerMonth: z.number().int().min(0).max(10_000),
+  /** How many days back an employee may still ask (staff may record later). */
+  retroactiveDays: z.number().int().min(0).max(60),
+});
 /** Attendance rules (ATT-10, ATT-11, ATT-12, ATT-16). Company-overridable. */
 const attendancePolicySchema = z.object({
   /** Punching only from the company's authorised networks (ATT-01). */
@@ -101,6 +112,13 @@ export const SETTINGS = {
     },
     companyOverride: true,
     permission: 'attendance.policy.manage',
+    public: false,
+  },
+  'leave.permissions': {
+    schema: leavePermissionsSchema,
+    default: { enabled: true, unit: 'both' as const, maxMinutesPerDay: 240, maxMinutesPerMonth: 480, retroactiveDays: 7 },
+    companyOverride: true,
+    permission: 'leave.types.manage',
     public: false,
   },
   'documents.limits': {

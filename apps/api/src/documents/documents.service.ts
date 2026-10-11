@@ -157,6 +157,23 @@ export class DocumentsService {
     return staff || own;
   }
 
+  /** Which of these employee documents may the principal open? (C-12 for leave attachments.) */
+  async visibleDocumentIds(tx: Tx, principal: Principal, docs: { documentId: string; employeeId: string; companyId: string }[]): Promise<Set<string>> {
+    if (!docs.length) return new Set();
+    const rows = await tx
+      .select({ id: document.id, c: documentCategory })
+      .from(document)
+      .innerJoin(documentCategory, eq(documentCategory.id, document.categoryId))
+      .where(inArray(document.id, docs.map((d) => d.documentId)));
+    const out = new Set<string>();
+    for (const d of docs) {
+      const row = rows.find((r) => r.id === d.documentId);
+      const self = !!principal.employeeId && principal.employeeId === d.employeeId;
+      if (row && this.canSeeCategory(principal, row.c, { companyId: d.companyId, self, employeeId: d.employeeId })) out.add(d.documentId);
+    }
+    return out;
+  }
+
   private async employeeContext(principal: Principal, employeeId: string) {
     const { current, access } = await this.employees.loadVisible(principal, employeeId);
     return { companyId: current?.companyId ?? null, self: access.self, employeeId };
@@ -232,12 +249,16 @@ export class DocumentsService {
     employeeId: string,
     fields: { categoryId: string; title: string; expiryDate?: string | undefined },
     file: UploadedFile | undefined,
-    opts: { supersedes?: DocumentRow; categoryCode?: string } = {},
+    /**
+     * forLeave: attachment of a leave request. The leave module has already authorised the
+     * submitter for this employee, and the category comes from the leave type (C-12).
+     */
+    opts: { supersedes?: DocumentRow; categoryCode?: string; forLeave?: boolean } = {},
   ): Promise<DocumentDto> {
     const storage = this.requireStorage();
     if (!file) throw ApiError.validation([{ path: 'file', message: 'A file is required' }]);
     const ctx = await this.employeeContext(principal, employeeId);
-    if (!ctx.companyId || !principal.canCompany('documents.upload', ctx.companyId)) throw ApiError.forbidden();
+    if (!ctx.companyId || (!opts.forLeave && !principal.canCompany('documents.upload', ctx.companyId))) throw ApiError.forbidden();
 
     const cat = await this.database.tx(principal.rls(), async (tx) => {
       const where = opts.categoryCode
@@ -247,7 +268,7 @@ export class DocumentsService {
       return c;
     });
     if (!cat || cat.status !== 'active') throw ApiError.validation([{ path: 'categoryId', message: 'Unknown or inactive category' }]);
-    if (!this.canSeeCategory(principal, cat, { ...ctx, self: false })) {
+    if (!opts.forLeave && !this.canSeeCategory(principal, cat, { ...ctx, self: false })) {
       throw ApiError.forbidden('You cannot manage documents of this category');
     }
     const limits = await this.settings.get('documents.limits');
@@ -272,7 +293,10 @@ export class DocumentsService {
     await storage.put(objectKey, Readable.from([encrypted]), 'application/octet-stream');
 
     const docId = uuidv7();
-    const result = await this.database.tx(principal.rls(), async (tx) => {
+    // A leave attachment is written as a trusted system operation: the employee may not write
+    // documents (RLS), but the leave module has authorised this upload (audited as the user).
+    const write = <T>(fn: (tx: Tx) => Promise<T>) => (opts.forLeave ? this.database.system(fn) : this.database.tx(principal.rls(), fn));
+    const result = await write(async (tx) => {
       await tx.insert(storedObject).values({
         id: objectId,
         provider: storage.description.split(':')[0] ?? 'storage',

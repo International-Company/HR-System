@@ -107,6 +107,7 @@ export const en = {
     CSRF_INVALID: 'Your session token is out of date. Reload the page.',
     SESSION_STATE: 'Complete the sign-in steps first.',
     MODULE_DISABLED: 'This module is disabled.',
+    INSUFFICIENT_BALANCE: 'Not enough balance for this request.',
     INTERNAL: 'Something went wrong. Please try again.',
     network: 'Cannot reach the server.',
     reasons: {

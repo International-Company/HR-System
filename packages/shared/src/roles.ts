@@ -61,6 +61,10 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'attendance.review',
       'attendance.network.manage',
       'attendance.device.manage',
+      'leave.request.create',
+      'leave.request.view',
+      'leave.request.manage',
+      'leave.balance.adjust',
     ],
   },
   {
@@ -79,6 +83,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'workflow.instances.view',
       'schedules.view',
       'attendance.record.view',
+      'leave.request.view',
     ],
   },
   {
@@ -94,13 +99,14 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'workflow.instances.view',
       'schedules.view',
       'attendance.record.view',
+      'leave.request.view',
     ],
   },
   {
     key: 'department_manager',
     name: { ar: 'مدير قسم', en: 'Department Manager' },
     defaultScope: 'DEPARTMENT',
-    permissions: ['org.company.view', 'org.department.view', 'employee.profile.view', 'attendance.record.view'],
+    permissions: ['org.company.view', 'org.department.view', 'employee.profile.view', 'attendance.record.view', 'leave.request.view'],
   },
   {
     key: 'employee',
@@ -108,7 +114,14 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
     defaultScope: 'SELF',
     // SELF scope: own profile, own current salary and own documents in employee-visible
     // categories (EMP-10).
-    permissions: ['employee.profile.view', 'documents.view', 'attendance.punch', 'attendance.record.view'],
+    permissions: [
+      'employee.profile.view',
+      'documents.view',
+      'attendance.punch',
+      'attendance.record.view',
+      'leave.request.create',
+      'leave.request.view',
+    ],
   },
   {
     key: 'finance',
@@ -137,6 +150,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'attendance.review',
       'attendance.network.manage',
       'attendance.device.manage',
+      'leave.request.view',
     ],
   },
 ];

@@ -11,6 +11,7 @@ import { AuditService } from './audit/audit.service.js';
 import { NotificationsService } from './notifications/notifications.service.js';
 import { RestoreService } from './backup/restore.service.js';
 import { AttendanceService } from './attendance/attendance.service.js';
+import { LeaveService } from './leave/leave.service.js';
 import { assertNoSeedAccounts } from './provisioning.js';
 
 /**
@@ -30,6 +31,7 @@ async function main() {
   const notifications = ctx.get(NotificationsService);
   const restores = ctx.get(RestoreService);
   const attendance = ctx.get(AttendanceService);
+  const leave = ctx.get(LeaveService);
 
   const guarded = (name: string, fn: () => Promise<void>) => async () => {
     try {
@@ -43,6 +45,10 @@ async function main() {
     // Attendance: recompute the last two days hourly (absence detection, auto-closure).
     new Cron('20 * * * *', { protect: true }, guarded('attendance', async () => {
       await attendance.dailyRecompute(2);
+    })),
+    // Leave: accrual, carryover and expiry entries, daily shortly after midnight.
+    new Cron('40 0 * * *', { protect: true }, guarded('leave-accrual', async () => {
+      await leave.dailyAccrual();
     })),
     // Web Push delivery of new notifications, every 15 seconds.
     new Cron('*/15 * * * * *', { protect: true }, guarded('push', async () => {
