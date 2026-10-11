@@ -73,7 +73,7 @@ jobs:
           fetch-depth: 0
       - name: gitleaks
         run: |
-          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest detect --source /repo --redact --no-banner
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest detect --source /repo --redact -v --no-banner
 
   docker-build:
     name: Container image builds
