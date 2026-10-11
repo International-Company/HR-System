@@ -13,7 +13,7 @@ Last updated: 2026-10-10
 | P3 Workflow, notifications, schedules, in-app restore | 🔄 Implementation complete (DL-026) | 118 API tests passing locally (+2 server-only in CI, incl. full restore); 2 web tests; live HTTP smoke test passed | ❓ First CI run; restore drill on staging after Backblaze is configured; review of defaults (DL-029) |
 | P4 Attendance | 🔄 Implementation complete (DL-030) | 148 API tests passing locally (+2 server-only in CI) incl. 16 golden cases and 14 attendance integration tests; local HTTP smoke test passed | ❓ Proxy spoof spike on Railway; HR sign-off of golden cases; k6 burst test; review of defaults (DL-031) |
 | P5 Leave | 🔄 Implementation complete (DL-038) | 172 API tests passing locally (+2 server-only in CI) incl. 10 leave-rule golden cases and 13 leave integration tests; migration 0005 applied to an existing database | ❓ HR sign-off of golden cases; review of defaults (DL-038); grant `documents.view.medical` to HR staff who check sick notes |
-| P6 Contracts | ⏳ | — | Q-14, Q-22, Q-28 |
+| P6 Contracts | 🔄 Implementation complete (DL-040) | 184 API tests passing locally (+2 server-only in CI) incl. 14 contract tests; migration 0006 applied to an existing database | ❓ Legal review of in-app signing (DL-042); Arabic print check signed off; review of defaults (DL-043) |
 | P7 Payroll | ⏳ | — | Q-13, Q-24, Q-28 |
 | P8 Separation & rehire | ⏳ | — | Q-27 |
 | P9 Recruitment | ⏳ | — | Q-11 |
@@ -121,3 +121,21 @@ Last updated: 2026-10-10
 | In-day permissions | Time window on a workday within working hours, daily and monthly limits, approval route (manager → HR), approved time is not lateness or early leave |
 | Attendance | Approved leave marks days as leave (excused); leave and permission flags; worked-on-leave flag |
 | Web | Leave page (balances, requests, permissions), leave management (company requests, record for employee, leave types), leave tab in the profile, in-day permission settings, readable approval summaries |
+
+## Phase 6 acceptance criteria (roadmap.md)
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | A signed version cannot be modified (API + DB tests) | ✅ | `contracts.test.ts` (NEG-08: API 409, triggers on versions and signatures) |
+| 2 | Renewal creates history in the configured mode | ✅ | `contracts.test.ts` (extension version; new linked contract, old one "renewed") |
+| 3 | Alerts fire with the configured timing, count and recipients | ✅ | `contracts.test.ts` (one alert per threshold, no repeats) |
+| 4 | Arabic output renders correctly (visual check signed off) | ⏳ owner check | Print page (DL-041) |
+
+## Phase 6 deliverables
+
+| Area | Delivered |
+|---|---|
+| Setup | Templates per language with merge fields (employee, company, job, department, contract, salary), fields filled when preparing, reusable clauses (company clause replaces group clause), rules per contract type (renewal mode, automatic renewal, signers, durations, retention) |
+| Contracts | Drafts generated from templates (manual text edit with permission), sending for signature, in-app signing with evidence or upload of a signed copy, database-locked signed versions, addenda, extensions, renewal as a new linked contract, ending, probation outcomes |
+| Automation | Daily job: expiry and probation alerts (in-app/push) to HR, manager and/or employee, expiry (or hold during approved leave), automatic renewal only for allowed types |
+| Web | Contracts page (awaiting my signature, my contracts, search by company/status/type/expiry/number or name), contract page with versions, signatures, evidence and print, contract setup (templates, clauses, types), contracts tab in the profile (configurable), contract settings |

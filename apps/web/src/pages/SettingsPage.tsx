@@ -162,6 +162,7 @@ export function SettingsPage() {
           <Tabs.Tab value="modules">{t('settings.modules')}</Tabs.Tab>
           <Tabs.Tab value="attendance">{t('att.policy')}</Tabs.Tab>
           <Tabs.Tab value="leave">{t('leave.permissionPolicy')}</Tabs.Tab>
+          <Tabs.Tab value="contracts">{t('ctr.policy')}</Tabs.Tab>
           {can('system.backup.view') && <Tabs.Tab value="backup">{t('settings.backup')}</Tabs.Tab>}
         </Tabs.List>
 
@@ -286,6 +287,39 @@ export function SettingsPage() {
                 <NumberInput label={f('maxMinutesPerDay')} min={15} max={720} value={v.maxMinutesPerDay} onChange={(x) => set({ ...v, maxMinutesPerDay: Number(x) || 15 })} />
                 <NumberInput label={f('maxMinutesPerMonth')} min={0} max={10000} value={v.maxMinutesPerMonth} onChange={(x) => set({ ...v, maxMinutesPerMonth: Number(x) || 0 })} />
                 <NumberInput label={f('retroactiveDays')} min={0} max={60} value={v.retroactiveDays} onChange={(x) => set({ ...v, retroactiveDays: Number(x) || 0 })} />
+              </SimpleGrid>
+            );
+          })}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="contracts">
+          {row<SettingValue<'contracts.policy'>>('contracts.policy', t('ctr.policy'), (v, set) => {
+            const f = (k: string) => t(`ctr.policyFields.${k}`);
+            const days = (s: string) =>
+              s
+                .split(/[,،\s]+/)
+                .map(Number)
+                .filter((n) => Number.isInteger(n) && n > 0)
+                .slice(0, 5);
+            return (
+              <SimpleGrid cols={{ base: 1, md: 2 }}>
+                <TextInput label={f('numberPrefix')} value={v.numberPrefix} maxLength={10} dir="ltr" onChange={(e) => set({ ...v, numberPrefix: e.currentTarget.value })} />
+                <Switch mt="xl" label={f('showInProfile')} checked={v.showInProfile} onChange={(e) => set({ ...v, showInProfile: e.currentTarget.checked })} />
+                <TextInput label={f('expiryAlertDays')} defaultValue={v.expiryAlertDays.join(', ')} dir="ltr" onBlur={(e) => set({ ...v, expiryAlertDays: days(e.currentTarget.value) })} />
+                <TextInput label={f('probationAlertDays')} defaultValue={v.probationAlertDays.join(', ')} dir="ltr" onBlur={(e) => set({ ...v, probationAlertDays: days(e.currentTarget.value) })} />
+                <MultiSelect
+                  label={f('alertRecipients')}
+                  data={(['hr', 'direct_manager', 'employee'] as const).map((x) => ({ value: x, label: f(`recipients.${x}`) }))}
+                  value={v.alertRecipients}
+                  onChange={(x) => x.length && set({ ...v, alertRecipients: x as typeof v.alertRecipients })}
+                />
+                <Select
+                  label={f('expiryDuringLeave')}
+                  data={(['expire', 'hold_until_return'] as const).map((x) => ({ value: x, label: f(`expiryDuringLeaveModes.${x}`) }))}
+                  value={v.expiryDuringLeave}
+                  onChange={(x) => set({ ...v, expiryDuringLeave: (x ?? v.expiryDuringLeave) as typeof v.expiryDuringLeave })}
+                  allowDeselect={false}
+                />
               </SimpleGrid>
             );
           })}

@@ -96,6 +96,12 @@ export class ContractsController {
     return this.contracts.employeeContracts(p, assertUuid(id, 'Employee'));
   }
 
+  /** CON-10: whether the employee profile shows contracts (company setting). */
+  @Get('employee/:id/display')
+  display(@CurrentPrincipal() p: Principal, @Param('id') id: string) {
+    return this.contracts.display(p, assertUuid(id, 'Employee'));
+  }
+
   @Get(':id')
   get(@CurrentPrincipal() p: Principal, @Param('id') id: string) {
     return this.contracts.get(p, assertUuid(id, 'Contract'));

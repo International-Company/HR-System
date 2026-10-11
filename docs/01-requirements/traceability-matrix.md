@@ -73,13 +73,13 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | PAY-11 | payroll, separation | P7/P8 | U | `settlement.*` | ⏳ |
 | CEV-01, CEV-02 | evaluation | P10 | U, I | `evaluation.*` | ⏳ |
 | CEV-03 | evaluation | P10 | X | `exclusion.performance-appraisal` | ⏳ |
-| CON-01, CON-02 | contracts | P6 | I, E | `contract.template.*` | ⏳ |
-| CON-03 | contracts | P6 | I, S | `signature.evidence` | ⏳ |
-| CON-04, CON-05 | contracts | P6 | I, D | `contract.renewal.*`, `addendum.*` | ⏳ |
-| CON-06 | contracts | P6 | D | NEG-08 | ⏳ |
-| CON-07 | contracts | P6 | I | `contract.status-retention` | ⏳ |
-| CON-08, CON-09 | contracts, notify | P6 | I | `contract.alerts.*` | ⏳ |
-| CON-10, CON-11 | contracts | P6/P11 | E, A | `contract.display`, `contract.search` | ⏳ |
+| CON-01, CON-02 | contracts | P6 | I, E | `contract.template.*` | ✅ `contracts.test.ts` (templates, clauses, merge fields) |
+| CON-03 | contracts | P6 | I, S | `signature.evidence` | ✅ `contracts.test.ts` (in-app evidence, upload) |
+| CON-04, CON-05 | contracts | P6 | I, D | `contract.renewal.*`, `addendum.*` | ✅ `contracts.test.ts` (extension, new contract, automatic, addendum) |
+| CON-06 | contracts | P6 | D | NEG-08 | ✅ `contracts.test.ts` (NEG-08) |
+| CON-07 | contracts | P6 | I | `contract.status-retention` | ✅ statuses + type retention; nothing deleted |
+| CON-08, CON-09 | contracts, notify | P6 | I | `contract.alerts.*` | ✅ `contracts.test.ts` (alerts, expiry, probation) |
+| CON-10, CON-11 | contracts | P6/P11 | E, A | `contract.display`, `contract.search` | ✅ profile tab setting, search |
 | DOC-01…DOC-03 | documents | P2 | I, S | `documents.*`, NEG-15 | ✅ P2 |
 | DOC-04 | documents, notify | P2 | X | `exclusion.doc-expiry-alerts` | ✅ P2 |
 | DOC-05 | documents | P2 | X | review | ✅ P2 |

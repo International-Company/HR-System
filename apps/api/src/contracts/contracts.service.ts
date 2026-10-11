@@ -783,6 +783,11 @@ export class ContractsService {
     });
   }
 
+  async display(principal: Principal, employeeId: string): Promise<{ showInProfile: boolean }> {
+    const { current } = await this.employees.loadVisible(principal, employeeId);
+    return { showInProfile: (await this.settings.get('contracts.policy', current?.companyId ?? null)).showInProfile };
+  }
+
   /** Advanced search (CON-11) within the viewer's companies. */
   async search(principal: Principal, q: z.infer<typeof contractSearchQuery>): Promise<ContractSummaryDto[]> {
     const scope = principal.scope('contracts.view');

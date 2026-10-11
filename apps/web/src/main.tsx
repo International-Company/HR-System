@@ -34,6 +34,8 @@ import { WorkflowDefinitionsPage } from './pages/WorkflowDefinitionsPage';
 import { AttendancePage } from './pages/attendance/AttendancePage';
 import { AttendanceAdminPage, AttendanceReviewPage } from './pages/attendance/AttendanceStaffPages';
 import { LeaveManagePage, LeavePage } from './pages/leave/LeavePages';
+import { ContractDetailPage, ContractsPage } from './pages/contracts/ContractPages';
+import { ContractSetupPage } from './pages/contracts/ContractSetupPage';
 import { registerServiceWorker } from './lib/push';
 
 const queryClient = new QueryClient({
@@ -75,6 +77,9 @@ const router = createBrowserRouter([
       { path: 'attendance/admin', element: <AttendanceAdminPage /> },
       { path: 'leave', element: <LeavePage /> },
       { path: 'leave/manage', element: <LeaveManagePage /> },
+      { path: 'contracts', element: <ContractsPage /> },
+      { path: 'contracts/setup', element: <ContractSetupPage /> },
+      { path: 'contracts/:id', element: <ContractDetailPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
