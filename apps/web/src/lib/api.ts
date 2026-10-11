@@ -56,6 +56,30 @@ export async function api<T = unknown>(
   return data as T;
 }
 
+/** POST that returns a file (exports): saves it with the name sent by the server. */
+export async function download(path: string, body: unknown): Promise<void> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+  let res: Response;
+  try {
+    res = await fetch(`/api/v1${path}`, { method: 'POST', headers, credentials: 'same-origin', body: JSON.stringify(body) });
+  } catch {
+    throw new ApiError(0, null);
+  }
+  if (!res.ok) {
+    const text = await res.text();
+    throw new ApiError(res.status, text ? (JSON.parse(text) as ProblemDetails) : null);
+  }
+  const disposition = res.headers.get('Content-Disposition') ?? '';
+  const name = decodeURIComponent(/filename\*=UTF-8''([^;]+)/.exec(disposition)?.[1] ?? 'report');
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 /** Multipart upload (file + fields). The browser sets the multipart boundary itself. */
 export async function upload<T>(path: string, form: FormData): Promise<T> {
   let res: Response;

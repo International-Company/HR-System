@@ -76,6 +76,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'recruitment.offers',
       'evaluation.view',
       'evaluation.manage',
+      'reports.run',
+      'reports.export',
     ],
   },
   {
@@ -101,6 +103,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'separation.view',
       'recruitment.view',
       'evaluation.view',
+      'reports.run',
+      'reports.export',
     ],
   },
   {
@@ -123,6 +127,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'separation.view',
       'recruitment.view',
       'evaluation.view',
+      'reports.run',
+      'reports.export',
     ],
   },
   {
@@ -136,6 +142,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'attendance.record.view',
       'leave.request.view',
       'evaluation.view',
+      'reports.run',
+      'reports.export',
     ],
   },
   {
@@ -171,6 +179,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'payroll.prepare',
       'payroll.payments.manage',
       'payroll.payslip.view',
+      'reports.run',
+      'reports.export',
     ],
   },
   {
@@ -190,6 +200,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'attendance.network.manage',
       'attendance.device.manage',
       'leave.request.view',
+      'reports.run',
+      'reports.export',
     ],
   },
 ];

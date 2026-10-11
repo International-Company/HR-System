@@ -14,6 +14,7 @@ import { AttendanceService } from './attendance/attendance.service.js';
 import { LeaveService } from './leave/leave.service.js';
 import { ContractsService } from './contracts/contracts.service.js';
 import { SeparationService } from './separation/separation.service.js';
+import { ReportsService } from './reports/reports.service.js';
 import { assertNoSeedAccounts } from './provisioning.js';
 
 /**
@@ -36,6 +37,7 @@ async function main() {
   const leave = ctx.get(LeaveService);
   const contracts = ctx.get(ContractsService);
   const separations = ctx.get(SeparationService);
+  const reports = ctx.get(ReportsService);
 
   const guarded = (name: string, fn: () => Promise<void>) => async () => {
     try {
@@ -61,6 +63,13 @@ async function main() {
     // Separation: apply the exit policy after the last working day (TRM-05), daily.
     new Cron('10 0 * * *', { protect: true }, guarded('separation', async () => {
       await separations.daily();
+    })),
+    // Scheduled reports, delivered in the app (C-03), checked every hour; old files pruned daily.
+    new Cron('5 * * * *', { protect: true }, guarded('reports', async () => {
+      await reports.runSchedules();
+    })),
+    new Cron('30 4 * * *', { protect: true }, guarded('report-files', async () => {
+      await reports.pruneOutputs();
     })),
     // Web Push delivery of new notifications, every 15 seconds.
     new Cron('*/15 * * * * *', { protect: true }, guarded('push', async () => {

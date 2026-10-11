@@ -16,7 +16,7 @@ import {
 } from '@mantine/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { BUSINESS_MODULES, type SettingValue, type CompanyDto, type ModuleDto, type RoleDto, type SettingDto } from '@hrms/shared';
+import { BUSINESS_MODULES, WIDGETS, type SettingValue, type CompanyDto, type ModuleDto, type RoleDto, type SettingDto } from '@hrms/shared';
 import { del, get, patch, put } from '../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { ErrorAlert, PageHeader, localName, notifyError, notifySaved } from '../components/common';
@@ -167,6 +167,7 @@ export function SettingsPage() {
           <Tabs.Tab value="separation">{t('sep.policy')}</Tabs.Tab>
           <Tabs.Tab value="recruitment">{t('rec.stagesSetting')}</Tabs.Tab>
           <Tabs.Tab value="evaluation">{t('evl.policy')}</Tabs.Tab>
+          <Tabs.Tab value="dashboards">{t('widgets.layout')}</Tabs.Tab>
           {can('system.backup.view') && <Tabs.Tab value="backup">{t('settings.backup')}</Tabs.Tab>}
         </Tabs.List>
 
@@ -515,6 +516,12 @@ export function SettingsPage() {
           })}
         </Tabs.Panel>
 
+        <Tabs.Panel value="dashboards">
+          {row<SettingValue<'dashboard.layouts'>>('dashboard.layouts', t('widgets.layout'), (v, set) => (
+            <DashboardLayoutEditor value={v} onChange={set} roles={(roles.data ?? []).map((r) => ({ key: r.key, label: localName(pub.language, r) }))} />
+          ))}
+        </Tabs.Panel>
+
         <Tabs.Panel value="backup">
           <SimpleGrid cols={{ base: 1, md: 2 }}>
             {row<{ enabled: boolean; dailyAt: string }>('backup.policy', t('settings.backup'), (v, set) => (
@@ -616,6 +623,64 @@ function ModulesPanel({ companies }: { companies: CompanyDto[] }) {
           </Table>
         </Table.ScrollContainer>
       </Paper>
+    </Stack>
+  );
+}
+
+function DashboardLayoutEditor({
+  value,
+  onChange,
+  roles,
+}: {
+  value: SettingValue<'dashboard.layouts'>;
+  onChange: (v: SettingValue<'dashboard.layouts'>) => void;
+  roles: { key: string; label: string }[];
+}) {
+  const { t } = useTranslation();
+  const [role, setRole] = useState<string | null>(roles[0]?.key ?? null);
+  const list = role ? (value.roles[role] ?? []) : [];
+  const setList = (next: typeof list) => role && onChange({ roles: { ...value.roles, [role]: next } });
+  const move = (i: number, d: -1 | 1) => {
+    const next = [...list];
+    const [x] = next.splice(i, 1);
+    next.splice(i + d, 0, x!);
+    setList(next);
+  };
+  return (
+    <Stack>
+      <Select w={260} label={t('widgets.role')} data={roles.map((r) => ({ value: r.key, label: r.label }))} value={role} onChange={setRole} allowDeselect={false} />
+      {list.map((w, i) => (
+        <Group key={`${w.widget}-${i}`} gap="xs">
+          <Text w={220} size="sm">
+            {t(`widgets.${w.widget}`)}
+          </Text>
+          <Select
+            w={120}
+            data={(['small', 'large'] as const).map((x) => ({ value: x, label: t(`widgets.sizes.${x}`) }))}
+            value={w.size}
+            onChange={(x) => setList(list.map((y, n) => (n === i ? { ...y, size: (x ?? 'small') as 'small' | 'large' } : y)))}
+            allowDeselect={false}
+          />
+          <Button size="compact-xs" variant="subtle" disabled={i === 0} onClick={() => move(i, -1)}>
+            ↑
+          </Button>
+          <Button size="compact-xs" variant="subtle" disabled={i === list.length - 1} onClick={() => move(i, 1)}>
+            ↓
+          </Button>
+          <Button size="compact-xs" variant="subtle" color="red" onClick={() => setList(list.filter((_, n) => n !== i))}>
+            ✕
+          </Button>
+        </Group>
+      ))}
+      {role && (
+        <Select
+          w={260}
+          placeholder={t('widgets.add')}
+          data={WIDGETS.filter((w) => !list.some((x) => x.widget === w)).map((w) => ({ value: w, label: t(`widgets.${w}`) }))}
+          value={null}
+          onChange={(x) => x && setList([...list, { widget: x as (typeof WIDGETS)[number], size: 'small' }])}
+        />
+      )}
     </Stack>
   );
 }

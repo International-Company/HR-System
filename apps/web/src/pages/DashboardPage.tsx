@@ -7,6 +7,7 @@ import type { BackupRunDto, CompanyDto, UserDto } from '@hrms/shared';
 import type { ReactNode } from 'react';
 import { get } from '../lib/api';
 import { useAuth } from '../auth/AuthContext';
+import { DashboardWidgets } from './Widgets';
 
 function Stat({ icon, label, value, to }: { icon: ReactNode; label: string; value: ReactNode; to?: string }) {
   const body = (
@@ -95,6 +96,8 @@ export function DashboardPage() {
           </>
         )}
       </SimpleGrid>
+
+      <DashboardWidgets />
     </Stack>
   );
 }

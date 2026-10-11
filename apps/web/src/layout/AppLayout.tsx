@@ -14,6 +14,7 @@ import {
   IconDoorExit,
   IconUserSearch,
   IconGauge,
+  IconReportAnalytics,
   IconCalendarStats,
   IconClipboardCheck,
   IconWifi,
@@ -39,6 +40,7 @@ import { useTranslation } from 'react-i18next';
 import type { ComponentType } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { NotificationBell } from '../pages/NotificationsPages';
+import { GlobalSearch } from '../components/GlobalSearch';
 
 interface Item {
   to: string;
@@ -80,6 +82,7 @@ export function AppLayout() {
     ...(can('separation.view') && !!session?.roles.some((r) => r.scopeType !== 'SELF') ? [{ to: '/separations', label: t('nav.separations'), icon: IconDoorExit }] : []),
     ...(can('recruitment.view') || can('recruitment.manage') ? [{ to: '/recruitment', label: t('nav.recruitment'), icon: IconUserSearch }] : []),
     ...(can('evaluation.manage') || (can('evaluation.view') && !!session?.roles.some((r) => r.scopeType !== 'SELF')) ? [{ to: '/evaluation', label: t('nav.evaluation'), icon: IconGauge }] : []),
+    ...(can('reports.run') ? [{ to: '/reports', label: t('nav.reports'), icon: IconReportAnalytics }] : []),
     { to: '/tasks', label: t('nav.tasks'), icon: IconChecklist },
   ].filter((i) => !('permission' in i) || !i.permission || can(i.permission));
   const admin: Item[] = [
@@ -153,7 +156,10 @@ export function AppLayout() {
             </Text>
           </Group>
           <Group gap="xs" wrap="nowrap">
-          <NotificationBell />
+          <Group gap="xs" wrap="nowrap">
+            <GlobalSearch />
+            <NotificationBell />
+          </Group>
           <Menu position="bottom-end" width={220} withArrow>
             <Menu.Target>
               <UnstyledButton aria-label={t('nav.account')}>

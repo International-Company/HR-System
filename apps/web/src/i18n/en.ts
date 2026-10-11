@@ -7,6 +7,7 @@ import { p7En } from './p7-en';
 import { p8En } from './p8-en';
 import { p9En } from './p9-en';
 import { p10En } from './p10-en';
+import { p11En } from './p11-en';
 
 /** English UI strings. ar.ts must provide exactly the same keys (checked by a test). */
 export const en = {
@@ -70,6 +71,7 @@ export const en = {
     separations: 'Separations',
     recruitment: 'Recruitment',
     evaluation: 'Commitment evaluation',
+    reports: 'Reports',
     account: 'My account',
     logout: 'Sign out',
     administration: 'Administration',
@@ -136,7 +138,7 @@ export const en = {
   },
   home: {
     welcome: 'Welcome, {{name}}',
-    intro: 'This is the foundation release. HR modules (employees, attendance, leave, payroll…) arrive in the next phases.',
+    intro: 'Your overview. The menu on the side opens every part of the system you have access to.',
     companies: 'Companies',
     users: 'Users',
     lastBackup: 'Last backup',
@@ -294,6 +296,7 @@ export const en = {
   ...p8En,
   ...p9En,
   ...p10En,
+  ...p11En,
 };
 
 export type Messages = typeof en;

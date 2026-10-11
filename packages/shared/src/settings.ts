@@ -3,6 +3,7 @@ import { endOfServiceSchema, payrollPolicySchema } from './payroll.js';
 import { separationPolicySchema } from './separation.js';
 import { DEFAULT_RECRUITMENT_STAGES, recruitmentStagesSchema } from './recruitment.js';
 import { DEFAULT_EVALUATION_POLICY, evaluationPolicySchema } from './evaluation.js';
+import { DEFAULT_DASHBOARD_LAYOUTS, dashboardLayoutsSchema } from './reports.js';
 import type { PermissionKey } from './permissions.js';
 
 /**
@@ -129,6 +130,13 @@ export const SETTINGS = {
     },
     companyOverride: true,
     permission: 'attendance.policy.manage',
+    public: false,
+  },
+  'dashboard.layouts': {
+    schema: dashboardLayoutsSchema,
+    default: DEFAULT_DASHBOARD_LAYOUTS,
+    companyOverride: false,
+    permission: 'dashboard.configure',
     public: false,
   },
   'evaluation.policy': {

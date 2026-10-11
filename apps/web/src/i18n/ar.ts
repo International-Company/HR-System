@@ -8,6 +8,7 @@ import { p7Ar } from './p7-ar';
 import { p8Ar } from './p8-ar';
 import { p9Ar } from './p9-ar';
 import { p10Ar } from './p10-ar';
+import { p11Ar } from './p11-ar';
 
 /** نصوص الواجهة العربية — يجب أن تطابق مفاتيح en.ts تماماً. */
 export const ar: Messages = {
@@ -71,6 +72,7 @@ export const ar: Messages = {
     separations: 'إنهاء الخدمة',
     recruitment: 'التوظيف',
     evaluation: 'تقييم الالتزام',
+    reports: 'التقارير',
     account: 'حسابي',
     logout: 'تسجيل الخروج',
     administration: 'الإدارة',
@@ -137,7 +139,7 @@ export const ar: Messages = {
   },
   home: {
     welcome: 'مرحباً، {{name}}',
-    intro: 'هذا هو الإصدار التأسيسي. وحدات الموارد البشرية (الموظفون، الحضور، الإجازات، الرواتب…) تأتي في المراحل التالية.',
+    intro: 'نظرة عامة. القائمة الجانبية تفتح كل أجزاء النظام المتاحة لك.',
     companies: 'الشركات',
     users: 'المستخدمون',
     lastBackup: 'آخر نسخة احتياطية',
@@ -295,4 +297,5 @@ export const ar: Messages = {
   ...p8Ar,
   ...p9Ar,
   ...p10Ar,
+  ...p11Ar,
 };
