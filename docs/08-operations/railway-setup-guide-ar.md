@@ -69,7 +69,7 @@ Project Settings ← **Shared Variables** (لبيئة `staging`). أضف:
 | `DB_APP_PASSWORD` | القيمة العشوائية من الجزء 0 |
 | `SESSION_SECRET` | القيمة العشوائية من الجزء 0 |
 | `DATA_ENCRYPTION_KEY` | القيمة العشوائية من الجزء 0 |
-| `TRUST_PROXY` | `1` |
+| `TRUST_PROXY` | `2` |
 | `BACKUP_ENCRYPTION_KEY` | القيمة العشوائية من الجزء 0 |
 | `BACKUP_S3_ENDPOINT` | `https://` + الـ Endpoint من الجزء 2، مثل `https://s3.eu-central-003.backblazeb2.com` |
 | `BACKUP_S3_REGION` | الجزء الأوسط من الـ Endpoint، مثل `eu-central-003` |
@@ -127,6 +127,6 @@ Project Settings ← **Shared Variables** (لبيئة `staging`). أضف:
 | العرض | السبب المحتمل | الحل |
 |---|---|---|
 | فشل النشر في خطوة Pre-deploy | متغير ناقص أو قصير | راجع سجلات النشر (Deploy Logs): رسالة `Invalid configuration` تحدد المتغير |
-| الصفحة تعمل لكن الدخول يفشل دائماً | `TRUST_PROXY` غير مضبوط، أو الرابط http | تأكد من `TRUST_PROXY=1` واستخدم رابط https |
+| الصفحة تعمل لكن الدخول يفشل دائماً | `TRUST_PROXY` غير مضبوط، أو الرابط http | تأكد من `TRUST_PROXY=2` واستخدم رابط https |
 | النسخ الاحتياطي "غير مهيأ" | متغيرات `BACKUP_*` ناقصة في خدمة worker أو web | اربط المتغيرات المشتركة بالخدمتين |
 | فشل النسخ الاحتياطي برسالة صلاحيات | مفتاح Backblaze لا يغطي الـ bucket | أنشئ المفتاح مرة أخرى للـ bucket نفسه بصلاحية Read and Write |

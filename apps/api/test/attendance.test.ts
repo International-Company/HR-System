@@ -213,3 +213,18 @@ describe('attendance (ATT-01..17)', () => {
     await expect(env.database.owner.exec(`delete from punch`)).rejects.toThrow(/append-only/);
   });
 });
+
+describe('client address behind Railway (DL-035)', () => {
+  let env: TestEnv;
+  beforeAll(async () => {
+    env = await setup({ env: { TRUST_PROXY: '2' } });
+  });
+  afterAll(async () => env.close());
+
+  it('takes the client from "client, edge" and ignores anything further left', async () => {
+    const who = await env.anon().get(`${API}/network/whoami`).set('X-Forwarded-For', '83.244.34.13, 152.233.13.166');
+    expect(who.body.ip).toBe('83.244.34.13');
+    const forged = await env.anon().get(`${API}/network/whoami`).set('X-Forwarded-For', '198.51.100.7, 83.244.34.13, 152.233.13.166');
+    expect(forged.body.ip).toBe('83.244.34.13');
+  });
+});

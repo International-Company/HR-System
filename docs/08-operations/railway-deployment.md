@@ -21,7 +21,7 @@ Status: **Implemented for Phase 1** (`Dockerfile`, `railway/web.json`, `railway/
 ## 2. Environment variables
 
 Names only (see security plan §8). Values are set by the owner or me in Railway variables, **never committed**. `.env.example` documents each variable with a description and no real value. Railway reference variables connect the services, for example `DATABASE_URL=${{postgres.DATABASE_URL}}`.
-Additional: `APP_ENV` (`staging|production`), `PUBLIC_URL`, `TRUST_PROXY=railway`, `LOG_LEVEL`, `MAIL_ENABLED=false`.
+Additional: `APP_ENV` (`staging|production`), `PUBLIC_URL`, `TRUST_PROXY=2` (Railway internal proxy + edge, DL-035), `LOG_LEVEL`, `MAIL_ENABLED=false`.
 
 ## 3. Owner's one-time steps (documented checklist)
 
