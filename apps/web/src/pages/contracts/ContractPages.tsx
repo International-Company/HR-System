@@ -31,6 +31,7 @@ import { get, post, put, upload } from '../../lib/api';
 import { useAuth } from '../../auth/AuthContext';
 import { useCompanies, useEmployeeOptions, useLookups } from '../../lib/refdata';
 import { EmptyRow, ErrorAlert, PageHeader, StatusBadge, localName, notifyError, notifySaved } from '../../components/common';
+import { DateField } from '../../components/DateFields';
 
 const STATUS_COLOR: Record<string, string> = {
   draft: 'inactive',
@@ -261,9 +262,9 @@ export function NewContractModal({ opened, onClose, employeeId }: { opened: bool
           onChange={(v) => setForm({ ...form, templateId: v, fieldValues: {} })}
         />
         <SimpleGrid cols={{ base: 1, sm: 3 }}>
-          <TextInput type="date" label={t('ctr.start')} value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.currentTarget.value })} required />
-          <TextInput type="date" label={t('ctr.end')} value={form.endDate} min={form.startDate} onChange={(e) => setForm({ ...form, endDate: e.currentTarget.value })} />
-          <TextInput type="date" label={t('ctr.probationEnd')} value={form.probationEnd} onChange={(e) => setForm({ ...form, probationEnd: e.currentTarget.value })} />
+          <DateField label={t('ctr.start')} value={form.startDate} onChange={(v) => setForm({ ...form, startDate: v })} required />
+          <DateField label={t('ctr.end')} value={form.endDate} min={form.startDate} onChange={(v) => setForm({ ...form, endDate: v })} />
+          <DateField label={t('ctr.probationEnd')} value={form.probationEnd} onChange={(v) => setForm({ ...form, probationEnd: v })} />
         </SimpleGrid>
         {tpl?.fields.map((f) => (
           <TextInput key={f.key} label={f.label} required={f.required} value={form.fieldValues[f.key] ?? ''} onChange={(e) => setForm({ ...form, fieldValues: { ...form.fieldValues, [f.key]: e.currentTarget.value } })} />
@@ -577,9 +578,9 @@ function EditDraftModal({ contract: c, onClose }: { contract: ContractDto; onClo
       <Stack>
         <ErrorAlert error={save.error} />
         <SimpleGrid cols={{ base: 1, sm: 3 }}>
-          <TextInput type="date" label={t('ctr.start')} value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.currentTarget.value })} />
-          <TextInput type="date" label={t('ctr.end')} value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.currentTarget.value })} />
-          <TextInput type="date" label={t('ctr.probationEnd')} value={form.probationEnd} onChange={(e) => setForm({ ...form, probationEnd: e.currentTarget.value })} />
+          <DateField label={t('ctr.start')} value={form.startDate} onChange={(v) => setForm({ ...form, startDate: v })} />
+          <DateField label={t('ctr.end')} value={form.endDate} onChange={(v) => setForm({ ...form, endDate: v })} />
+          <DateField label={t('ctr.probationEnd')} value={form.probationEnd} onChange={(v) => setForm({ ...form, probationEnd: v })} />
         </SimpleGrid>
         {!form.manual &&
           tpl?.fields.map((f) => (
@@ -635,11 +636,11 @@ function ChangeModal({ kind, contract: c, onClose }: { kind: 'addendum' | 'renew
           />
         )}
         {(kind !== 'probation' || form.outcome === 'extended') && (
-          <TextInput
-            type="date"
+          <DateField
+           
             label={{ addendum: t('ctr.effective'), renew: t('ctr.newEnd'), end: t('ctr.endDate'), probation: t('ctr.newProbationEnd') }[kind]}
             value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.currentTarget.value })}
+            onChange={(v) => setForm({ ...form, date: v })}
           />
         )}
         {kind !== 'renew' && (

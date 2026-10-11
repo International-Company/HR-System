@@ -5,6 +5,7 @@ import { GENDERS, ID_TYPES, MARITAL_STATUSES, PAYMENT_METHODS } from '@hrms/shar
 import { useAuth } from '../../auth/AuthContext';
 import { employeeName, lookupOptions, useCompanies, useDepartments, useEmployeeOptions, useLocations, useLookups } from '../../lib/refdata';
 import { localName } from '../../components/common';
+import { DateField } from '../../components/DateFields';
 
 export interface AssignmentForm {
   companyId: string | null;
@@ -132,8 +133,8 @@ export function AssignmentFields({
         onChange={(v) => set({ contractTypeId: v })}
       />
       <Group grow>
-        <TextInput type="date" label={t('emp.contractStart')} value={value.contractStart} onChange={(e) => set({ contractStart: e.currentTarget.value })} />
-        <TextInput type="date" label={t('emp.contractEnd')} value={value.contractEnd} onChange={(e) => set({ contractEnd: e.currentTarget.value })} />
+        <DateField label={t('emp.contractStart')} value={value.contractStart} onChange={(v) => set({ contractStart: v })} />
+        <DateField label={t('emp.contractEnd')} value={value.contractEnd} onChange={(v) => set({ contractEnd: v })} />
       </Group>
     </SimpleGrid>
   );
@@ -327,7 +328,7 @@ export function PersonalFields({
           <TextInput label={t('emp.idNumber')} value={value.idNumber} onChange={(ev) => set({ idNumber: ev.currentTarget.value })} dir="ltr" error={e('idNumber')} />
         </>
       )}
-      <TextInput type="date" label={t('emp.birthDate')} value={value.birthDate} onChange={(ev) => set({ birthDate: ev.currentTarget.value })} error={e('birthDate')} />
+      <DateField label={t('emp.birthDate')} value={value.birthDate} onChange={(v) => set({ birthDate: v })} error={e('birthDate')} />
       <Select label={t('emp.gender')} data={GENDERS.map((g) => ({ value: g, label: t(`emp.genders.${g}`) }))} value={value.gender} onChange={(v) => set({ gender: v })} clearable />
       <TextInput label={t('emp.nationality')} value={value.nationality} onChange={(ev) => set({ nationality: ev.currentTarget.value.toUpperCase() })} maxLength={2} dir="ltr" placeholder="DE" error={e('nationality')} />
       <Select

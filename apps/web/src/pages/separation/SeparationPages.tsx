@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Anchor, Badge, Button, Card, Checkbox, Group, Modal, Paper, Select, SimpleGrid, Stack, Switch, Table, Text, TextInput, Textarea } from '@mantine/core';
+import { Alert, Anchor, Badge, Button, Card, Checkbox, Group, Modal, Paper, Select, SimpleGrid, Stack, Switch, Table, Text, Textarea } from '@mantine/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,7 @@ import { get, post } from '../../lib/api';
 import { useAuth } from '../../auth/AuthContext';
 import { lookupOptions, useCompanies, useDepartments, useLookups } from '../../lib/refdata';
 import { EmptyRow, ErrorAlert, PageHeader, StatusBadge, localName, notifyError, notifySaved } from '../../components/common';
+import { DateField } from '../../components/DateFields';
 
 const COLOR: Record<string, string> = { pending: 'requested', approved: 'denied', rejected: 'inactive', cancelled: 'inactive', completed: 'failed' };
 const today = () => new Date().toISOString().slice(0, 10);
@@ -209,7 +210,7 @@ function StartModal({ employeeId, self, onClose }: { employeeId: string; self: b
         {!self && (
           <Select label={t('sep.type')} data={SEPARATION_TYPES.map((x) => ({ value: x, label: t(`sep.types.${x}`) }))} value={form.type} onChange={(v) => setForm({ ...form, type: (v ?? 'termination') as SeparationType })} allowDeselect={false} />
         )}
-        <TextInput type="date" label={t('sep.lastWorkingDay')} value={form.lastWorkingDay} onChange={(e) => setForm({ ...form, lastWorkingDay: e.currentTarget.value })} required />
+        <DateField label={t('sep.lastWorkingDay')} value={form.lastWorkingDay} onChange={(v) => setForm({ ...form, lastWorkingDay: v })} required />
         <Textarea label={t('sep.reason')} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.currentTarget.value })} autosize minRows={3} required />
         {!self && <Switch label={t('sep.rehireEligible')} checked={form.rehireEligible} onChange={(e) => setForm({ ...form, rehireEligible: e.currentTarget.checked })} />}
         <Alert variant="light">{self ? t('sep.noticeNote') : t('sep.exitNote')}</Alert>
@@ -263,8 +264,8 @@ function RehireModal({ employee: e, onClose }: { employee: EmployeeDto; onClose:
       <Stack>
         <ErrorAlert error={save.error} />
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput type="date" label={t('sep.rehireDate')} value={form.effectiveDate} onChange={(ev) => setForm({ ...form, effectiveDate: ev.currentTarget.value })} />
-          <TextInput type="date" label={t('sep.probationEnd')} value={form.probationEndDate} onChange={(ev) => setForm({ ...form, probationEndDate: ev.currentTarget.value })} />
+          <DateField label={t('sep.rehireDate')} value={form.effectiveDate} onChange={(v) => setForm({ ...form, effectiveDate: v })} />
+          <DateField label={t('sep.probationEnd')} value={form.probationEndDate} onChange={(v) => setForm({ ...form, probationEndDate: v })} />
           <Select
             label={t('sep.company')}
             data={(companies.data ?? []).map((c) => ({ value: c.id, label: localName(lang, c) }))}

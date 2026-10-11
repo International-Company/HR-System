@@ -23,6 +23,7 @@ import type { LeaveBalanceDto, LeaveRequestDto, LeaveTypeDto, LedgerEntryDto, Pe
 import { get, post, upload } from '../../lib/api';
 import { useAuth } from '../../auth/AuthContext';
 import { EmptyRow, ErrorAlert, StatusBadge, notifySaved } from '../../components/common';
+import { DateField } from '../../components/DateFields';
 
 export const LEAVE_STATUS_COLOR: Record<string, string> = { pending: 'requested', approved: 'success', rejected: 'failed', cancelled: 'inactive' };
 const today = () => new Date().toISOString().slice(0, 10);
@@ -133,8 +134,8 @@ export function LeaveRequestModal({ opened, onClose, employeeId, onBehalf }: { o
           required
         />
         <Group grow>
-          <TextInput type="date" label={t('leave.from')} value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.currentTarget.value, endDate: e.currentTarget.value > form.endDate ? e.currentTarget.value : form.endDate })} required />
-          <TextInput type="date" label={t('leave.to')} value={form.endDate} min={form.startDate} onChange={(e) => setForm({ ...form, endDate: e.currentTarget.value })} required />
+          <DateField label={t('leave.from')} value={form.startDate} onChange={(v) => setForm({ ...form, startDate: v, endDate: v > form.endDate ? v : form.endDate })} required />
+          <DateField label={t('leave.to')} value={form.endDate} min={form.startDate} onChange={(v) => setForm({ ...form, endDate: v })} required />
         </Group>
         <Textarea label={t('leave.reason')} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.currentTarget.value })} autosize minRows={2} />
         {attachment !== 'none' && (
@@ -188,7 +189,7 @@ export function PermissionModal({ opened, onClose, employeeId, onBehalf }: { ope
     <Modal opened={opened} onClose={onClose} title={t('leave.requestPermission')}>
       <Stack>
         <ErrorAlert error={submit.error} />
-        <TextInput type="date" label={t('leave.date')} value={form.date} onChange={(e) => setForm({ ...form, date: e.currentTarget.value })} required />
+        <DateField label={t('leave.date')} value={form.date} onChange={(v) => setForm({ ...form, date: v })} required />
         <Group grow>
           <TextInput type="time" label={t('leave.start')} value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.currentTarget.value })} required />
           <TextInput type="time" label={t('leave.end')} value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.currentTarget.value })} required />
@@ -398,7 +399,7 @@ export function AdjustModal({ opened, onClose, employeeId }: { opened: boolean; 
         />
         <Group grow>
           <NumberInput label={t('leave.amount')} decimalScale={2} min={-366} max={366} value={form.amount} onChange={(v) => setForm({ ...form, amount: Number(v) || 0 })} />
-          <TextInput type="date" label={t('leave.effectiveDate')} value={form.effectiveDate} max={today()} onChange={(e) => setForm({ ...form, effectiveDate: e.currentTarget.value })} />
+          <DateField label={t('leave.effectiveDate')} value={form.effectiveDate} max={today()} onChange={(v) => setForm({ ...form, effectiveDate: v })} />
         </Group>
         <Textarea label={t('leave.note')} value={form.note} onChange={(e) => setForm({ ...form, note: e.currentTarget.value })} required autosize minRows={2} />
         <Group justify="flex-end">

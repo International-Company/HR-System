@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Button, Card, Group, Modal, Paper, Select, Stack, Table, Tabs, Text, TextInput, Textarea, Timeline } from '@mantine/core';
+import { Badge, Button, Card, Group, Modal, Paper, Select, Stack, Table, Tabs, Text, Textarea, Timeline } from '@mantine/core';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -8,6 +8,7 @@ import type { DelegationDto, WorkflowInstanceDto } from '@hrms/shared';
 import { get, post } from '../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { EmptyRow, ErrorAlert, PageHeader, StatusBadge, notifyError, notifySaved } from '../components/common';
+import { DateField } from '../components/DateFields';
 
 const statusColor: Record<string, string> = { pending: 'requested', approved: 'success', rejected: 'failed', cancelled: 'inactive', skipped: 'inactive' };
 
@@ -261,8 +262,8 @@ function Delegations() {
             value={form.toUserId}
             onChange={(v) => setForm({ ...form, toUserId: v })}
           />
-          <TextInput type="date" label={t('tasks.from')} value={form.validFrom} onChange={(e) => setForm({ ...form, validFrom: e.currentTarget.value })} />
-          <TextInput type="date" label={t('tasks.to')} value={form.validTo} onChange={(e) => setForm({ ...form, validTo: e.currentTarget.value })} />
+          <DateField label={t('tasks.from')} value={form.validFrom} onChange={(v) => setForm({ ...form, validFrom: v })} />
+          <DateField label={t('tasks.to')} value={form.validTo} onChange={(v) => setForm({ ...form, validTo: v })} />
           <Button disabled={!form.toUserId} loading={create.isPending} onClick={() => create.mutate()}>
             {t('tasks.newDelegation')}
           </Button>

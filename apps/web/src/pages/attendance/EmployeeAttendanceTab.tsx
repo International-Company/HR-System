@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Group, Paper, TextInput } from '@mantine/core';
+import { Group, Paper } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { AttendanceDayDto } from '@hrms/shared';
 import { get } from '../../lib/api';
 import { ErrorAlert } from '../../components/common';
 import { AttendanceDaysTable } from './AttendanceDaysTable';
+import { DateField } from '../../components/DateFields';
 
 /** Attendance history in the employee profile (ATT-13); the API enforces scope. */
 export function EmployeeAttendanceTab({ employeeId }: { employeeId: string }) {
@@ -20,8 +21,8 @@ export function EmployeeAttendanceTab({ employeeId }: { employeeId: string }) {
   return (
     <Paper p="md">
       <Group mb="md">
-        <TextInput type="date" label={t('att.from')} value={from} max={to} onChange={(e) => setFrom(e.currentTarget.value)} />
-        <TextInput type="date" label={t('att.to')} value={to} max={today} onChange={(e) => setTo(e.currentTarget.value)} />
+        <DateField label={t('att.from')} value={from} max={to} onChange={(v) => setFrom(v)} />
+        <DateField label={t('att.to')} value={to} max={today} onChange={(v) => setTo(v)} />
       </Group>
       <ErrorAlert error={days.error} />
       <AttendanceDaysTable days={[...(days.data ?? [])].reverse()} />

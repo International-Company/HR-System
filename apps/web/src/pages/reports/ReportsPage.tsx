@@ -26,6 +26,7 @@ import { del, download, get, post, put } from '../../lib/api';
 import { useAuth } from '../../auth/AuthContext';
 import { useCompanies, useDepartments } from '../../lib/refdata';
 import { EmptyRow, ErrorAlert, PageHeader, localName, notifyError, notifySaved } from '../../components/common';
+import { DateField, MonthField } from '../../components/DateFields';
 
 type Schedule = SavedReportDto['schedule'];
 
@@ -139,11 +140,11 @@ export function ReportsPage() {
                   )}
                   {def.filters.includes('dateRange') && (
                     <>
-                      <TextInput type="date" label={t('rpt.from')} value={filters.from ?? ''} onChange={(e) => setFilters({ ...filters, from: e.currentTarget.value || undefined })} />
-                      <TextInput type="date" label={t('rpt.to')} value={filters.to ?? ''} onChange={(e) => setFilters({ ...filters, to: e.currentTarget.value || undefined })} />
+                      <DateField label={t('rpt.from')} value={filters.from ?? ''} onChange={(v) => setFilters({ ...filters, from: v || undefined })} />
+                      <DateField label={t('rpt.to')} value={filters.to ?? ''} onChange={(v) => setFilters({ ...filters, to: v || undefined })} />
                     </>
                   )}
-                  {def.filters.includes('month') && <TextInput type="month" label={t('rpt.month')} value={filters.month ?? ''} onChange={(e) => setFilters({ ...filters, month: e.currentTarget.value || undefined })} dir="ltr" />}
+                  {def.filters.includes('month') && <MonthField label={t('rpt.month')} value={filters.month ?? ''} onChange={(v) => setFilters({ ...filters, month: v || undefined })} />}
                   {def.filters.includes('status') && def.statuses && (
                     <Select w={180} label={t('rpt.status')} clearable data={def.statuses} value={filters.status ?? null} onChange={(v) => setFilters({ ...filters, status: v ?? undefined })} />
                   )}

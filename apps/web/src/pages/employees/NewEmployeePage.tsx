@@ -19,6 +19,7 @@ import {
   personalPayload,
 } from './forms';
 import { useCompanies } from '../../lib/refdata';
+import { DateField } from '../../components/DateFields';
 
 export function NewEmployeePage() {
   const { t } = useTranslation();
@@ -96,9 +97,9 @@ export function NewEmployeePage() {
           </Title>
           <Stack>
             <SimpleGrid cols={{ base: 1, sm: 3 }}>
-              <TextInput type="date" label={t('emp.hireDate')} value={hireDate} onChange={(e) => setHireDate(e.currentTarget.value)} required error={errs.hireDate} />
-              <TextInput type="date" label={t('emp.actualStart')} value={actualStart} onChange={(e) => setActualStart(e.currentTarget.value)} />
-              <TextInput type="date" label={t('emp.probationEnd')} value={probationEnd} onChange={(e) => setProbationEnd(e.currentTarget.value)} />
+              <DateField label={t('emp.hireDate')} value={hireDate} onChange={(v) => setHireDate(v)} required error={errs.hireDate} />
+              <DateField label={t('emp.actualStart')} value={actualStart} onChange={(v) => setActualStart(v)} />
+              <DateField label={t('emp.probationEnd')} value={probationEnd} onChange={(v) => setProbationEnd(v)} />
             </SimpleGrid>
             <AssignmentFields value={assignment} onChange={setAssignment} errors={errs} />
           </Stack>
