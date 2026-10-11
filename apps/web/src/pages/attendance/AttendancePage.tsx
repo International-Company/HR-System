@@ -29,6 +29,7 @@ import { get, post } from '../../lib/api';
 import { useAuth } from '../../auth/AuthContext';
 import { ErrorAlert, PageHeader, StatusBadge, errorMessage, notifyError, notifySaved } from '../../components/common';
 import { AttendanceDaysTable } from './AttendanceDaysTable';
+import { TimeField } from '../../components/DateFields';
 
 const TOKEN_KEY = 'hrms.attendance.deviceToken';
 const KIND_ICON: Record<PunchKind, typeof IconLogin2> = { in: IconLogin2, out: IconLogout2, break_start: IconPlayerPause, break_end: IconPlayerPlay };
@@ -302,7 +303,7 @@ function CorrectionModal({ day, onClose }: { day: AttendanceDayDto | null; onClo
                 onChange={(v) => setAdd(add.map((x, n) => (n === i ? { ...x, kind: (v ?? 'in') as PunchKind } : x)))}
                 allowDeselect={false}
               />
-              <TextInput aria-label={t('att.time')} w={110} type="time" value={a.time} onChange={(e) => setAdd(add.map((x, n) => (n === i ? { ...x, time: e.currentTarget.value } : x)))} />
+              <TimeField aria-label={t('att.time')} w={130} value={a.time} onChange={(v) => setAdd(add.map((x, n) => (n === i ? { ...x, time: v } : x)))} />
               <ActionIcon variant="subtle" color="red" mb={4} onClick={() => setAdd(add.filter((_, n) => n !== i))} aria-label={t('emp.remove')}>
                 <IconTrash size={14} />
               </ActionIcon>

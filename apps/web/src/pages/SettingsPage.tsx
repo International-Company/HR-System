@@ -20,6 +20,7 @@ import { BUSINESS_MODULES, WIDGETS, type SettingValue, type CompanyDto, type Mod
 import { del, get, patch, put } from '../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { ErrorAlert, PageHeader, localName, notifyError, notifySaved } from '../components/common';
+import { TimeField } from '../components/DateFields';
 
 const TIME_ZONES: string[] = (() => {
   try {
@@ -527,7 +528,7 @@ export function SettingsPage() {
             {row<{ enabled: boolean; dailyAt: string }>('backup.policy', t('settings.backup'), (v, set) => (
               <Stack>
                 <Switch label={t('settings.backupEnabled')} checked={v.enabled} onChange={(e) => set({ ...v, enabled: e.currentTarget.checked })} />
-                <TextInput label={t('settings.backupAt')} type="time" value={v.dailyAt} onChange={(e) => set({ ...v, dailyAt: e.currentTarget.value })} dir="ltr" />
+                <TimeField label={t('settings.backupAt')} value={v.dailyAt} onChange={(at) => set({ ...v, dailyAt: at })} />
               </Stack>
             ))}
           </SimpleGrid>
