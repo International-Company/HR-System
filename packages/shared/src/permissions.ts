@@ -210,6 +210,12 @@ export const PERMISSIONS = [
   p('separation.view', 'separation', 'View separations', 'عرض حالات إنهاء الخدمة'),
   p('separation.manage', 'separation', 'Cancel approved separations and decide rehire eligibility', 'إلغاء إنهاء الخدمة المعتمد وتحديد أهلية إعادة التوظيف'),
 
+  // Recruitment (Phase 9). Interviewers see the applications they interview for.
+  p('recruitment.view', 'recruitment', 'View vacancies and candidates', 'عرض الوظائف الشاغرة والمرشحين'),
+  p('recruitment.manage', 'recruitment', 'Manage vacancies, candidates and applications', 'إدارة الوظائف الشاغرة والمرشحين والطلبات'),
+  p('recruitment.offers', 'recruitment', 'Prepare job offers (salary)', 'إعداد عروض العمل (الراتب)', { sensitivity: 'financial' }),
+  p('recruitment.settings.manage', 'recruitment', 'Configure candidate stages and retention', 'ضبط مراحل المرشحين ومدة الاحتفاظ', { groupOnly: true }),
+
   // System backup
   p('system.backup.view', 'system', 'View backups', 'عرض النسخ الاحتياطية', {
     sensitivity: 'security',

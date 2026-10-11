@@ -27,7 +27,7 @@ const upload = FileInterceptor('file', {
   limits: { fileSize: 50 * 1024 * 1024, files: 1, fields: 10, fieldSize: 10_000 },
 });
 
-function sendFile(res: Response, file: { body: Buffer; mime: string; fileName: string }, inline: boolean) {
+export function sendFile(res: Response, file: { body: Buffer; mime: string; fileName: string }, inline: boolean) {
   res.setHeader('Content-Type', file.mime);
   res.setHeader('Content-Length', String(file.body.length));
   res.setHeader(

@@ -199,6 +199,52 @@ export class DocumentsService {
     });
   }
 
+  // --- linked entities other than employees (recruitment) ------------------------------------
+
+  /** Files linked to a candidate; the caller has authorised access to the candidate. */
+  async listForCandidate(tx: Tx, candidateId: string): Promise<DocumentDto[]> {
+    const rows = await tx
+      .select({ d: document, o: storedObject })
+      .from(documentLink)
+      .innerJoin(document, eq(document.id, documentLink.documentId))
+      .innerJoin(storedObject, eq(storedObject.id, document.objectId))
+      .where(and(eq(documentLink.entityType, 'candidate'), eq(documentLink.entityId, candidateId), eq(document.status, 'active')))
+      .orderBy(desc(document.createdAt));
+    return rows.map(({ d, o }) => toDocumentDto(d, o));
+  }
+
+  /** Content of a candidate's file; the caller has authorised access to the candidate. */
+  async candidateContent(principal: Principal, candidateId: string, documentId: string): Promise<{ body: Buffer; mime: string; fileName: string }> {
+    const storage = this.requireStorage();
+    const [row] = await this.database.tx(principal.rls(), (tx) =>
+      tx
+        .select({ d: document, o: storedObject })
+        .from(documentLink)
+        .innerJoin(document, eq(document.id, documentLink.documentId))
+        .innerJoin(storedObject, eq(storedObject.id, document.objectId))
+        .where(and(eq(documentLink.entityType, 'candidate'), eq(documentLink.entityId, candidateId), eq(document.id, documentId))),
+    );
+    if (!row || row.d.status === 'deleted') throw ApiError.notFound('Document');
+    const chunks: Buffer[] = [];
+    for await (const chunk of await storage.get(row.o.objectKey)) chunks.push(chunk as Buffer);
+    const body = this.encryptor.decrypt(Buffer.concat(chunks), `doc:${row.o.id}`);
+    if (!sha256(body).equals(row.o.sha256)) throw new Error(`Integrity check failed for object ${row.o.id}`);
+    await this.audit.recordStandalone({ action: 'documents.downloaded', entityType: 'document', entityId: documentId, companyId: row.d.companyId, details: { candidateId } });
+    return { body, mime: row.o.mime, fileName: safeFileName(row.d.originalName) };
+  }
+
+  /** On hiring (REC-06) the candidate's files also appear in the employee profile. */
+  async linkCandidateFilesToEmployee(tx: Tx, candidateId: string, employeeId: string): Promise<number> {
+    const docs = await tx.select({ id: documentLink.documentId }).from(documentLink).where(and(eq(documentLink.entityType, 'candidate'), eq(documentLink.entityId, candidateId)));
+    if (docs.length) {
+      await tx
+        .insert(documentLink)
+        .values(docs.map((d) => ({ documentId: d.id, entityType: 'employee' as const, entityId: employeeId })))
+        .onConflictDoNothing();
+    }
+    return docs.length;
+  }
+
   /** Decrypted content for download, after the same authorization as listing. */
   async content(principal: Principal, documentId: string): Promise<{ body: Buffer; mime: string; fileName: string }> {
     const storage = this.requireStorage();
@@ -253,12 +299,19 @@ export class DocumentsService {
      * forLeave: attachment of a leave request. The leave module has already authorised the
      * submitter for this employee, and the category comes from the leave type (C-12).
      */
-    opts: { supersedes?: DocumentRow; categoryCode?: string; forLeave?: boolean } = {},
+    opts: {
+      supersedes?: DocumentRow;
+      categoryCode?: string;
+      forLeave?: boolean;
+      /** A candidate's file (REC-02); the recruitment module has authorised the upload. */
+      candidate?: { id: string; companyId: string };
+    } = {},
   ): Promise<DocumentDto> {
     const storage = this.requireStorage();
     if (!file) throw ApiError.validation([{ path: 'file', message: 'A file is required' }]);
-    const ctx = await this.employeeContext(principal, employeeId);
-    if (!ctx.companyId || (!opts.forLeave && !principal.canCompany('documents.upload', ctx.companyId))) throw ApiError.forbidden();
+    const ctx = opts.candidate ? { companyId: opts.candidate.companyId, self: false, employeeId: '' } : await this.employeeContext(principal, employeeId);
+    const trusted = opts.forLeave || !!opts.candidate;
+    if (!ctx.companyId || (!trusted && !principal.canCompany('documents.upload', ctx.companyId))) throw ApiError.forbidden();
 
     const cat = await this.database.tx(principal.rls(), async (tx) => {
       const where = opts.categoryCode
@@ -268,7 +321,12 @@ export class DocumentsService {
       return c;
     });
     if (!cat || cat.status !== 'active') throw ApiError.validation([{ path: 'categoryId', message: 'Unknown or inactive category' }]);
-    if (!opts.forLeave && !this.canSeeCategory(principal, cat, { ...ctx, self: false })) {
+    if (opts.candidate) {
+      // Candidates never get medical files; identity files need the restricted permission.
+      if (cat.sensitivity === 'medical' || (cat.sensitivity === 'restricted' && !principal.canCompany('documents.view.restricted', ctx.companyId))) {
+        throw ApiError.forbidden('You cannot manage documents of this category');
+      }
+    } else if (!opts.forLeave && !this.canSeeCategory(principal, cat, { ...ctx, self: false })) {
       throw ApiError.forbidden('You cannot manage documents of this category');
     }
     const limits = await this.settings.get('documents.limits');
@@ -322,14 +380,16 @@ export class DocumentsService {
           updatedBy: principal.userId,
         })
         .returning();
-      await tx.insert(documentLink).values({ documentId: docId, entityType: 'employee', entityId: employeeId });
+      await tx.insert(documentLink).values(
+        opts.candidate ? { documentId: docId, entityType: 'candidate', entityId: opts.candidate.id } : { documentId: docId, entityType: 'employee', entityId: employeeId },
+      );
       if (opts.supersedes) {
         await tx
           .update(document)
           .set({ status: 'superseded', updatedBy: principal.userId })
           .where(eq(document.id, opts.supersedes.id));
       }
-      if (cat.code === 'photo') {
+      if (cat.code === 'photo' && !opts.candidate) {
         await tx.update(employee).set({ photoDocumentId: docId, updatedBy: principal.userId }).where(eq(employee.id, employeeId));
       }
       await this.audit.record(tx, {
@@ -337,7 +397,14 @@ export class DocumentsService {
         entityType: 'document',
         entityId: docId,
         companyId: ctx.companyId,
-        after: { employeeId, category: cat.code, title: fields.title, sizeBytes: file.buffer.length, mime: detected.mime, supersedes: opts.supersedes?.id ?? null },
+        after: {
+          ...(opts.candidate ? { candidateId: opts.candidate.id } : { employeeId }),
+          category: cat.code,
+          title: fields.title,
+          sizeBytes: file.buffer.length,
+          mime: detected.mime,
+          supersedes: opts.supersedes?.id ?? null,
+        },
       });
       return d!;
     });

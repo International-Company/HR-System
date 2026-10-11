@@ -49,6 +49,8 @@ import { PayrollService } from './payroll/payroll.service.js';
 import { PayrollController } from './payroll/payroll.controller.js';
 import { SeparationService } from './separation/separation.service.js';
 import { SeparationController } from './separation/separation.controller.js';
+import { RecruitmentService } from './recruitment/recruitment.service.js';
+import { RecruitmentController } from './recruitment/recruitment.controller.js';
 
 export interface AppDeps {
   config: AppConfig;
@@ -92,6 +94,7 @@ export function coreProviders(deps: AppDeps) {
     ContractsService,
     PayrollService,
     SeparationService,
+    RecruitmentService,
   ];
 }
 
@@ -120,6 +123,7 @@ export class AppModule {
         ContractsController,
         PayrollController,
         SeparationController,
+        RecruitmentController,
       ],
       providers: [
         ...coreProviders(deps),
