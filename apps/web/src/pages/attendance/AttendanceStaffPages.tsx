@@ -10,6 +10,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { useCompanies, useLocations } from '../../lib/refdata';
 import { EmptyRow, ErrorAlert, PageHeader, StatusBadge, localName, notifyError, notifySaved } from '../../components/common';
 import { hm } from './AttendanceDaysTable';
+import { DateField } from '../../components/DateFields';
 
 interface ReviewRow {
   employeeId: string;
@@ -63,8 +64,8 @@ export function AttendanceReviewPage() {
       <PageHeader title={t('att.review')} subtitle={t('att.reviewHint')} />
       <Group mb="md" align="flex-end" wrap="wrap">
         <Select w={240} label={t('emp.company')} data={(companies.data ?? []).map((c) => ({ value: c.id, label: localName(lang, c) }))} value={companyId} onChange={setCompanyId} allowDeselect={false} />
-        <TextInput type="date" label={t('att.from')} value={from} onChange={(e) => setFrom(e.currentTarget.value)} />
-        <TextInput type="date" label={t('att.to')} value={to} onChange={(e) => setTo(e.currentTarget.value)} />
+        <DateField label={t('att.from')} value={from} onChange={(v) => setFrom(v)} />
+        <DateField label={t('att.to')} value={to} onChange={(v) => setTo(v)} />
       </Group>
       <ErrorAlert error={rows.error} />
       <Paper>

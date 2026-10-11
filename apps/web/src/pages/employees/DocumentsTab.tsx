@@ -8,6 +8,7 @@ import { get, post, upload } from '../../lib/api';
 import { useAuth } from '../../auth/AuthContext';
 import { useDocumentCategories } from '../../lib/refdata';
 import { EmptyRow, ErrorAlert, StatusBadge, localName, notifyError, notifySaved } from '../../components/common';
+import { DateField } from '../../components/DateFields';
 
 export function DocumentsTab({ employeeId, canManage }: { employeeId: string; canManage: boolean }) {
   const { t } = useTranslation();
@@ -162,7 +163,7 @@ export function DocumentsTab({ employeeId, canManage }: { employeeId: string; ca
             )}
             <TextInput label={t('docs.docTitle')} value={form.title} onChange={(e) => setForm({ ...form, title: e.currentTarget.value })} required />
             {!form.replaceId && selected?.hasExpiry && (
-              <TextInput type="date" label={t('docs.expiry')} value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.currentTarget.value })} />
+              <DateField label={t('docs.expiry')} value={form.expiryDate} onChange={(v) => setForm({ ...form, expiryDate: v })} />
             )}
             <FileInput ref={fileRef} label={t('docs.file')} value={form.file} onChange={(f) => setForm({ ...form, file: f })} required clearable />
             <Group justify="flex-end">

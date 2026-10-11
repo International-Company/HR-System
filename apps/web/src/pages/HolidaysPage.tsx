@@ -8,6 +8,7 @@ import { del, get, post } from '../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { useCompanies } from '../lib/refdata';
 import { EmptyRow, ErrorAlert, PageHeader, localName, notifyError, notifySaved } from '../components/common';
+import { DateField } from '../components/DateFields';
 
 export function HolidaysPage() {
   const { t } = useTranslation();
@@ -97,7 +98,7 @@ export function HolidaysPage() {
               onChange={(v) => setForm({ ...form, companyId: v || null })}
               allowDeselect={false}
             />
-            <TextInput type="date" label={t('cal.date')} value={form.date} onChange={(e) => setForm({ ...form, date: e.currentTarget.value })} required />
+            <DateField label={t('cal.date')} value={form.date} onChange={(v) => setForm({ ...form, date: v })} required />
             <TextInput label={t('app.nameAr')} value={form.nameAr} onChange={(e) => setForm({ ...form, nameAr: e.currentTarget.value })} required dir="rtl" />
             <TextInput label={t('app.nameEn')} value={form.nameEn} onChange={(e) => setForm({ ...form, nameEn: e.currentTarget.value })} required dir="ltr" />
             <Group justify="flex-end">

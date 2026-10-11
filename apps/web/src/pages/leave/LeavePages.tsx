@@ -36,6 +36,7 @@ import {
   SectionTitle,
   useLeaveTypes,
 } from './LeaveParts';
+import { DateField } from '../../components/DateFields';
 
 /** Balances, requests and permissions of one employee (self-service and the profile tab). */
 export function EmployeeLeaveTab({ employeeId }: { employeeId: string }) {
@@ -141,8 +142,8 @@ export function LeaveManagePage() {
         <Tabs.Panel value="requests">
           <Group mb="md" align="flex-end" wrap="wrap">
             <Select w={240} label={t('leave.company')} data={(companies.data ?? []).map((c) => ({ value: c.id, label: localName(lang, c) }))} value={company} onChange={setCompanyId} allowDeselect={false} />
-            <TextInput type="date" label={t('leave.from')} value={from} onChange={(e) => setFrom(e.currentTarget.value)} />
-            <TextInput type="date" label={t('leave.to')} value={to} onChange={(e) => setTo(e.currentTarget.value)} />
+            <DateField label={t('leave.from')} value={from} onChange={(v) => setFrom(v)} />
+            <DateField label={t('leave.to')} value={to} onChange={(v) => setTo(v)} />
           </Group>
           <Paper>
             <ErrorAlert error={requests.error} />

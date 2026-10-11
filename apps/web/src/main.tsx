@@ -1,14 +1,17 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { DirectionProvider, Loader, Center, MantineProvider } from '@mantine/core';
+import { DatesProvider } from '@mantine/dates';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router';
 import '@fontsource-variable/cairo';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
+import '@mantine/dates/styles.css';
 import './i18n';
 import { theme } from './theme';
+import { datesLocale } from './lib/dates';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { ApiError } from './lib/api';
 import { AppLayout } from './layout/AppLayout';
@@ -130,8 +133,10 @@ function Root() {
   return (
     <DirectionProvider initialDirection={dir} detectDirection key={dir}>
       <MantineProvider theme={theme} defaultColorScheme="light">
-        <Notifications position={dir === 'rtl' ? 'top-left' : 'top-right'} />
-        <Gate />
+        <DatesProvider settings={datesLocale(settings.language, settings.numerals)}>
+          <Notifications position={dir === 'rtl' ? 'top-left' : 'top-right'} />
+          <Gate />
+        </DatesProvider>
       </MantineProvider>
     </DirectionProvider>
   );

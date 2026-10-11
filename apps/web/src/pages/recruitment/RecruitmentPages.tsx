@@ -40,6 +40,7 @@ import { get, patch, post, upload } from '../../lib/api';
 import { useAuth } from '../../auth/AuthContext';
 import { lookupOptions, useCompanies, useDepartments, useDocumentCategories, useEmployeeOptions, useLookups } from '../../lib/refdata';
 import { EmptyRow, ErrorAlert, PageHeader, StatusBadge, localName, notifyError, notifySaved } from '../../components/common';
+import { DateField, DateTimeField } from '../../components/DateFields';
 
 const VAC_COLOR: Record<string, string> = { draft: 'inactive', open: 'success', on_hold: 'requested', closed: 'inactive', filled: 'success' };
 const OUTCOME_COLOR: Record<string, string> = { open: 'requested', accepted: 'success', rejected: 'failed', withdrawn: 'inactive' };
@@ -685,7 +686,7 @@ function InterviewModal({ applicationId, onClose }: { applicationId: string; onC
     <Modal opened onClose={onClose} title={t('rec.schedule')}>
       <Stack>
         <ErrorAlert error={save.error} />
-        <TextInput type="datetime-local" label={t('rec.when')} value={form.when} onChange={(e) => setForm({ ...form, when: e.currentTarget.value })} required />
+        <DateTimeField label={t('rec.when')} value={form.when} onChange={(v) => setForm({ ...form, when: v })} required />
         <Group grow>
           <NumberInput label={t('rec.duration')} min={10} max={480} value={form.durationMinutes} onChange={(v) => setForm({ ...form, durationMinutes: Number(v) || 45 })} />
           <Select label={t('rec.mode')} data={['in_person', 'phone', 'video'].map((m) => ({ value: m, label: t(`rec.modes.${m}`) }))} value={form.mode} onChange={(v) => setForm({ ...form, mode: v ?? 'in_person' })} allowDeselect={false} />
@@ -761,7 +762,7 @@ function OfferModal({ application: a, onClose }: { application: ApplicationDto; 
           <NumberInput label={t('rec.salary')} min={0} decimalScale={2} value={form.baseSalary} onChange={(v) => setForm({ ...form, baseSalary: Number(v) || 0 })} />
           <TextInput label={t('rec.currency')} maxLength={3} dir="ltr" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.currentTarget.value.toUpperCase() })} />
         </Group>
-        <TextInput type="date" label={t('rec.startDate')} value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.currentTarget.value })} />
+        <DateField label={t('rec.startDate')} value={form.startDate} onChange={(v) => setForm({ ...form, startDate: v })} />
         <Select label={t('rec.jobTitle')} clearable searchable data={lookupOptions(lookups.data, 'job_title', settings.language, a.companyId)} value={form.jobTitleId} onChange={(v) => setForm({ ...form, jobTitleId: v })} />
         <Textarea label={t('rec.notes')} autosize value={form.notes} onChange={(e) => setForm({ ...form, notes: e.currentTarget.value })} />
         <Group justify="flex-end">
@@ -805,8 +806,8 @@ function HireModal({ application: a, onClose }: { application: ApplicationDto; o
         <ErrorAlert error={save.error} />
         <Alert variant="light">{t('rec.hireHint')}</Alert>
         <Group grow>
-          <TextInput type="date" label={t('rec.hireDate')} value={form.hireDate} onChange={(e) => setForm({ ...form, hireDate: e.currentTarget.value })} />
-          <TextInput type="date" label={t('rec.probationEnd')} value={form.probationEndDate} onChange={(e) => setForm({ ...form, probationEndDate: e.currentTarget.value })} />
+          <DateField label={t('rec.hireDate')} value={form.hireDate} onChange={(v) => setForm({ ...form, hireDate: v })} />
+          <DateField label={t('rec.probationEnd')} value={form.probationEndDate} onChange={(v) => setForm({ ...form, probationEndDate: v })} />
         </Group>
         <Select label={t('rec.department')} clearable data={(departments.data ?? []).map((d) => ({ value: d.id, label: localName(settings.language, d) }))} value={form.departmentId ?? null} onChange={(v) => setForm({ ...form, departmentId: v })} />
         <Select

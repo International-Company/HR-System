@@ -56,6 +56,7 @@ import {
 } from './forms';
 import { EmployeeAvatar, EmployeeStatusBadge } from './EmployeesListPage';
 import { DocumentsTab } from './DocumentsTab';
+import { DateField } from '../../components/DateFields';
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -483,7 +484,7 @@ function EmploymentTab({
                   onChange={(v) => setChange({ ...change, event: v ?? 'job_change', ...(v !== 'transfer' ? { companyId: cur.companyId } : {}) })}
                   allowDeselect={false}
                 />
-                <TextInput type="date" label={t('emp.effectiveDate')} value={change.effectiveDate} onChange={(ev) => setChange({ ...change, effectiveDate: ev.currentTarget.value })} required error={fieldErrors(saveChange.error).effectiveDate} />
+                <DateField label={t('emp.effectiveDate')} value={change.effectiveDate} onChange={(v) => setChange({ ...change, effectiveDate: v })} required error={fieldErrors(saveChange.error).effectiveDate} />
               </SimpleGrid>
               <AssignmentFields
                 value={change}
@@ -517,7 +518,7 @@ function EmploymentTab({
               onChange={(v) => setStatus({ ...status, status: v })}
               required
             />
-            <TextInput type="date" label={t('emp.effectiveDate')} value={status.effectiveDate} onChange={(ev) => setStatus({ ...status, effectiveDate: ev.currentTarget.value })} />
+            <DateField label={t('emp.effectiveDate')} value={status.effectiveDate} onChange={(v) => setStatus({ ...status, effectiveDate: v })} />
             <Textarea label={t('emp.reason')} value={status.reason} onChange={(ev) => setStatus({ ...status, reason: ev.currentTarget.value })} required autosize minRows={2} />
             <Group justify="flex-end">
               <Button variant="default" onClick={() => setStatus(null)}>
@@ -678,7 +679,7 @@ function CompensationTab({ e, onSaved }: { e: EmployeeDto; onSaved: () => Promis
                   onChange={(v) => setChange({ ...change, event: v ?? 'salary_change' })}
                   allowDeselect={false}
                 />
-                <TextInput type="date" label={t('emp.effectiveDate')} value={change.effectiveDate} onChange={(ev) => setChange({ ...change, effectiveDate: ev.currentTarget.value })} required error={fieldErrors(save.error).effectiveDate} />
+                <DateField label={t('emp.effectiveDate')} value={change.effectiveDate} onChange={(v) => setChange({ ...change, effectiveDate: v })} required error={fieldErrors(save.error).effectiveDate} />
               </SimpleGrid>
               <CompensationFields value={change} onChange={(v) => setChange({ ...change, ...v })} companyId={e.current?.companyId ?? null} errors={fieldErrors(save.error)} />
               <Textarea label={t('emp.reason')} value={change.reason} onChange={(ev) => setChange({ ...change, reason: ev.currentTarget.value })} required autosize minRows={2} />

@@ -23,6 +23,7 @@ import { get, patch, post } from '../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { employeeName, useCompanies, useDepartments, useEmployeeOptions } from '../lib/refdata';
 import { EmptyRow, ErrorAlert, PageHeader, StatusBadge, localName, notifySaved } from '../components/common';
+import { DateField } from '../components/DateFields';
 
 type Draft = Omit<ScheduleDto, 'id' | 'version' | 'status'> & { id?: string; version?: number; status: 'active' | 'inactive' };
 
@@ -350,7 +351,7 @@ function Assignments({ companyId, schedules }: { companyId: string; schedules: S
                 onChange={(v) => setForm({ ...form, employeeId: v })}
               />
             )}
-            <TextInput type="date" label={t('cal.validFrom')} value={form.validFrom} onChange={(e) => setForm({ ...form, validFrom: e.currentTarget.value })} />
+            <DateField label={t('cal.validFrom')} value={form.validFrom} onChange={(v) => setForm({ ...form, validFrom: v })} />
             <Group justify="flex-end">
               <Button variant="default" onClick={() => setForm(null)}>
                 {t('app.cancel')}

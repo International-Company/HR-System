@@ -29,6 +29,7 @@ import { get, post, put } from '../../lib/api';
 import { useAuth } from '../../auth/AuthContext';
 import { useCompanies, useEmployeeOptions } from '../../lib/refdata';
 import { EmptyRow, ErrorAlert, PageHeader, StatusBadge, localName, notifyError, notifySaved } from '../../components/common';
+import { DateField, MonthField } from '../../components/DateFields';
 
 const RUN_COLOR: Record<string, string> = { draft: 'inactive', submitted: 'requested', approved: 'success', superseded: 'inactive' };
 const PAY_COLOR: Record<string, string> = { pending: 'requested', paid: 'success', failed: 'failed', cancelled: 'inactive' };
@@ -93,7 +94,7 @@ export function PayrollPage() {
             <Select w={240} label={t('pay.company')} data={(companies.data ?? []).map((c) => ({ value: c.id, label: localName(lang, c) }))} value={company} onChange={setCompanyId} allowDeselect={false} />
             {can('payroll.prepare') && (
               <>
-                <TextInput type="month" label={t('pay.period')} value={period} onChange={(e) => setPeriod(e.currentTarget.value)} dir="ltr" />
+                <MonthField label={t('pay.period')} value={period} onChange={(v) => setPeriod(v)} />
                 <Button leftSection={<IconPlus size={16} />} loading={create.isPending} disabled={!company || !period} onClick={() => create.mutate()}>
                   {t('pay.newRun')}
                 </Button>
@@ -158,7 +159,7 @@ function GroupSummary() {
   const q = useQuery({ queryKey: ['payroll', 'summary', period], queryFn: () => get<GroupSummaryDto>(`/payroll/summary?period=${period}`), enabled: /^\d{4}-\d{2}$/.test(period) });
   return (
     <Stack>
-      <TextInput w={200} type="month" label={t('pay.period')} value={period} onChange={(e) => setPeriod(e.currentTarget.value)} dir="ltr" />
+      <MonthField w={200} label={t('pay.period')} value={period} onChange={(v) => setPeriod(v)} />
       <ErrorAlert error={q.error} />
       <Paper>
         <Table>
@@ -221,7 +222,7 @@ function EndOfServicePanel() {
           value={employeeId}
           onChange={setEmployeeId}
         />
-        <TextInput type="date" label={t('pay.eosEndDate')} value={endDate} onChange={(e) => setEndDate(e.currentTarget.value)} />
+        <DateField label={t('pay.eosEndDate')} value={endDate} onChange={(v) => setEndDate(v)} />
         <Button disabled={!employeeId} loading={calc.isPending} onClick={() => calc.mutate()}>
           {t('pay.calculate')}
         </Button>
@@ -525,7 +526,7 @@ function PaymentModal({ line, onClose }: { line: PayLineDto; onClose: () => void
           <Select label={t('pay.status')} data={['pending', 'paid', 'failed', 'cancelled'].map((s) => ({ value: s, label: t(`pay.paymentStatuses.${s}`) }))} value={form.status} onChange={(v) => setForm({ ...form, status: v ?? 'paid' })} allowDeselect={false} />
           <Select label={t('pay.method')} data={['bank_transfer', 'cash', 'cheque'].map((s) => ({ value: s, label: t(`pay.methods.${s}`) }))} value={form.method} onChange={(v) => setForm({ ...form, method: v ?? 'bank_transfer' })} allowDeselect={false} />
           <NumberInput label={`${t('pay.amount')} (${line.currency})`} decimalScale={2} min={0.01} value={form.amount} onChange={(v) => setForm({ ...form, amount: Number(v) || 0 })} />
-          <TextInput type="date" label={t('pay.paidOn')} value={form.paidOn} onChange={(e) => setForm({ ...form, paidOn: e.currentTarget.value })} />
+          <DateField label={t('pay.paidOn')} value={form.paidOn} onChange={(v) => setForm({ ...form, paidOn: v })} />
         </SimpleGrid>
         <TextInput label={t('pay.reference')} value={form.reference} onChange={(e) => setForm({ ...form, reference: e.currentTarget.value })} dir="ltr" />
         <Textarea label={t('pay.note')} value={form.note} onChange={(e) => setForm({ ...form, note: e.currentTarget.value })} autosize />
