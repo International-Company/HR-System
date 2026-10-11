@@ -60,17 +60,17 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | LEV-06 | leave | P5 | U, I | `leave.policies.*` | ✅ `leave.test.ts` (deduction timing, cancellation, retroactive) |
 | LEV-07 | leave, attendance | P5 | I | `leave.attendance-integration` | ✅ `leave.test.ts` (absence → leave) |
 | LEV-08 | leave, documents | P5 | I, A | `leave.attachment-required`, `medical.restricted` | ✅ `leave.test.ts` (C-12) |
-| PAY-01 | payroll | P7 | U (golden cases) | `payroll.calc.*` | ⏳ |
-| PAY-02 | payroll | P7 | I, A | `payroll.company-run`, `group-summary` | ⏳ |
-| PAY-03 | payroll | P7 | A, E | NEG-01, `payslip.pdf` | ⏳ |
-| PAY-04 | payroll, workflow | P7 | I | `payroll.approval.*` | ⏳ |
-| PAY-05 | payroll | P7 | D, A | NEG-07, `payroll.reopen` | ⏳ |
-| PAY-06 | payroll | P7 | I | `payments.*` | ⏳ |
-| PAY-07 | payroll | P7 | U, I | `multicurrency.*` | ⏳ |
-| PAY-08 | payroll, settings | P7 | U, I | `payroll.config.*`, `proration.*` | ⏳ |
-| PAY-09 | payroll | Future | Doc | port documented | ⏳ |
-| PAY-10 | payroll | Future | X | module disabled by default | ⏳ |
-| PAY-11 | payroll, separation | P7/P8 | U | `settlement.*` | ⏳ |
+| PAY-01 | payroll | P7 | U (golden cases) | `payroll.calc.*` | ✅ `payroll-calc.test.ts`, `payroll.test.ts` |
+| PAY-02 | payroll | P7 | I, A | `payroll.company-run`, `group-summary` | ✅ `payroll-calc.test.ts`, `payroll.test.ts` |
+| PAY-03 | payroll | P7 | A, E | NEG-01, `payslip.pdf` | ✅ `payroll-calc.test.ts`, `payroll.test.ts` |
+| PAY-04 | payroll, workflow | P7 | I | `payroll.approval.*` | ✅ `payroll-calc.test.ts`, `payroll.test.ts` |
+| PAY-05 | payroll | P7 | D, A | NEG-07, `payroll.reopen` | ✅ `payroll-calc.test.ts`, `payroll.test.ts` |
+| PAY-06 | payroll | P7 | I | `payments.*` | ✅ `payroll-calc.test.ts`, `payroll.test.ts` |
+| PAY-07 | payroll | P7 | U, I | `multicurrency.*` | ✅ `payroll-calc.test.ts`, `payroll.test.ts` |
+| PAY-08 | payroll, settings | P7 | U, I | `payroll.config.*`, `proration.*` | ✅ `payroll-calc.test.ts`, `payroll.test.ts` |
+| PAY-09 | payroll | Future | Doc | port documented | ➖ future (extension point / optional module) |
+| PAY-10 | payroll | Future | X | module disabled by default | ➖ future (extension point / optional module) |
+| PAY-11 | payroll, separation | P7/P8 | U | `settlement.*` | ✅ `payroll-calc.test.ts`, `payroll.test.ts` |
 | CEV-01, CEV-02 | evaluation | P10 | U, I | `evaluation.*` | ⏳ |
 | CEV-03 | evaluation | P10 | X | `exclusion.performance-appraisal` | ⏳ |
 | CON-01, CON-02 | contracts | P6 | I, E | `contract.template.*` | ✅ `contracts.test.ts` (templates, clauses, merge fields) |

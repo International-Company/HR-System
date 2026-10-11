@@ -163,6 +163,7 @@ export function SettingsPage() {
           <Tabs.Tab value="attendance">{t('att.policy')}</Tabs.Tab>
           <Tabs.Tab value="leave">{t('leave.permissionPolicy')}</Tabs.Tab>
           <Tabs.Tab value="contracts">{t('ctr.policy')}</Tabs.Tab>
+          <Tabs.Tab value="payroll">{t('pay.policy')}</Tabs.Tab>
           {can('system.backup.view') && <Tabs.Tab value="backup">{t('settings.backup')}</Tabs.Tab>}
         </Tabs.List>
 
@@ -323,6 +324,86 @@ export function SettingsPage() {
               </SimpleGrid>
             );
           })}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="payroll">
+          <Stack>
+            {row<SettingValue<'payroll.policy'>>('payroll.policy', t('pay.policy'), (v, set) => {
+              const f = (k: string) => t(`pay.policyFields.${k}`);
+              return (
+                <SimpleGrid cols={{ base: 1, md: 2 }}>
+                  <Select
+                    label={f('dayRateBasis')}
+                    data={(['fixed_30', 'calendar_days', 'working_days'] as const).map((x) => ({ value: x, label: f(`dayRateBases.${x}`) }))}
+                    value={v.dayRateBasis}
+                    onChange={(x) => set({ ...v, dayRateBasis: (x ?? v.dayRateBasis) as typeof v.dayRateBasis })}
+                    allowDeselect={false}
+                  />
+                  <NumberInput label={f('hoursPerDay')} min={1} max={24} decimalScale={2} value={v.hoursPerDay} onChange={(x) => set({ ...v, hoursPerDay: Number(x) || 8 })} />
+                  <NumberInput label={f('overtimeMultiplier')} min={0} max={5} decimalScale={2} step={0.25} value={v.overtimeMultiplier} onChange={(x) => set({ ...v, overtimeMultiplier: Number(x) || 0 })} />
+                  <NumberInput label={f('holidayWorkMultiplier')} min={0} max={5} decimalScale={2} step={0.25} value={v.holidayWorkMultiplier} onChange={(x) => set({ ...v, holidayWorkMultiplier: Number(x) || 0 })} />
+                  <Select
+                    label={f('latenessDeduction')}
+                    data={(['none', 'per_minute'] as const).map((x) => ({ value: x, label: f(`latenessDeductions.${x}`) }))}
+                    value={v.latenessDeduction}
+                    onChange={(x) => set({ ...v, latenessDeduction: (x ?? v.latenessDeduction) as typeof v.latenessDeduction })}
+                    allowDeselect={false}
+                  />
+                  <NumberInput label={f('latenessToleranceMinutes')} min={0} max={10000} value={v.latenessToleranceMinutes} onChange={(x) => set({ ...v, latenessToleranceMinutes: Number(x) || 0 })} />
+                  <Select
+                    label={f('absenceDeduction')}
+                    data={(['none', 'confirmed', 'confirmed_and_pending'] as const).map((x) => ({ value: x, label: f(`absenceDeductions.${x}`) }))}
+                    value={v.absenceDeduction}
+                    onChange={(x) => set({ ...v, absenceDeduction: (x ?? v.absenceDeduction) as typeof v.absenceDeduction })}
+                    allowDeselect={false}
+                  />
+                  <NumberInput label={f('payDay')} min={1} max={31} value={v.payDay} onChange={(x) => set({ ...v, payDay: Number(x) || 28 })} />
+                  <Switch label={f('unpaidLeaveDeduction')} checked={v.unpaidLeaveDeduction} onChange={(e) => set({ ...v, unpaidLeaveDeduction: e.currentTarget.checked })} />
+                  <Switch label={f('notifyEmployees')} checked={v.notifyEmployees} onChange={(e) => set({ ...v, notifyEmployees: e.currentTarget.checked })} />
+                </SimpleGrid>
+              );
+            })}
+            {row<SettingValue<'payroll.endOfService'>>('payroll.endOfService', t('pay.eosPolicy'), (v, set) => {
+              const f = (k: string) => t(`pay.eosFields.${k}`);
+              return (
+                <Stack>
+                  <SimpleGrid cols={{ base: 1, md: 2 }}>
+                    <Select
+                      label={f('method')}
+                      data={(['none', 'days_per_year', 'months_per_year'] as const).map((x) => ({ value: x, label: f(`methods.${x}`) }))}
+                      value={v.method}
+                      onChange={(x) => set({ ...v, method: (x ?? v.method) as typeof v.method })}
+                      allowDeselect={false}
+                    />
+                    <NumberInput label={f('minYears')} min={0} max={10} decimalScale={2} value={v.minYears} onChange={(x) => set({ ...v, minYears: Number(x) || 0 })} />
+                    {v.method === 'months_per_year' && <NumberInput label={f('monthsPerYear')} min={0} max={12} decimalScale={2} value={v.monthsPerYear} onChange={(x) => set({ ...v, monthsPerYear: Number(x) || 0 })} />}
+                    <NumberInput label={f('capMonths')} min={0} max={120} value={v.capMonths ?? ''} onChange={(x) => set({ ...v, capMonths: x === '' ? null : Number(x) })} />
+                  </SimpleGrid>
+                  {v.method === 'days_per_year' && (
+                    <Stack gap="xs">
+                      <Group justify="space-between">
+                        <Text size="sm" fw={500}>
+                          {f('bands')}
+                        </Text>
+                        <Button size="compact-xs" variant="light" onClick={() => set({ ...v, bands: [...v.bands, { fromYears: v.bands.length ? 5 : 0, daysPerYear: 21 }] })}>
+                          {f('addBand')}
+                        </Button>
+                      </Group>
+                      {v.bands.map((b, i) => (
+                        <Group key={i} gap="xs" align="flex-end">
+                          <NumberInput w={140} label={f('fromYears')} min={0} max={60} value={b.fromYears} onChange={(x) => set({ ...v, bands: v.bands.map((y, n) => (n === i ? { ...y, fromYears: Number(x) || 0 } : y)) })} />
+                          <NumberInput w={140} label={f('daysPerYear')} min={0} max={365} value={b.daysPerYear} onChange={(x) => set({ ...v, bands: v.bands.map((y, n) => (n === i ? { ...y, daysPerYear: Number(x) || 0 } : y)) })} />
+                          <Button size="compact-xs" variant="subtle" color="red" mb={6} onClick={() => set({ ...v, bands: v.bands.filter((_, n) => n !== i) })}>
+                            ✕
+                          </Button>
+                        </Group>
+                      ))}
+                    </Stack>
+                  )}
+                </Stack>
+              );
+            })}
+          </Stack>
         </Tabs.Panel>
 
         <Tabs.Panel value="backup">

@@ -3,6 +3,7 @@ import { p3En } from './p3-en';
 import { p4En } from './p4-en';
 import { p5En } from './p5-en';
 import { p6En } from './p6-en';
+import { p7En } from './p7-en';
 
 /** English UI strings. ar.ts must provide exactly the same keys (checked by a test). */
 export const en = {
@@ -61,6 +62,8 @@ export const en = {
     leaveManage: 'Leave management',
     contracts: 'Contracts',
     contractSetup: 'Contract setup',
+    payroll: 'Payroll',
+    payslips: 'My payslips',
     account: 'My account',
     logout: 'Sign out',
     administration: 'Administration',
@@ -281,6 +284,7 @@ export const en = {
   ...p4En,
   ...p5En,
   ...p6En,
+  ...p7En,
 };
 
 export type Messages = typeof en;

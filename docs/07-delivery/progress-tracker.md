@@ -14,7 +14,7 @@ Last updated: 2026-10-10
 | P4 Attendance | 🔄 Implementation complete (DL-030) | 148 API tests passing locally (+2 server-only in CI) incl. 16 golden cases and 14 attendance integration tests; local HTTP smoke test passed | ❓ Proxy spoof spike on Railway; HR sign-off of golden cases; k6 burst test; review of defaults (DL-031) |
 | P5 Leave | 🔄 Implementation complete (DL-038) | 172 API tests passing locally (+2 server-only in CI) incl. 10 leave-rule golden cases and 13 leave integration tests; migration 0005 applied to an existing database | ❓ HR sign-off of golden cases; review of defaults (DL-038); grant `documents.view.medical` to HR staff who check sick notes |
 | P6 Contracts | 🔄 Implementation complete (DL-040) | 184 API tests passing locally (+2 server-only in CI) incl. 14 contract tests; migration 0006 applied to an existing database | ❓ Legal review of in-app signing (DL-042); Arabic print check signed off; review of defaults (DL-043) |
-| P7 Payroll | ⏳ | — | Q-13, Q-24, Q-28 |
+| P7 Payroll | 🔄 Implementation complete (DL-044) | 203 API tests passing locally (+2 server-only in CI) incl. 9 payroll golden cases and 10 payroll integration tests; migration 0007 applied to an existing database | ❓ HR/Finance golden cases signed off; Q-24 statutory deductions (DL-045); Q-28 country; performance test on the largest company |
 | P8 Separation & rehire | ⏳ | — | Q-27 |
 | P9 Recruitment | ⏳ | — | Q-11 |
 | P10 Commitment evaluation | ⏳ | — | — |
@@ -139,3 +139,24 @@ Last updated: 2026-10-10
 | Contracts | Drafts generated from templates (manual text edit with permission), sending for signature, in-app signing with evidence or upload of a signed copy, database-locked signed versions, addenda, extensions, renewal as a new linked contract, ending, probation outcomes |
 | Automation | Daily job: expiry and probation alerts (in-app/push) to HR, manager and/or employee, expiry (or hold during approved leave), automatic renewal only for allowed types |
 | Web | Contracts page (awaiting my signature, my contracts, search by company/status/type/expiry/number or name), contract page with versions, signatures, evidence and print, contract setup (templates, clauses, types), contracts tab in the profile (configurable), contract settings |
+
+## Phase 7 acceptance criteria (roadmap.md)
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Golden cases pass to the minor currency unit | ✅ code / ⏳ HR-Finance sign-off | `payroll-calc.test.ts` (9 cases), `payroll.test.ts` |
+| 2 | NEG-01 (other employee's payslip) and NEG-07 (edit a locked run, API and SQL) pass | ✅ | `payroll.test.ts` |
+| 3 | A locked run is reproducible from its snapshot | ✅ | Each line stores all calculation inputs (`payroll_line.inputs`) |
+| 4 | Reopen keeps the previous revision and the audit reason | ✅ | `payroll.test.ts` (revision 2, superseded, reason) |
+| 5 | Preparer ≠ approver | ✅ | Workflow excludes the requester (`payroll.test.ts`) |
+| 6 | Performance target for the largest company | ⏳ staging | — |
+
+## Phase 7 deliverables
+
+| Area | Delivered |
+|---|---|
+| Calculation | Base and recurring items prorated by days employed, mid-month salary changes, overtime and holiday work with multipliers, lateness per minute after tolerance, absence (confirmed or also unreviewed), unpaid leave, manual bonuses and deductions, rounding to cents, explanation per item, warnings (no salary, currency change, negative net) |
+| Runs | One per company and month, recalculation keeps manual items, exchange rates per run, submission and approval through the workflow, database lock after approval, reopening as an audited new revision |
+| Payments and payslips | Payment history per employee (status, method, reference, date), payslips for employees (own and approved only), printable payslip, notification when ready |
+| Group | Summary per company and currency with optional conversion; end-of-service calculator with configurable methods |
+| Web | Payroll page (runs, group summary, end of service), run page with lines, items, manual entries, payments, rates, submit and reopen; My payslips; payroll and end-of-service settings |

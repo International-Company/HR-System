@@ -36,6 +36,7 @@ import { AttendanceAdminPage, AttendanceReviewPage } from './pages/attendance/At
 import { LeaveManagePage, LeavePage } from './pages/leave/LeavePages';
 import { ContractDetailPage, ContractsPage } from './pages/contracts/ContractPages';
 import { ContractSetupPage } from './pages/contracts/ContractSetupPage';
+import { PayrollPage, PayrollRunPage, PayslipPage, PayslipsPage } from './pages/payroll/PayrollPages';
 import { registerServiceWorker } from './lib/push';
 
 const queryClient = new QueryClient({
@@ -80,6 +81,10 @@ const router = createBrowserRouter([
       { path: 'contracts', element: <ContractsPage /> },
       { path: 'contracts/setup', element: <ContractSetupPage /> },
       { path: 'contracts/:id', element: <ContractDetailPage /> },
+      { path: 'payroll', element: <PayrollPage /> },
+      { path: 'payroll/:id', element: <PayrollRunPage /> },
+      { path: 'payslips', element: <PayslipsPage /> },
+      { path: 'payslips/:lineId', element: <PayslipPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
