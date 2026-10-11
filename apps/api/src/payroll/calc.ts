@@ -33,6 +33,8 @@ export interface CalcInput {
   };
   unpaidLeaveDays: number;
   manual: { id: string; kind: 'earning' | 'deduction'; label: string; amount: number }[];
+  /** Finalised commitment evaluation of the month with salary impact (Phase 10). */
+  commitment?: { bonusPercent: number; band: string } | null;
 }
 
 export interface CalcItem {
@@ -192,6 +194,18 @@ export function calculatePay(input: CalcInput): CalcResult {
       rate: round2(dayRate),
       amount: round2(input.unpaidLeaveDays * dayRate),
       explanation: `${input.unpaidLeaveDays} day(s) × ${rateText}`,
+    });
+  }
+  if (input.commitment && input.commitment.bonusPercent > 0 && base > 0) {
+    items.push({
+      kind: 'earning',
+      source: 'attendance',
+      code: 'COMMITMENT',
+      label: 'Commitment bonus',
+      quantity: null,
+      rate: input.commitment.bonusPercent,
+      amount: round2((base * input.commitment.bonusPercent) / 100),
+      explanation: `${money(base)} × ${input.commitment.bonusPercent}% (${input.commitment.band})`,
     });
   }
   for (const m of input.manual) {

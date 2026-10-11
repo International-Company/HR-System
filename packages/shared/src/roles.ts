@@ -74,6 +74,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'recruitment.view',
       'recruitment.manage',
       'recruitment.offers',
+      'evaluation.view',
+      'evaluation.manage',
     ],
   },
   {
@@ -98,6 +100,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'payroll.summary.view',
       'separation.view',
       'recruitment.view',
+      'evaluation.view',
     ],
   },
   {
@@ -119,13 +122,21 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'payroll.view',
       'separation.view',
       'recruitment.view',
+      'evaluation.view',
     ],
   },
   {
     key: 'department_manager',
     name: { ar: 'مدير قسم', en: 'Department Manager' },
     defaultScope: 'DEPARTMENT',
-    permissions: ['org.company.view', 'org.department.view', 'employee.profile.view', 'attendance.record.view', 'leave.request.view'],
+    permissions: [
+      'org.company.view',
+      'org.department.view',
+      'employee.profile.view',
+      'attendance.record.view',
+      'leave.request.view',
+      'evaluation.view',
+    ],
   },
   {
     key: 'employee',
@@ -144,6 +155,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'payroll.payslip.view',
       'separation.request',
       'separation.view',
+      'evaluation.view',
     ],
   },
   {

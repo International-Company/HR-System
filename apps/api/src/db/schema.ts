@@ -23,6 +23,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import type {
   ContractStatus,
+  EvaluationComponentDto,
   OfferStatus,
   StageOutcome,
   VacancyStatus,
@@ -1101,6 +1102,28 @@ export const jobOffer = pgTable('job_offer', {
   updatedAt: tstz('updated_at').notNull().defaultNow(),
 });
 
+// --- Commitment evaluation (Phase 10) ------------------------------------------------------
+
+export const evaluationResult = pgTable('evaluation_result', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  period: text('period').notNull(),
+  periodStart: date('period_start', { mode: 'string' }).notNull(),
+  periodEnd: date('period_end', { mode: 'string' }).notNull(),
+  score: numeric('score', { precision: 5, scale: 2 }).notNull(),
+  band: jsonb('band').$type<{ nameAr: string; nameEn: string; bonusPercent: number }>().notNull(),
+  components: jsonb('components').$type<EvaluationComponentDto[]>().notNull(),
+  inputs: jsonb('inputs').$type<Record<string, unknown>>().notNull(),
+  policy: jsonb('policy').$type<Record<string, unknown>>().notNull(),
+  status: text('status').$type<'draft' | 'final'>().notNull().default('draft'),
+  calcVersion: integer('calc_version').notNull().default(1),
+  calculatedAt: tstz('calculated_at').notNull().defaultNow(),
+  calculatedBy: uuid('calculated_by'),
+  finalizedAt: tstz('finalized_at'),
+  finalizedBy: uuid('finalized_by'),
+});
+
 export const schema = {
   companyGroup,
   company,
@@ -1176,4 +1199,5 @@ export const schema = {
   applicationEvent,
   interview,
   jobOffer,
+  evaluationResult,
 };

@@ -23,6 +23,7 @@ import {
   compensationItem,
   employee,
   employmentAssignment,
+  evaluationResult,
   leaveRequest,
   leaveType,
   lookupValue,
@@ -143,6 +144,7 @@ export class PayrollService implements OnModuleInit {
   async calculate(principal: Principal, id: string): Promise<PayRunDetailDto> {
     const companyId = await this.database.tx(principal.rls(), async (tx) => (await this.loadRun(tx, principal, id)).companyId);
     const policy = await this.settings.get('payroll.policy', companyId);
+    const salaryImpact = (await this.settings.get('evaluation.policy', companyId)).salaryImpact;
     await this.database.tx(principal.rls(), async (tx) => {
       const run = await this.loadRun(tx, principal, id, true);
       this.requirePrepare(principal, run);
@@ -164,7 +166,7 @@ export class PayrollService implements OnModuleInit {
         );
       const employees = [...new Set(assigns.map((a) => a.employeeId))];
       for (const empId of employees) {
-        const input = await this.inputsFor(tx, run, empId, policy, assigns.filter((a) => a.employeeId === empId));
+        const input = await this.inputsFor(tx, run, empId, policy, assigns.filter((a) => a.employeeId === empId), salaryImpact);
         const r = calculatePay(input);
         const lineId = uuidv7();
         await tx.insert(payrollLine).values({
@@ -207,7 +209,14 @@ export class PayrollService implements OnModuleInit {
   }
 
   /** Everything the calculation needs, stored on the line as a snapshot. */
-  private async inputsFor(tx: Tx, run: RunRow, empId: string, policy: PayrollPolicy, assigns: (typeof employmentAssignment.$inferSelect)[]): Promise<CalcInput> {
+  private async inputsFor(
+    tx: Tx,
+    run: RunRow,
+    empId: string,
+    policy: PayrollPolicy,
+    assigns: (typeof employmentAssignment.$inferSelect)[],
+    salaryImpact: boolean,
+  ): Promise<CalcInput> {
     const employed = assigns.map((a) => ({ from: maxS(a.validFrom, run.periodStart), to: minS(a.validTo ?? run.periodEnd, run.periodEnd) }));
     const comps = await tx
       .select()
@@ -269,6 +278,13 @@ export class PayrollService implements OnModuleInit {
       unpaidLeaveDays +=
         leaveRulesSchema.parse(rules).countDays === 'calendar' ? range.length : workdays.filter((w) => range.includes(w.date) && w.isWorkday && !w.holiday).length;
     }
+    // Finalised monthly commitment evaluation with salary impact (CEV-02).
+    const [evaluation] = salaryImpact
+      ? await tx
+          .select({ band: evaluationResult.band })
+          .from(evaluationResult)
+          .where(and(eq(evaluationResult.employeeId, empId), eq(evaluationResult.companyId, run.companyId), eq(evaluationResult.period, run.period), eq(evaluationResult.status, 'final')))
+      : [];
     const manual = await tx.select().from(payrollManualItem).where(and(eq(payrollManualItem.runId, run.id), eq(payrollManualItem.employeeId, empId))).orderBy(asc(payrollManualItem.createdAt));
     return {
       periodStart: run.periodStart,
@@ -280,6 +296,7 @@ export class PayrollService implements OnModuleInit {
       attendance,
       unpaidLeaveDays,
       manual: manual.map((m) => ({ id: m.id, kind: m.kind, label: m.label, amount: Number(m.amount) })),
+      commitment: evaluation ? { bonusPercent: evaluation.band.bonusPercent, band: evaluation.band.nameEn } : null,
     };
   }
 

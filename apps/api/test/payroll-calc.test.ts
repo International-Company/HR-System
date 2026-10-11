@@ -105,6 +105,12 @@ describe('payroll calculation — golden cases (PAY-01, PAY-08)', () => {
     expect(r.warnings).toContain('negative_net');
   });
 
+  it('commitment bonus from a finalised evaluation (CEV-02 salary impact)', () => {
+    const r = calculatePay(month({ commitment: { bonusPercent: 5, band: 'Excellent' } }));
+    expect(r.items.find((i) => i.code === 'COMMITMENT')).toMatchObject({ amount: 150, explanation: '3000.00 × 5% (Excellent)' });
+    expect(calculatePay(month({ commitment: { bonusPercent: 0, band: 'Weak' } })).items.some((i) => i.code === 'COMMITMENT')).toBe(false);
+  });
+
   it('missing salary and changed currency are reported', () => {
     expect(calculatePay(month({ segments: [] })).warnings).toContain('no_salary');
     const r = calculatePay(
