@@ -46,7 +46,9 @@ export class AttendanceController {
   @Public()
   @Get('network/whoami')
   whoami(@Req() req: AuthedRequest) {
-    return { ip: req.ip ?? null };
+    // TEMPORARY proxy spike (P4): echoes the caller's own forwarding headers; removed after measurement.
+    const h = req.headers;
+    return { ip: req.ip ?? null, ips: req.ips, xff: h['x-forwarded-for'] ?? null, xri: h['x-real-ip'] ?? null, socket: req.socket.remoteAddress ?? null };
   }
 
   @Get('attendance/today')
