@@ -116,9 +116,9 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | PRIV-01…PRIV-03 | employees, settings | TBD | — | Pending change-request approval | ❓ |
 | ARC-01…ARC-06 | ops/docs | P0–P1 | Doc, deploy | this package; staging deploy | 🔄 |
 | GOV-01…GOV-05 | delivery | P0+ | Doc | roadmap, tracker, decision log | ✅ drafted |
-| QA-01…QA-05 | quality | P1+ | CI gates | testing-strategy.md | ⏳ |
+| QA-01…QA-05 | quality | P1+ | CI gates | testing-strategy.md; `route-coverage.test.ts`, `security-fixes.test.ts` | 🔄 (CI workflow pending GitHub Actions) |
 | QA-06 | quality | P13 | UAT | pilot-uat-plan.md | ⏳ |
 | OPS-01…OPS-03 | ops | P0/P14 | Doc | deployment + cost docs | ✅ drafted |
-| UX-01…UX-04 | web | P1+ | E, axe, owner review | `a11y.*` | ⏳ |
+| UX-01…UX-04 | web | P1+ | E, a11y scan, owner review | labels scan (P12), RTL/LTR in every phase | 🔄 (screen-reader check in P13) |
 | EXC-01…EXC-12 | all | every phase | X | exclusion checklist at each gate | ⏳ |
-| NFR-01…NFR-07 | ops/all | P12 | P, E | k6, browser matrix | ⏳ (pending approval of NFRs) |
+| NFR-01…NFR-07 | ops/all | P12 | P, E | `performance.test.ts` (payroll 200+ employees, punch p95), live header check | 🔄 P12 (browser matrix and load test on staging in P13) |

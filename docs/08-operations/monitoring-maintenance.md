@@ -27,4 +27,4 @@ Status: **Proposed.**
 
 ## 3. Troubleshooting & documentation
 
-Runbooks in `docs/08-operations/runbooks/`: deploy failed, migration failed, DB full, bucket unreachable, punch failures (IP/proxy), push not delivered, job stuck, restore. Each covers symptoms, checks, fixes and escalation. Incidents are documented in `docs/08-operations/incidents/`.
+Runbooks in [runbooks.md](runbooks.md): deploy failed, migration failed, DB full, bucket unreachable, punch failures (IP/proxy), push not delivered, job stuck, restore. Each covers symptoms, checks, fixes and escalation. Incidents are documented in `docs/08-operations/incidents/`.

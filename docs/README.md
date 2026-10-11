@@ -51,3 +51,12 @@ Conventions:
 - Requirement IDs (`EMP-03`) are defined in the specification and must be referenced from code-level tests and from the traceability matrix.
 - Decision IDs: `D-xx` are proposals awaiting approval, `DL-xxx` are Decision Log entries, `Q-xx` are open questions, `C-xx` are conflicts and `A-xx` are assumptions.
 - Facts are labelled **Verified**. Anything else is labelled **Assumption** or **Recommendation**.
+
+## Phase 12 additions
+
+| Document | Link |
+|---|---|
+| Security review (P12) | [05-security/security-review-p12.md](05-security/security-review-p12.md) |
+| Operations runbooks | [08-operations/runbooks.md](08-operations/runbooks.md) |
+| User guide (Arabic / English) | [09-guides/user-guide-ar.md](09-guides/user-guide-ar.md) · [09-guides/user-guide-en.md](09-guides/user-guide-en.md) |
+| Administrator guide (Arabic / English) | [09-guides/admin-guide-ar.md](09-guides/admin-guide-ar.md) · [09-guides/admin-guide-en.md](09-guides/admin-guide-en.md) |
