@@ -71,8 +71,8 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | PAY-09 | payroll | Future | Doc | port documented | ➖ future (extension point / optional module) |
 | PAY-10 | payroll | Future | X | module disabled by default | ➖ future (extension point / optional module) |
 | PAY-11 | payroll, separation | P7/P8 | U | `settlement.*` | ✅ `payroll-calc.test.ts`, `payroll.test.ts` |
-| CEV-01, CEV-02 | evaluation | P10 | U, I | `evaluation.*` | ⏳ |
-| CEV-03 | evaluation | P10 | X | `exclusion.performance-appraisal` | ⏳ |
+| CEV-01, CEV-02 | evaluation | P10 | U, I | `evaluation.*` | ✅ `evaluation-score.test.ts`, `evaluation.test.ts` |
+| CEV-03 | evaluation | P10 | X | `exclusion.performance-appraisal` | ✅ `evaluation-score.test.ts`, `evaluation.test.ts` |
 | CON-01, CON-02 | contracts | P6 | I, E | `contract.template.*` | ✅ `contracts.test.ts` (templates, clauses, merge fields) |
 | CON-03 | contracts | P6 | I, S | `signature.evidence` | ✅ `contracts.test.ts` (in-app evidence, upload) |
 | CON-04, CON-05 | contracts | P6 | I, D | `contract.renewal.*`, `addendum.*` | ✅ `contracts.test.ts` (extension, new contract, automatic, addendum) |

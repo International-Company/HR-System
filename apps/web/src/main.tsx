@@ -39,6 +39,7 @@ import { ContractSetupPage } from './pages/contracts/ContractSetupPage';
 import { PayrollPage, PayrollRunPage, PayslipPage, PayslipsPage } from './pages/payroll/PayrollPages';
 import { SeparationDetailPage, SeparationsPage } from './pages/separation/SeparationPages';
 import { ApplicationPage, RecruitmentPage, VacancyPage } from './pages/recruitment/RecruitmentPages';
+import { EvaluationPage } from './pages/evaluation/EvaluationPages';
 import { registerServiceWorker } from './lib/push';
 
 const queryClient = new QueryClient({
@@ -92,6 +93,7 @@ const router = createBrowserRouter([
       { path: 'recruitment', element: <RecruitmentPage /> },
       { path: 'recruitment/vacancies/:id', element: <VacancyPage /> },
       { path: 'recruitment/applications/:id', element: <ApplicationPage /> },
+      { path: 'evaluation', element: <EvaluationPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

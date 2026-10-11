@@ -17,7 +17,7 @@ Last updated: 2026-10-10
 | P7 Payroll | 🔄 Implementation complete (DL-044) | 203 API tests passing locally (+2 server-only in CI) incl. 9 payroll golden cases and 10 payroll integration tests; migration 0007 applied to an existing database | ❓ HR/Finance golden cases signed off; Q-24 statutory deductions (DL-045); Q-28 country; performance test on the largest company |
 | P8 Separation & rehire | 🔄 Implementation complete (DL-049) | 208 API tests passing locally (+2 server-only in CI) incl. 5 separation tests; migration 0008 applied to an existing database | ❓ Review of defaults (DL-051); end-of-service method depends on Q-28 |
 | P9 Recruitment | 🔄 Implementation complete (DL-053) | 214 API tests passing locally (+2 server-only in CI) incl. 6 recruitment tests; migration 0009 applied to an existing database | ❓ Q-11 public portal (DL-054); retention of candidate data (C-20); optional malware scanning for candidate uploads (security plan) |
-| P10 Commitment evaluation | ⏳ | — | — |
+| P10 Commitment evaluation | 🔄 Implementation complete (DL-056) | 227 API tests passing locally (+2 server-only in CI) incl. 6 golden cases and 6 integration tests; migration 0010 applied to an existing database | ❓ Review of weights and bands (DL-057); works-council consultation if required in the member state (Q-28) |
 | P11 Reports, search, dashboards | ⏳ | — | — |
 | P12 Hardening | ⏳ | — | — |
 | P13 Pilot / UAT | ⏳ | — | Q-23; retention periods (C-20); GDPR owner items |
@@ -197,3 +197,20 @@ Last updated: 2026-10-10
 | Offers | Salary and start date, approval through the workflow, sent / accepted / declined / withdrawn |
 | Hiring | One-click employee record from candidate, vacancy and accepted offer; files added to the profile |
 | Web | Recruitment page (vacancies, candidates), vacancy board by stage, application page, stage settings |
+
+## Phase 10 acceptance criteria (roadmap.md)
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Scores reproduce from inputs | ✅ | Each result stores its attendance inputs and policy; `evaluation-score.test.ts` |
+| 2 | Recalculation is audited | ✅ | `evaluation.test.ts` (final results change only with a reason; audit event) |
+| 3 | No performance-appraisal features exist (exclusion check) | ✅ | `evaluation.test.ts` scans permissions and routes |
+
+## Phase 10 deliverables
+
+| Area | Delivered |
+|---|---|
+| Evaluation | Monthly or quarterly attendance-only score with five weighted components, bands, draft → final, audited recalculation, stored inputs |
+| Visibility | HR/managers by company or department; employees see their own final results when allowed |
+| Payroll link | Optional band bonus added to payroll for final monthly results |
+| Web | Commitment evaluation page (calculate, finalise, recalculate with reason, component bars), Commitment tab in the profile, evaluation settings (weights, bands, period, visibility, salary impact) |

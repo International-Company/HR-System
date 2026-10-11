@@ -166,6 +166,7 @@ export function SettingsPage() {
           <Tabs.Tab value="payroll">{t('pay.policy')}</Tabs.Tab>
           <Tabs.Tab value="separation">{t('sep.policy')}</Tabs.Tab>
           <Tabs.Tab value="recruitment">{t('rec.stagesSetting')}</Tabs.Tab>
+          <Tabs.Tab value="evaluation">{t('evl.policy')}</Tabs.Tab>
           {can('system.backup.view') && <Tabs.Tab value="backup">{t('settings.backup')}</Tabs.Tab>}
         </Tabs.List>
 
@@ -460,6 +461,58 @@ export function SettingsPage() {
               <NumberInput w={320} label={t('rec.retentionMonths')} min={1} max={120} value={v.retentionMonths} onChange={(x) => set({ ...v, retentionMonths: Number(x) || 12 })} />
             </Stack>
           ))}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="evaluation">
+          {row<SettingValue<'evaluation.policy'>>('evaluation.policy', t('evl.policy'), (v, set) => {
+            const f = (k: string) => t(`evl.policyFields.${k}`);
+            const keys = ['attendance', 'punctuality', 'early_departure', 'worked_hours', 'overtime'] as const;
+            const total = keys.reduce((s, k) => s + v.weights[k], 0);
+            return (
+              <Stack>
+                <SimpleGrid cols={{ base: 1, md: 2 }}>
+                  <Select
+                    label={f('period')}
+                    data={(['monthly', 'quarterly'] as const).map((x) => ({ value: x, label: f(`periods.${x}`) }))}
+                    value={v.period}
+                    onChange={(x) => set({ ...v, period: (x ?? v.period) as typeof v.period })}
+                    allowDeselect={false}
+                  />
+                  <NumberInput label={f('overtimeTargetHours')} min={1} max={500} value={v.overtimeTargetHours} onChange={(x) => set({ ...v, overtimeTargetHours: Number(x) || 10 })} />
+                  <Switch label={f('countPendingAbsence')} checked={v.countPendingAbsence} onChange={(e) => set({ ...v, countPendingAbsence: e.currentTarget.checked })} />
+                  <Switch label={f('employeeVisible')} checked={v.employeeVisible} onChange={(e) => set({ ...v, employeeVisible: e.currentTarget.checked })} />
+                  <Switch label={f('salaryImpact')} checked={v.salaryImpact} onChange={(e) => set({ ...v, salaryImpact: e.currentTarget.checked })} />
+                </SimpleGrid>
+                <Text size="sm" fw={500} c={total === 100 ? undefined : 'red'}>
+                  {f('weights')}: {total}
+                </Text>
+                <Group gap="xs" wrap="wrap">
+                  {keys.map((k) => (
+                    <NumberInput key={k} w={150} label={t(`evl.components.${k}`)} min={0} max={100} value={v.weights[k]} onChange={(x) => set({ ...v, weights: { ...v.weights, [k]: Number(x) || 0 } })} />
+                  ))}
+                </Group>
+                <Text size="sm" fw={500}>
+                  {f('bands')}
+                </Text>
+                {v.bands.map((b, i) => (
+                  <Group key={i} gap="xs" align="flex-end" wrap="wrap">
+                    <NumberInput w={110} label={f('minScore')} min={0} max={100} value={b.minScore} onChange={(x) => set({ ...v, bands: v.bands.map((y, n) => (n === i ? { ...y, minScore: Number(x) || 0 } : y)) })} />
+                    <TextInput w={140} label={t('rec.nameAr')} value={b.nameAr} onChange={(e) => set({ ...v, bands: v.bands.map((y, n) => (n === i ? { ...y, nameAr: e.currentTarget.value } : y)) })} />
+                    <TextInput w={140} label={t('rec.nameEn')} value={b.nameEn} onChange={(e) => set({ ...v, bands: v.bands.map((y, n) => (n === i ? { ...y, nameEn: e.currentTarget.value } : y)) })} />
+                    <NumberInput w={130} label={f('bonusPercent')} min={0} max={100} decimalScale={2} value={b.bonusPercent} onChange={(x) => set({ ...v, bands: v.bands.map((y, n) => (n === i ? { ...y, bonusPercent: Number(x) || 0 } : y)) })} />
+                    <Button size="compact-xs" variant="subtle" color="red" mb={6} onClick={() => set({ ...v, bands: v.bands.filter((_, n) => n !== i) })}>
+                      ✕
+                    </Button>
+                  </Group>
+                ))}
+                <Group>
+                  <Button size="xs" variant="light" onClick={() => set({ ...v, bands: [...v.bands, { minScore: 50, nameAr: '', nameEn: '', bonusPercent: 0 }] })}>
+                    {f('addBand')}
+                  </Button>
+                </Group>
+              </Stack>
+            );
+          })}
         </Tabs.Panel>
 
         <Tabs.Panel value="backup">

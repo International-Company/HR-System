@@ -1,0 +1,47 @@
+import type { p10En } from './p10-en';
+
+/** نصوص المرحلة العاشرة: تقييم الالتزام. */
+export const p10Ar: typeof p10En = {
+  evl: {
+    title: 'تقييم الالتزام',
+    tab: 'الالتزام',
+    intro: 'يعتمد على الحضور فقط: الحضور، والانضباط في المواعيد، والخروج المبكر، وساعات العمل، والعمل الإضافي.',
+    company: 'الشركة',
+    period: 'الفترة',
+    calculate: 'احتساب',
+    finalize: 'اعتماد',
+    recalculate: 'إعادة احتساب المعتمد',
+    reason: 'سبب إعادة الاحتساب',
+    recalcHint: 'النتائج المعتمدة لا تتغير إلا بسبب يُسجَّل في سجل التدقيق.',
+    employee: 'الموظف',
+    score: 'الدرجة',
+    band: 'التصنيف',
+    status: 'الحالة',
+    statuses: { draft: 'مسودة', final: 'معتمد' },
+    version: 'إ{{n}}',
+    components: {
+      attendance: 'الحضور',
+      punctuality: 'الانضباط في المواعيد',
+      early_departure: 'عدم الخروج المبكر',
+      worked_hours: 'ساعات العمل',
+      overtime: 'العمل الإضافي',
+    },
+    weight: 'الوزن',
+    calculated: 'احتُسب {{calculated}}، وبقي {{skipped}} معتمداً دون تغيير',
+    finalized: 'اعتُمد {{n}}',
+    policy: 'تقييم الالتزام',
+    policyFields: {
+      period: 'الفترة',
+      periods: { monthly: 'شهرية', quarterly: 'ربع سنوية' },
+      weights: 'الأوزان (مجموعها 100)',
+      overtimeTargetHours: 'ساعات الإضافي للحصول على الدرجة الكاملة',
+      countPendingAbsence: 'احتساب الغياب غير المراجع',
+      bands: 'التصنيفات',
+      minScore: 'ابتداءً من درجة',
+      bonusPercent: 'مكافأة % من الأساسي',
+      addBand: 'إضافة تصنيف',
+      employeeVisible: 'يرى الموظف نتائجه المعتمدة',
+      salaryImpact: 'إضافة مكافأة التصنيف إلى الرواتب (شهرياً، للنتائج المعتمدة)',
+    },
+  },
+};
