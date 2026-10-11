@@ -5,6 +5,9 @@ import {
   IconCalendarEvent,
   IconChecklist,
   IconClockHour4,
+  IconFingerprint,
+  IconClipboardCheck,
+  IconWifi,
   IconRoute,
   IconFiles,
   IconId,
@@ -53,6 +56,10 @@ export function AppLayout() {
     ...(can('employee.profile.view') && session?.permissions.some((p) => p === 'employee.profile.create' || p === 'employee.lifecycle.manage' || p === 'employee.financial.view') || can('org.company.view')
       ? [{ to: '/employees', label: t('nav.employees'), icon: IconId, permission: 'employee.profile.view' }]
       : []),
+    ...(session?.user.employeeId && can('attendance.punch')
+      ? [{ to: '/attendance', label: t('nav.attendance'), icon: IconFingerprint }]
+      : []),
+    { to: '/attendance/review', label: t('nav.attendanceReview'), icon: IconClipboardCheck, permission: 'attendance.review' },
     { to: '/tasks', label: t('nav.tasks'), icon: IconChecklist },
   ].filter((i) => !('permission' in i) || !i.permission || can(i.permission));
   const admin: Item[] = [
@@ -62,6 +69,9 @@ export function AppLayout() {
     { to: '/lookups', label: t('nav.lookups'), icon: IconListTree, permission: 'lookups.manage' },
     { to: '/schedules', label: t('nav.schedules'), icon: IconClockHour4, permission: 'schedules.view' },
     { to: '/holidays', label: t('nav.holidays'), icon: IconCalendarEvent, permission: 'schedules.view' },
+    ...(can('attendance.network.manage') || can('attendance.device.manage')
+      ? [{ to: '/attendance/admin', label: t('nav.attendanceAdmin'), icon: IconWifi }]
+      : []),
     { to: '/workflow-definitions', label: t('nav.workflows'), icon: IconRoute, permission: 'workflow.definitions.manage' },
     { to: '/document-categories', label: t('nav.documentCategories'), icon: IconFiles, permission: 'documents.categories.manage' },
     { to: '/settings', label: t('nav.settings'), icon: IconSettings, permission: 'settings.view' },
@@ -75,7 +85,7 @@ export function AppLayout() {
       ? location.pathname === '/'
       : to === '/employees' && location.pathname === ownProfile
         ? false
-        : location.pathname.startsWith(to);
+        : to === '/attendance' ? location.pathname === to : location.pathname.startsWith(to);
   const width = collapsed ? 72 : 260;
 
   const renderItem = (item: Item) => {

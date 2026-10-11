@@ -34,6 +34,8 @@ import { NotificationsPage } from './pages/NotificationsPages';
 import { SchedulesPage } from './pages/SchedulesPage';
 import { HolidaysPage } from './pages/HolidaysPage';
 import { WorkflowDefinitionsPage } from './pages/WorkflowDefinitionsPage';
+import { AttendancePage } from './pages/attendance/AttendancePage';
+import { AttendanceAdminPage, AttendanceReviewPage } from './pages/attendance/AttendanceStaffPages';
 import { registerServiceWorker } from './lib/push';
 
 const queryClient = new QueryClient({
@@ -70,6 +72,9 @@ const router = createBrowserRouter([
       { path: 'schedules', element: <SchedulesPage /> },
       { path: 'holidays', element: <HolidaysPage /> },
       { path: 'workflow-definitions', element: <WorkflowDefinitionsPage /> },
+      { path: 'attendance', element: <AttendancePage /> },
+      { path: 'attendance/review', element: <AttendanceReviewPage /> },
+      { path: 'attendance/admin', element: <AttendanceAdminPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

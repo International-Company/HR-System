@@ -37,22 +37,22 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | SCH-01, SCH-02 | calendar | P3 | U, I, D | `schedule.*`, `schedule.as-of` | ✅ P3 |
 | SCH-03 | calendar | P3 | X | `exclusion.shift-roster` | ✅ P3 |
 | SCH-04 | calendar | P3 | I | `holidays.group-company` | ✅ P3 |
-| ATT-01, ATT-02 | attendance | P4 | I, S | `punch.ip-allowlist`, NEG-06, proxy spoof spike | ⏳ |
-| ATT-03 | identity, attendance | P4 | I, E | `webauthn.*` | ⏳ |
-| ATT-04 | identity, attendance | P4 | I, S | `pin.*`, NEG-14 | ⏳ |
-| ATT-05 | attendance | P4 | I, A | `devices.*` | ⏳ |
-| ATT-06 | attendance | P4 | I | `punch.metadata` | ⏳ |
-| ATT-07 | attendance | P4 | X | `exclusion.gps` (no geolocation API, Permissions-Policy) | ⏳ |
-| ATT-08 | docs | P4 | Doc | architecture.md §9 + user guide | ⏳ |
-| ATT-09 | attendance | P4 | U (golden cases), E | `attendance-day.calc.*` | ⏳ |
-| ATT-10 | attendance, settings | P4 | U, I | `attendance.policy.*` | ⏳ |
-| ATT-11 | attendance | P4 | U | `auto-closure.no-overtime` (C-02) | ⏳ |
-| ATT-12 | attendance | P4 | U | `overtime.auto` | ⏳ |
-| ATT-13 | attendance | P4 | U | `breaks.*` | ⏳ |
-| ATT-14 | attendance | P4/P5 | I, D | `absence.detection.*` | ⏳ |
-| ATT-15 | attendance, workflow | P4 | I, D | `corrections.*`, `punch.append-only` | ⏳ |
-| ATT-16 | attendance | P4/P5 | U | `conflict-policies.*` | ⏳ |
-| ATT-17 | attendance | P4 | U | `holiday-work.not-overtime` | ⏳ |
+| ATT-01, ATT-02 | attendance | P4 | I, S | `punch.ip-allowlist`, NEG-06, proxy spoof spike | ✅ `attendance.test.ts`; ⏳ Railway spoof spike |
+| ATT-03 | identity, attendance | P4 | I, E | `webauthn.*` | ✅ `attendance.test.ts` (options); ⏳ real device |
+| ATT-04 | identity, attendance | P4 | I, S | `pin.*`, NEG-14 | ✅ |
+| ATT-05 | attendance | P4 | I, A | `devices.*` | ✅ |
+| ATT-06 | attendance | P4 | I | `punch.metadata` | ✅ |
+| ATT-07 | attendance | P4 | X | `exclusion.gps` (no geolocation API, Permissions-Policy) | ✅ Permissions-Policy `geolocation=()` |
+| ATT-08 | docs | P4 | Doc | architecture.md §9 + user guide | ✅ UI notice + DL-031 |
+| ATT-09 | attendance | P4 | U (golden cases), E | `attendance-day.calc.*` | ✅ |
+| ATT-10 | attendance, settings | P4 | U, I | `attendance.policy.*` | ✅ |
+| ATT-11 | attendance | P4 | U | `auto-closure.no-overtime` (C-02) | ✅ |
+| ATT-12 | attendance | P4 | U | `overtime.auto` | ✅ |
+| ATT-13 | attendance | P4 | U | `breaks.*` | ✅ |
+| ATT-14 | attendance | P4/P5 | I, D | `absence.detection.*` | ✅ |
+| ATT-15 | attendance, workflow | P4 | I, D | `corrections.*`, `punch.append-only` | ✅ |
+| ATT-16 | attendance | P4/P5 | U | `conflict-policies.*` | ✅ |
+| ATT-17 | attendance | P4 | U | `holiday-work.not-overtime` | ✅ |
 | LEV-01, LEV-02 | leave | P5 | U (golden cases), D | `leave.accrual.*`, `ledger.sum` | ⏳ |
 | LEV-03 | leave, workflow | P5 | I, A | `leave.chain`, NEG-10 | 🔄 route + engine done (P3); leave requests P5 |
 | LEV-04 | leave | P5 | X | `exclusion.half-day` | ⏳ |

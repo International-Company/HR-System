@@ -1,6 +1,7 @@
 import type { Messages } from './en';
 import { p2Ar } from './p2-ar';
 import { p3Ar } from './p3-ar';
+import { p4Ar } from './p4-ar';
 
 /** نصوص الواجهة العربية — يجب أن تطابق مفاتيح en.ts تماماً. */
 export const ar: Messages = {
@@ -52,6 +53,9 @@ export const ar: Messages = {
     schedules: 'جداول الدوام',
     holidays: 'العطل الرسمية',
     workflows: 'مسارات الموافقة',
+    attendance: 'الحضور والانصراف',
+    attendanceReview: 'مراجعة الحضور',
+    attendanceAdmin: 'إعداد الحضور',
     account: 'حسابي',
     logout: 'تسجيل الخروج',
     administration: 'الإدارة',
@@ -268,4 +272,5 @@ export const ar: Messages = {
   },
   ...p2Ar,
   ...p3Ar,
+  ...p4Ar,
 };
