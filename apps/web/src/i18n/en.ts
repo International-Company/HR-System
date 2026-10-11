@@ -4,6 +4,7 @@ import { p4En } from './p4-en';
 import { p5En } from './p5-en';
 import { p6En } from './p6-en';
 import { p7En } from './p7-en';
+import { p8En } from './p8-en';
 
 /** English UI strings. ar.ts must provide exactly the same keys (checked by a test). */
 export const en = {
@@ -64,6 +65,7 @@ export const en = {
     contractSetup: 'Contract setup',
     payroll: 'Payroll',
     payslips: 'My payslips',
+    separations: 'Separations',
     account: 'My account',
     logout: 'Sign out',
     administration: 'Administration',
@@ -285,6 +287,7 @@ export const en = {
   ...p5En,
   ...p6En,
   ...p7En,
+  ...p8En,
 };
 
 export type Messages = typeof en;

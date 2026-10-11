@@ -164,6 +164,7 @@ export function SettingsPage() {
           <Tabs.Tab value="leave">{t('leave.permissionPolicy')}</Tabs.Tab>
           <Tabs.Tab value="contracts">{t('ctr.policy')}</Tabs.Tab>
           <Tabs.Tab value="payroll">{t('pay.policy')}</Tabs.Tab>
+          <Tabs.Tab value="separation">{t('sep.policy')}</Tabs.Tab>
           {can('system.backup.view') && <Tabs.Tab value="backup">{t('settings.backup')}</Tabs.Tab>}
         </Tabs.List>
 
@@ -404,6 +405,29 @@ export function SettingsPage() {
               );
             })}
           </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="separation">
+          {row<SettingValue<'separation.policy'>>('separation.policy', t('sep.policy'), (v, set) => {
+            const f = (k: string) => t(`sep.policyFields.${k}`);
+            return (
+              <SimpleGrid cols={{ base: 1, md: 2 }}>
+                <Switch label={f('selfResignation')} checked={v.selfResignation} onChange={(e) => set({ ...v, selfResignation: e.currentTarget.checked })} />
+                <NumberInput label={f('resignationNoticeDays')} min={0} max={365} value={v.resignationNoticeDays} onChange={(x) => set({ ...v, resignationNoticeDays: Number(x) || 0 })} />
+                <Select
+                  label={f('accountOnExit')}
+                  data={(['disable', 'self_service_only'] as const).map((x) => ({ value: x, label: f(`accountModes.${x}`) }))}
+                  value={v.accountOnExit}
+                  onChange={(x) => set({ ...v, accountOnExit: (x ?? v.accountOnExit) as typeof v.accountOnExit })}
+                  allowDeselect={false}
+                />
+                <Switch label={f('revokeDevices')} checked={v.revokeDevices} onChange={(e) => set({ ...v, revokeDevices: e.currentTarget.checked })} />
+                <Switch label={f('cancelFutureLeave')} checked={v.cancelFutureLeave} onChange={(e) => set({ ...v, cancelFutureLeave: e.currentTarget.checked })} />
+                <Switch label={f('endContract')} checked={v.endContract} onChange={(e) => set({ ...v, endContract: e.currentTarget.checked })} />
+                <Switch label={f('settlement')} checked={v.settlement} onChange={(e) => set({ ...v, settlement: e.currentTarget.checked })} />
+              </SimpleGrid>
+            );
+          })}
         </Tabs.Panel>
 
         <Tabs.Panel value="backup">

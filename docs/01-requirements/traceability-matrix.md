@@ -25,7 +25,7 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | EMP-01…EMP-04 | employees | P2 | I, E | `employee.profile.*` | ✅ P2 |
 | EMP-05 | employees | P2 | X | `exclusion.employee-fields` | ✅ P2 |
 | EMP-06 | employees | P2 | D, I | `employee-number.*` (unique, immutable, format change new-only) | ✅ P2 |
-| EMP-07 | employees | P2 (+P8) | I, E | `lifecycle.*` | 🔄 P2 (termination/rehire in P8) |
+| EMP-07 | employees | P2 (+P8) | I, E | `lifecycle.*` | ✅ P2 + P8 (separation, rehire) |
 | EMP-08 | employees | P2 | D | `history.no-overlap`, `as-of.*` | ✅ P2 |
 | EMP-09 | employees | P2 | A | NEG-03, `financial-fields.*` | ✅ P2 |
 | EMP-10 | employees, payroll | P2/P7 | A | NEG-01, `self.salary` | ✅ P2 |
@@ -84,11 +84,11 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | DOC-04 | documents, notify | P2 | X | `exclusion.doc-expiry-alerts` | ✅ P2 |
 | DOC-05 | documents | P2 | X | review | ✅ P2 |
 | DOC-06 | files | P2 | I | `storage-port.*` (adapter contract tests) | ✅ P2 |
-| TRM-01…TRM-04 | separation | P8 | I, A | `separation.*` | ⏳ |
-| TRM-05 | separation, identity | P8 | I, A | NEG-05, `exit-policy.*` | ⏳ |
-| TRM-06 | separation | P8 | D | `separation.history-kept` | ⏳ |
-| TRM-07 | separation, employees | P8 | I, D | `rehire.same-number` | ⏳ |
-| TRM-08 | — | P8 | X | `exclusion.clearance` | ⏳ |
+| TRM-01…TRM-04 | separation | P8 | I, A | `separation.*` | ✅ `separation.test.ts` |
+| TRM-05 | separation, identity | P8 | I, A | NEG-05, `exit-policy.*` | ✅ `separation.test.ts` (NEG-05) |
+| TRM-06 | separation | P8 | D | `separation.history-kept` | ✅ nothing deleted; former employees visible (DL-050) |
+| TRM-07 | separation, employees | P8 | I, D | `rehire.same-number` | ✅ `separation.test.ts` |
+| TRM-08 | — | P8 | X | `exclusion.clearance` | ✅ excluded (no clearance module) |
 | NOT-01, NOT-02 | notify | P3 | I, A, E | `notifications.*` | ✅ P3 |
 | NOT-03 | notify | P3 | E (manual on devices) | `push.*` | ✅ P3 |
 | NOT-04 | notify + modules | P3–P8 | I | `events.<module>` | ⏳ |
