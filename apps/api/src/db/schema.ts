@@ -23,6 +23,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import type {
   ContractStatus,
+  ReportFilters,
   EvaluationComponentDto,
   OfferStatus,
   StageOutcome,
@@ -1124,6 +1125,33 @@ export const evaluationResult = pgTable('evaluation_result', {
   finalizedBy: uuid('finalized_by'),
 });
 
+// --- Reports (Phase 11) --------------------------------------------------------------------
+
+export const savedReport = pgTable('saved_report', {
+  id: uuid('id').primaryKey(),
+  userId: uuid('user_id').notNull(),
+  name: text('name').notNull(),
+  dataset: text('dataset').notNull(),
+  fields: text('fields').array().notNull(),
+  filters: jsonb('filters').$type<ReportFilters>().notNull(),
+  schedule: jsonb('schedule').$type<{ frequency: 'daily' | 'weekly' | 'monthly'; hour: number } | null>(),
+  lastRunAt: tstz('last_run_at'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+});
+
+export const reportOutput = pgTable('report_output', {
+  id: uuid('id').primaryKey(),
+  reportId: uuid('report_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  fileName: text('file_name').notNull(),
+  mime: text('mime').notNull(),
+  body: bytea('body').notNull(),
+  rowCount: integer('row_count').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  expiresAt: tstz('expires_at').notNull(),
+});
+
 export const schema = {
   companyGroup,
   company,
@@ -1200,4 +1228,6 @@ export const schema = {
   interview,
   jobOffer,
   evaluationResult,
+  savedReport,
+  reportOutput,
 };

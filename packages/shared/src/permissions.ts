@@ -221,6 +221,11 @@ export const PERMISSIONS = [
   p('evaluation.manage', 'evaluation', 'Calculate, finalise and recalculate evaluations', 'احتساب التقييمات واعتمادها وإعادة احتسابها'),
   p('evaluation.settings.manage', 'evaluation', 'Configure the commitment evaluation', 'ضبط تقييم الالتزام', { groupOnly: true }),
 
+  // Reports, search and dashboards (Phase 11). Datasets also need their own permission.
+  p('reports.run', 'reports', 'Run and save reports', 'تشغيل التقارير وحفظها'),
+  p('reports.export', 'reports', 'Export and print reports', 'تصدير التقارير وطباعتها'),
+  p('dashboard.configure', 'reports', 'Configure dashboards per role', 'ضبط لوحات المتابعة لكل دور', { groupOnly: true }),
+
   // System backup
   p('system.backup.view', 'system', 'View backups', 'عرض النسخ الاحتياطية', {
     sensitivity: 'security',

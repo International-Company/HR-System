@@ -53,6 +53,9 @@ import { RecruitmentService } from './recruitment/recruitment.service.js';
 import { RecruitmentController } from './recruitment/recruitment.controller.js';
 import { EvaluationService } from './evaluation/evaluation.service.js';
 import { EvaluationController } from './evaluation/evaluation.controller.js';
+import { ReportsService } from './reports/reports.service.js';
+import { DashboardService } from './reports/dashboard.service.js';
+import { ReportsController } from './reports/reports.controller.js';
 
 export interface AppDeps {
   config: AppConfig;
@@ -98,6 +101,8 @@ export function coreProviders(deps: AppDeps) {
     SeparationService,
     RecruitmentService,
     EvaluationService,
+    ReportsService,
+    DashboardService,
   ];
 }
 
@@ -128,6 +133,7 @@ export class AppModule {
         SeparationController,
         RecruitmentController,
         EvaluationController,
+        ReportsController,
       ],
       providers: [
         ...coreProviders(deps),
