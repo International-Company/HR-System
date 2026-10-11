@@ -3,7 +3,7 @@
 This tracker is for the development team. It is kept separate from the HR application (GOV-02). Updated at every status change.
 Legend: ✅ Completed · 🔄 In progress · ⏳ Remaining · ⛔ Blocked · ❓ Awaiting decision/owner action
 
-Last updated: 2026-10-10
+Last updated: 2026-10-11
 
 | Phase | Status | Tests | Blocked by / waiting for |
 |---|---|---|---|
@@ -18,8 +18,8 @@ Last updated: 2026-10-10
 | P8 Separation & rehire | 🔄 Implementation complete (DL-049) | 208 API tests passing locally (+2 server-only in CI) incl. 5 separation tests; migration 0008 applied to an existing database | ❓ Review of defaults (DL-051); end-of-service method depends on Q-28 |
 | P9 Recruitment | 🔄 Implementation complete (DL-053) | 214 API tests passing locally (+2 server-only in CI) incl. 6 recruitment tests; migration 0009 applied to an existing database | ❓ Q-11 public portal (DL-054); retention of candidate data (C-20); optional malware scanning for candidate uploads (security plan) |
 | P10 Commitment evaluation | 🔄 Implementation complete (DL-056) | 227 API tests passing locally (+2 server-only in CI) incl. 6 golden cases and 6 integration tests; migration 0010 applied to an existing database | ❓ Review of weights and bands (DL-057); works-council consultation if required in the member state (Q-28) |
-| P11 Reports, search, dashboards | 🔄 Implementation complete (DL-058) | 234 API tests passing locally (+2 server-only in CI) incl. 7 report/search/dashboard tests; migration 0011 applied to an existing database | ❓ Review of report catalogue and default dashboards with HR |
-| P12 Hardening | ⏳ | — | — |
+| P11 Reports, search, dashboards | ✅ Merged and deployed (DL-058) | 234 API tests passing locally (+2 server-only in CI) incl. 7 report/search/dashboard tests; migration 0011 applied to an existing database | ❓ Review of report catalogue and default dashboards with HR |
+| P12 Hardening | 🔄 Implementation complete (DL-062) | 248 API tests passing locally (+2 server-only in CI) incl. route sweep, 9 security regression tests and performance baselines; migration 0012 | ❓ Restore drill needs Backblaze (DL-068); owner acceptance of residual risks R1–R6 (DL-067) |
 | P13 Pilot / UAT | ⏳ | — | Q-23; retention periods (C-20); GDPR owner items |
 | P14 Release | ⏳ | — | Owner approval; Railway Pro plan confirmation |
 
@@ -230,3 +230,21 @@ Last updated: 2026-10-10
 | Reports | Builder (dataset, columns, filters), 12 datasets covering the RPT-04 catalogue, saved reports, Excel/CSV export, print/PDF view, scheduled in-app delivery, delivered files |
 | Search | Header search across employees, contracts, candidates and vacancies, within scope |
 | Dashboards | Widget catalogue (my attendance, my leave, my approvals, headcount, attendance today, on leave today, pending approvals, contracts ending, open vacancies, payroll status, system health); layouts per role in Settings |
+
+## Phase 12 acceptance criteria (roadmap.md)
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Zero open critical/high findings | ✅ | [security-review-p12.md](../05-security/security-review-p12.md): 15 findings fixed, 0 critical/high open; `security-fixes.test.ts`, `route-coverage.test.ts` |
+| 2 | Restore drill meets RPO/RTO | ❓ | In-app restore tested automatically (P3); off-site drill waits for Backblaze (DL-068) |
+| 3 | Documentation complete | ✅ | Runbooks, user and administrator guides (AR/EN), security review report |
+
+## Phase 12 deliverables
+
+| Area | Delivered |
+|---|---|
+| Security review | Two independent reviews; 15 findings fixed (separation of duties, scope checks, atomic lockout, audit masking, push SSRF, interviewer view, atomic hiring, database triggers in migration 0012) |
+| Automated checks | Route sweep over every API route (anonymous, plain employee, junk input), security regression tests, performance baselines (payroll 200+ employees ≈ 1.9 s; punch p95 ≈ 47 ms) |
+| Accessibility | Code scan of form controls and icon buttons; missing labels added |
+| Live configuration | Security headers, HTTPS redirect, cookie flags and client IP verified on the production domain; dependency audit clean |
+| Documentation | [runbooks.md](../08-operations/runbooks.md), [user guide AR](../09-guides/user-guide-ar.md) / [EN](../09-guides/user-guide-en.md), [admin guide AR](../09-guides/admin-guide-ar.md) / [EN](../09-guides/admin-guide-en.md) |

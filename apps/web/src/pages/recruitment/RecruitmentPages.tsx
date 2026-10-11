@@ -216,7 +216,7 @@ function CandidatesPanel({ companyId, manage }: { companyId: string; manage: boo
   return (
     <Paper>
       <Group justify="space-between" p="sm">
-        <TextInput w={260} placeholder={t('rec.search')} value={q} onChange={(e) => setQ(e.currentTarget.value)} />
+        <TextInput aria-label={t('rec.search')} w={260} placeholder={t('rec.search')} value={q} onChange={(e) => setQ(e.currentTarget.value)} />
         {manage && (
           <Button size="xs" leftSection={<IconPlus size={14} />} onClick={() => setEdit('new')}>
             {t('rec.newCandidate')}
@@ -458,7 +458,7 @@ export function ApplicationPage() {
             <Group justify="space-between" mb="xs">
               <StatusBadge status={OUTCOME_COLOR[a.outcome] ?? 'inactive'} label={stageName(a.stage)} />
               {manage && !closed && (
-                <Select
+                <Select aria-label={t('rec.moveTo')}
                   w={200}
                   placeholder={t('rec.moveTo')}
                   data={(stages.data?.stages ?? []).filter((s) => s.key !== a.stage).map((s) => ({ value: s.key, label: lang === 'ar' ? s.nameAr : s.nameEn }))}
@@ -618,7 +618,7 @@ export function ApplicationPage() {
           </Title>
           {manage && (
             <Stack gap="xs" mb="md">
-              <Textarea placeholder={t('rec.note')} autosize minRows={2} value={note} onChange={(e) => setNote(e.currentTarget.value)} />
+              <Textarea aria-label={t('rec.note')} placeholder={t('rec.note')} autosize minRows={2} value={note} onChange={(e) => setNote(e.currentTarget.value)} />
               <Group justify="space-between">
                 <Text size="xs" c="dimmed">
                   {t('rec.internalNote')}
@@ -861,7 +861,7 @@ function FileModal({ candidateId, onClose }: { candidateId: string; onClose: () 
           onChange={(v) => setForm({ ...form, categoryId: v })}
         />
         <TextInput label={t('rec.fileTitle')} value={form.title} onChange={(e) => setForm({ ...form, title: e.currentTarget.value })} />
-        <FileInput value={form.file} onChange={(f) => setForm({ ...form, file: f, title: form.title || f?.name || '' })} />
+        <FileInput aria-label={t('rec.uploadFile')} value={form.file} onChange={(f) => setForm({ ...form, file: f, title: form.title || f?.name || '' })} />
         <Group justify="flex-end">
           <Button variant="default" onClick={onClose}>
             {t('app.cancel')}

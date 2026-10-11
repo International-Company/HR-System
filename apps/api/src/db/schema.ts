@@ -477,6 +477,7 @@ export const workflowInstance = pgTable('workflow_instance', {
   currentSeq: integer('current_seq').notNull().default(1),
   createdAt: tstz('created_at').notNull().defaultNow(),
   completedAt: tstz('completed_at'),
+  excludedUserIds: uuid('excluded_user_ids').array().notNull().default([]),
 });
 
 export const workflowTask = pgTable('workflow_task', {

@@ -68,6 +68,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'contracts.view',
       'contracts.manage',
       'contracts.manual_edit',
+      'contracts.sign',
       'separation.request',
       'separation.view',
       'separation.manage',

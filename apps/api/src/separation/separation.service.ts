@@ -309,13 +309,23 @@ export class SeparationService implements OnModuleInit {
 
   // --- reading ---------------------------------------------------------------------------------------
 
-  private canView(principal: Principal, s: SepRow): boolean {
+  /** Company staff, department managers for their departments, or the employee. */
+  private canView(principal: Principal, s: SepRow, departmentId: string | null): boolean {
     return (
       principal.canCompany('separation.view', s.companyId) ||
       principal.canCompany('separation.request', s.companyId) ||
-      principal.touchesCompany('separation.view', s.companyId) ||
+      principal.canDepartment('separation.view', s.companyId, departmentId ?? '') ||
       (s.employeeId === principal.employeeId && principal.canSelf('separation.view', s.employeeId))
     );
+  }
+
+  private async departmentOf(tx: Tx, employeeId: string): Promise<string | null> {
+    const [a] = await tx
+      .select({ d: employmentAssignment.departmentId })
+      .from(employmentAssignment)
+      .where(eq(employmentAssignment.employeeId, employeeId))
+      .orderBy(desc(employmentAssignment.validFrom));
+    return a?.d ?? null;
   }
 
   private async toDtos(tx: Tx, rows: SepRow[]): Promise<SeparationDto[]> {
@@ -351,8 +361,11 @@ export class SeparationService implements OnModuleInit {
   async get(principal: Principal, id: string): Promise<SeparationDto> {
     return this.database.tx(principal.rls(), async (tx) => {
       const [s] = await tx.select().from(separation).where(eq(separation.id, id));
-      // Approvers in the workflow see it through the row policy.
       if (!s) throw ApiError.notFound('Separation');
+      const participant = s.workflowInstanceId
+        ? ((await tx.execute<{ ok: boolean }>(sql`select app_is_workflow_participant(${s.workflowInstanceId}::uuid) as ok`)) as unknown as { rows: { ok: boolean }[] }).rows[0]?.ok
+        : false;
+      if (!participant && !this.canView(principal, s, await this.departmentOf(tx, s.employeeId))) throw ApiError.notFound('Separation');
       const dto = (await this.toDtos(tx, [s]))[0]!;
       // Settlement amounts are financial: only for staff with the financial permission or the employee.
       if (!principal.canCompany('employee.financial.view', s.companyId) && s.employeeId !== principal.employeeId) dto.settlement = null;
@@ -369,7 +382,9 @@ export class SeparationService implements OnModuleInit {
         .where(and(eq(separation.companyId, companyId), status ? eq(separation.status, status as SepRow['status']) : undefined))
         .orderBy(desc(separation.lastWorkingDay))
         .limit(500);
-      const dtos = await this.toDtos(tx, rows.filter((s) => this.canView(principal, s)));
+      const visible: SepRow[] = [];
+      for (const s of rows) if (this.canView(principal, s, await this.departmentOf(tx, s.employeeId))) visible.push(s);
+      const dtos = await this.toDtos(tx, visible);
       if (!principal.canCompany('employee.financial.view', companyId)) for (const d of dtos) d.settlement = null;
       return dtos;
     });
@@ -378,7 +393,8 @@ export class SeparationService implements OnModuleInit {
   async employeeSeparations(principal: Principal, employeeId: string): Promise<SeparationDto[]> {
     await this.employees.loadVisible(principal, employeeId);
     return this.database.tx(principal.rls(), async (tx) => {
-      const rows = (await tx.select().from(separation).where(eq(separation.employeeId, employeeId)).orderBy(desc(separation.createdAt))).filter((s) => this.canView(principal, s));
+      const dept = await this.departmentOf(tx, employeeId);
+      const rows = (await tx.select().from(separation).where(eq(separation.employeeId, employeeId)).orderBy(desc(separation.createdAt))).filter((s) => this.canView(principal, s, dept));
       const dtos = await this.toDtos(tx, rows);
       for (const d of dtos) if (!principal.canCompany('employee.financial.view', d.companyId) && d.employeeId !== principal.employeeId) d.settlement = null;
       return dtos;

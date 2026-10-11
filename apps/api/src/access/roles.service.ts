@@ -87,6 +87,9 @@ export class RolesService {
       if (before.isSystem) {
         throw ApiError.conflict('System roles cannot be changed. Copy the role to customise it.');
       }
+      if (principal.roleKeys.has(before.key)) {
+        throw ApiError.forbidden('You cannot change a role you hold yourself');
+      }
       const beforePerms = await this.permissionsOf(tx, id);
       const [after] = await tx
         .update(role)

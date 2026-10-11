@@ -44,6 +44,8 @@ export interface StartInput {
   subjectId: string;
   subjectEmployeeId?: string | null;
   summary?: Record<string, unknown>;
+  /** Further users who may not approve (e.g. everyone who prepared a payroll). */
+  excludeUserIds?: string[];
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -74,7 +76,7 @@ export class WorkflowService {
     const [def] = await tx.select().from(workflowDefinition).where(eq(workflowDefinition.key, input.definitionKey));
     if (!def) throw new Error(`Unknown workflow ${input.definitionKey}`);
     const steps = await this.steps(tx, def.id);
-    const excluded = await this.excludedUsers(tx, principal.userId, input.subjectEmployeeId ?? null);
+    const excluded = await this.excludedUsers(tx, principal.userId, input.subjectEmployeeId ?? null, input.excludeUserIds ?? [], null);
 
     // Refuse requests that could never be approved by anyone (prevents silent auto-approval).
     let resolvable = 0;
@@ -99,6 +101,7 @@ export class WorkflowService {
         subjectId: input.subjectId,
         subjectEmployeeId: input.subjectEmployeeId ?? null,
         requesterUserId: principal.userId,
+        excludedUserIds: [...new Set(input.excludeUserIds ?? [])],
         summary: input.summary ?? {},
       })
       .returning();
@@ -117,8 +120,16 @@ export class WorkflowService {
   }
 
   /** Requester and the subject employee's own account can never approve. */
-  private async excludedUsers(tx: Tx, requesterUserId: string, subjectEmployeeId: string | null): Promise<Set<string>> {
-    const ex = new Set([requesterUserId]);
+  /**
+   * Who may not approve: the requester, the subject employee's own account, users listed on the
+   * request, and anyone who already decided a step of it (one decision per person).
+   */
+  private async excludedUsers(tx: Tx, requesterUserId: string, subjectEmployeeId: string | null, extra: string[], instanceId: string | null): Promise<Set<string>> {
+    const ex = new Set([requesterUserId, ...extra]);
+    if (instanceId) {
+      const decided = await tx.select({ by: workflowTask.decidedBy }).from(workflowTask).where(eq(workflowTask.instanceId, instanceId));
+      for (const d of decided) if (d.by) ex.add(d.by);
+    }
     if (subjectEmployeeId) {
       const [u] = await tx.select({ id: userAccount.id }).from(userAccount).where(eq(userAccount.employeeId, subjectEmployeeId));
       if (u) ex.add(u.id);
@@ -163,7 +174,7 @@ export class WorkflowService {
   /** Create tasks for the next resolvable step at or after `fromSeq`, or complete. */
   private async advance(tx: Tx, inst: InstanceRow, fromSeq: number, nameAr: string, nameEn: string): Promise<InstanceRow> {
     const steps = (await this.steps(tx, inst.definitionId)).filter((s) => s.seq >= fromSeq);
-    const excluded = await this.excludedUsers(tx, inst.requesterUserId, inst.subjectEmployeeId);
+    const excluded = await this.excludedUsers(tx, inst.requesterUserId, inst.subjectEmployeeId, inst.excludedUserIds, inst.id);
     for (const s of steps) {
       const users = await this.resolve(tx, s, inst.companyId, inst.subjectEmployeeId, excluded);
       if (!users.length) {
@@ -251,7 +262,14 @@ export class WorkflowService {
       if (!inst || inst.status !== 'pending' || inst.currentSeq !== task.seq) {
         throw ApiError.conflict('This request is no longer awaiting this step');
       }
-      if (inst.requesterUserId === principal.userId) throw ApiError.forbidden('You cannot approve your own request');
+      if (inst.requesterUserId === principal.userId || inst.excludedUserIds.includes(principal.userId)) {
+        throw ApiError.forbidden('You cannot approve this request');
+      }
+      const earlier = await tx
+        .select({ id: workflowTask.id })
+        .from(workflowTask)
+        .where(and(eq(workflowTask.instanceId, inst.id), eq(workflowTask.decidedBy, principal.userId)));
+      if (earlier.length) throw ApiError.forbidden('You already decided another step of this request');
       if (decision === 'reject' && !comment?.trim()) {
         throw ApiError.validation([{ path: 'comment', message: 'A reason is required when rejecting' }]);
       }

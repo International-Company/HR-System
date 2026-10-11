@@ -82,14 +82,14 @@ export class AuthService {
     const ok = await this.passwords.verify(user.passwordHash, password);
     if (!ok) {
       const lockout = await this.settings.get('security.lockout'); // read before opening the tx
-      const failures = user.failedLoginCount + 1;
-      const lock = failures >= lockout.maxFailures;
-      const lockedUntil = lock ? new Date(Date.now() + lockout.lockMinutes * 60_000) : null;
+      let failures = 0;
+      let lock = false;
+      let lockedUntil: Date | null = null;
       await this.database.system(async (tx) => {
-        await tx
-          .update(userAccount)
-          .set({ failedLoginCount: lock ? 0 : failures, lockedUntil })
-          .where(eq(userAccount.id, user.id));
+        failures = await this.countFailure(tx, user.id);
+        lock = failures >= lockout.maxFailures;
+        lockedUntil = lock ? new Date(Date.now() + lockout.lockMinutes * 60_000) : null;
+        if (lock) await tx.update(userAccount).set({ failedLoginCount: 0, lockedUntil }).where(eq(userAccount.id, user.id));
         await this.audit.record(tx, {
           action: 'auth.login',
           outcome: 'failure',
@@ -108,7 +108,7 @@ export class AuthService {
       });
       if (lock) {
         throw new ApiError(423, 'AUTH_LOCKED', 'The account is temporarily locked', {
-          meta: { lockedUntil: lockedUntil!.toISOString() },
+          meta: { lockedUntil: (lockedUntil as Date | null)?.toISOString() },
         });
       }
       throw this.invalidCredentials();
@@ -121,7 +121,8 @@ export class AuthService {
         actor,
         details: { reason: 'disabled' },
       });
-      throw new ApiError(403, 'AUTH_DISABLED', 'The account is disabled');
+      // Same answer as a wrong password: a correct password of a disabled account is not revealed.
+      throw this.invalidCredentials();
     }
 
     const sessionPolicy = await this.settings.get('security.session');
@@ -296,6 +297,16 @@ export class AuthService {
     return { recoveryCodes };
   }
 
+  /** Atomic failed-attempt counter (concurrent requests cannot reuse an old value). */
+  private async countFailure(tx: Tx, userId: string): Promise<number> {
+    const [r] = await tx
+      .update(userAccount)
+      .set({ failedLoginCount: sql`${userAccount.failedLoginCount} + 1` })
+      .where(eq(userAccount.id, userId))
+      .returning({ n: userAccount.failedLoginCount });
+    return r?.n ?? 0;
+  }
+
   async verifyMfa(
     principal: Principal,
     input: { code: string } | { recoveryCode: string },
@@ -330,18 +341,22 @@ export class AuthService {
     }
 
     if (!ok) {
+      const lockout = await this.settings.get('security.lockout');
       const revoked = await this.database.system(async (tx) => {
         const [s] = await tx
-          .select({ attempts: session.mfaFailedAttempts })
-          .from(session)
-          .where(eq(session.id, principal.sessionId));
-        const attempts = (s?.attempts ?? 0) + 1;
-        await tx
           .update(session)
-          .set({ mfaFailedAttempts: attempts })
-          .where(eq(session.id, principal.sessionId));
-        const kill = attempts >= MAX_MFA_ATTEMPTS;
-        if (kill) await this.sessions.revoke(tx, principal.sessionId, 'mfa_attempts_exceeded');
+          .set({ mfaFailedAttempts: sql`${session.mfaFailedAttempts} + 1` })
+          .where(eq(session.id, principal.sessionId))
+          .returning({ attempts: session.mfaFailedAttempts });
+        const attempts = s?.attempts ?? MAX_MFA_ATTEMPTS;
+        // Wrong codes also count toward the account lockout (no unlimited retries by signing in again).
+        const accountFailures = await this.countFailure(tx, user.id);
+        const lockAccount = accountFailures >= lockout.maxFailures;
+        if (lockAccount) {
+          await tx.update(userAccount).set({ failedLoginCount: 0, lockedUntil: new Date(Date.now() + lockout.lockMinutes * 60_000) }).where(eq(userAccount.id, user.id));
+        }
+        const kill = attempts >= MAX_MFA_ATTEMPTS || lockAccount;
+        if (kill) await this.sessions.revoke(tx, principal.sessionId, lockAccount ? 'account_locked' : 'mfa_attempts_exceeded');
         await this.audit.record(tx, {
           action: 'auth.mfa_verify',
           outcome: 'failure',

@@ -488,7 +488,7 @@ function ManualItemModal({ runId, line, onClose }: { runId: string; line: PayLin
     <Modal opened onClose={onClose} title={t('pay.addItem')}>
       <Stack>
         <ErrorAlert error={save.error} />
-        <Select data={(['earning', 'deduction'] as const).map((k) => ({ value: k, label: t(`pay.${k}`) }))} value={form.kind} onChange={(v) => setForm({ ...form, kind: (v ?? 'earning') as 'earning' | 'deduction' })} allowDeselect={false} />
+        <Select aria-label={t('pay.items')} data={(['earning', 'deduction'] as const).map((k) => ({ value: k, label: t(`pay.${k}`) }))} value={form.kind} onChange={(v) => setForm({ ...form, kind: (v ?? 'earning') as 'earning' | 'deduction' })} allowDeselect={false} />
         <TextInput label={t('pay.label')} value={form.label} onChange={(e) => setForm({ ...form, label: e.currentTarget.value })} />
         <NumberInput label={`${t('pay.amount')} (${line.currency})`} min={0.01} decimalScale={2} value={form.amount} onChange={(v) => setForm({ ...form, amount: Number(v) || 0 })} />
         <Textarea label={t('pay.note')} value={form.note} onChange={(e) => setForm({ ...form, note: e.currentTarget.value })} autosize />

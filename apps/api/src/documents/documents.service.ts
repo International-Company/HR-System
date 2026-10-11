@@ -202,15 +202,21 @@ export class DocumentsService {
   // --- linked entities other than employees (recruitment) ------------------------------------
 
   /** Files linked to a candidate; the caller has authorised access to the candidate. */
-  async listForCandidate(tx: Tx, candidateId: string): Promise<DocumentDto[]> {
+  async listForCandidate(tx: Tx, principal: Principal, candidateId: string): Promise<DocumentDto[]> {
     const rows = await tx
-      .select({ d: document, o: storedObject })
+      .select({ d: document, o: storedObject, c: documentCategory })
       .from(documentLink)
       .innerJoin(document, eq(document.id, documentLink.documentId))
       .innerJoin(storedObject, eq(storedObject.id, document.objectId))
+      .innerJoin(documentCategory, eq(documentCategory.id, document.categoryId))
       .where(and(eq(documentLink.entityType, 'candidate'), eq(documentLink.entityId, candidateId), eq(document.status, 'active')))
       .orderBy(desc(document.createdAt));
-    return rows.map(({ d, o }) => toDocumentDto(d, o));
+    return rows.filter(({ d, c }) => this.candidateCategoryVisible(principal, c, d.companyId)).map(({ d, o }) => toDocumentDto(d, o));
+  }
+
+  /** Candidate files of restricted categories (e.g. passports) need the restricted permission. */
+  private candidateCategoryVisible(principal: Principal, c: CategoryRow, companyId: string): boolean {
+    return c.sensitivity === 'normal' || (c.sensitivity === 'restricted' && principal.canCompany('documents.view.restricted', companyId));
   }
 
   /** Content of a candidate's file; the caller has authorised access to the candidate. */
@@ -218,13 +224,14 @@ export class DocumentsService {
     const storage = this.requireStorage();
     const [row] = await this.database.tx(principal.rls(), (tx) =>
       tx
-        .select({ d: document, o: storedObject })
+        .select({ d: document, o: storedObject, c: documentCategory })
         .from(documentLink)
         .innerJoin(document, eq(document.id, documentLink.documentId))
         .innerJoin(storedObject, eq(storedObject.id, document.objectId))
+        .innerJoin(documentCategory, eq(documentCategory.id, document.categoryId))
         .where(and(eq(documentLink.entityType, 'candidate'), eq(documentLink.entityId, candidateId), eq(document.id, documentId))),
     );
-    if (!row || row.d.status === 'deleted') throw ApiError.notFound('Document');
+    if (!row || row.d.status === 'deleted' || !this.candidateCategoryVisible(principal, row.c, row.d.companyId)) throw ApiError.notFound('Document');
     const chunks: Buffer[] = [];
     for await (const chunk of await storage.get(row.o.objectKey)) chunks.push(chunk as Buffer);
     const body = this.encryptor.decrypt(Buffer.concat(chunks), `doc:${row.o.id}`);

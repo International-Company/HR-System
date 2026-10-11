@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, asc, eq, gte, ilike, inArray, lte, ne, or, sql } from 'drizzle-orm';
+import { and, asc, eq, gte, ilike, inArray, lte, ne, or } from 'drizzle-orm';
 import { WIDGETS, type SearchResultDto, type WidgetDto, type WidgetKey } from '@hrms/shared';
 import { DATABASE } from '../common/tokens.js';
 import type { Database } from '../db/database.js';
@@ -124,27 +124,29 @@ export class DashboardService {
         return { pending: (await this.workflow.myTasks(principal, 'pending')).length };
       case 'headcount': {
         const cos = await this.companiesFor(principal, 'employee.profile.view');
-        const counts = await this.database.tx(principal.rls(), (tx) =>
+        const rows = await this.database.tx(principal.rls(), (tx) =>
           tx
-            .select({ c: employeeCurrentAssignment.companyId, n: sql<number>`count(*)::int` })
+            .select({ c: employeeCurrentAssignment.companyId, d: employeeCurrentAssignment.departmentId })
             .from(employeeCurrentAssignment)
             .innerJoin(employee, eq(employee.id, employeeCurrentAssignment.employeeId))
-            .where(and(inArray(employeeCurrentAssignment.companyId, cos.map((c) => c.id).concat('00000000-0000-0000-0000-000000000000')), ne(employee.status, 'terminated')))
-            .groupBy(employeeCurrentAssignment.companyId),
+            .where(and(inArray(employeeCurrentAssignment.companyId, ids(cos)), ne(employee.status, 'terminated'))),
         );
-        return { companies: cos.map((c) => ({ nameAr: c.ar, nameEn: c.en, count: counts.find((x) => x.c === c.id)?.n ?? 0 })) };
+        const mine = rows.filter((r) => principal.canDepartment('employee.profile.view', r.c, r.d ?? ''));
+        return { companies: cos.map((c) => ({ nameAr: c.ar, nameEn: c.en, count: mine.filter((r) => r.c === c.id).length })) };
       }
       case 'attendance_today': {
         const cos = await this.companiesFor(principal, 'attendance.record.view');
         const rows = await this.database.tx(principal.rls(), (tx) =>
           tx
-            .select({ c: attendanceDay.companyId, status: attendanceDay.status, late: attendanceDay.lateMinutes })
+            .select({ c: attendanceDay.companyId, d: employeeCurrentAssignment.departmentId, status: attendanceDay.status, late: attendanceDay.lateMinutes })
             .from(attendanceDay)
-            .where(and(eq(attendanceDay.workDate, today), inArray(attendanceDay.companyId, cos.map((c) => c.id).concat('00000000-0000-0000-0000-000000000000')))),
+            .leftJoin(employeeCurrentAssignment, eq(employeeCurrentAssignment.employeeId, attendanceDay.employeeId))
+            .where(and(eq(attendanceDay.workDate, today), inArray(attendanceDay.companyId, ids(cos)))),
         );
+        const scoped = rows.filter((r) => principal.canDepartment('attendance.record.view', r.c, r.d ?? ''));
         return {
           companies: cos.map((c) => {
-            const mine = rows.filter((r) => r.c === c.id);
+            const mine = scoped.filter((r) => r.c === c.id);
             return {
               nameAr: c.ar,
               nameEn: c.en,
@@ -159,13 +161,15 @@ export class DashboardService {
         const cos = await this.companiesFor(principal, 'leave.request.view');
         const rows = await this.database.tx(principal.rls(), (tx) =>
           tx
-            .select({ ar: employee.fullNameAr, en: employee.fullNameEn, end: leaveRequest.endDate })
+            .select({ c: leaveRequest.companyId, d: employeeCurrentAssignment.departmentId, ar: employee.fullNameAr, en: employee.fullNameEn, end: leaveRequest.endDate })
             .from(leaveRequest)
             .innerJoin(employee, eq(employee.id, leaveRequest.employeeId))
-            .where(and(eq(leaveRequest.status, 'approved'), lte(leaveRequest.startDate, today), gte(leaveRequest.endDate, today), inArray(leaveRequest.companyId, cos.map((c) => c.id).concat('00000000-0000-0000-0000-000000000000'))))
-            .limit(20),
+            .leftJoin(employeeCurrentAssignment, eq(employeeCurrentAssignment.employeeId, leaveRequest.employeeId))
+            .where(and(eq(leaveRequest.status, 'approved'), lte(leaveRequest.startDate, today), gte(leaveRequest.endDate, today), inArray(leaveRequest.companyId, ids(cos))))
+            .limit(200),
         );
-        return { count: rows.length, people: rows.slice(0, 8).map((r) => ({ nameAr: r.ar, nameEn: r.en, until: r.end })) };
+        const mine = rows.filter((r) => principal.canDepartment('leave.request.view', r.c, r.d ?? ''));
+        return { count: mine.length, people: mine.slice(0, 8).map((r) => ({ nameAr: r.ar, nameEn: r.en, until: r.end })) };
       }
       case 'pending_approvals': {
         const list = await this.workflow.companyInstances(principal, { status: 'pending' });
@@ -220,3 +224,7 @@ function prevMonth(m: string): string {
   return new Date(Date.UTC(y!, mo! - 2, 1)).toISOString().slice(0, 7);
 }
 
+/** Company ids for an IN list (never empty). */
+function ids(cos: { id: string }[]): string[] {
+  return cos.map((c) => c.id).concat('00000000-0000-0000-0000-000000000000');
+}

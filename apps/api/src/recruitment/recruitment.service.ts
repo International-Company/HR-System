@@ -1,5 +1,5 @@
 import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
-import { and, asc, desc, eq, ilike, inArray, isNotNull, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, isNotNull, ne, or, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 import type {
   ApplicationDto,
@@ -325,7 +325,11 @@ export class RecruitmentService implements OnModuleInit {
     const [v] = await tx.select().from(vacancy).where(eq(vacancy.id, app.vacancyId));
     const staff = this.canView(principal, app.companyId, v?.departmentId);
     if (!staff) {
-      const mine = await tx.select({ id: interview.id }).from(interview).where(and(eq(interview.applicationId, id), sql`${principal.userId}::uuid = any(${interview.interviewerUserIds})`));
+      // Interviewers of a scheduled or held interview only (not after it was cancelled).
+      const mine = await tx
+        .select({ id: interview.id })
+        .from(interview)
+        .where(and(eq(interview.applicationId, id), ne(interview.status, 'cancelled'), sql`${principal.userId}::uuid = any(${interview.interviewerUserIds})`));
       if (!mine.length) throw ApiError.notFound('Application');
     }
     return { app, v: v!, staff };
@@ -341,14 +345,15 @@ export class RecruitmentService implements OnModuleInit {
       const userIds = [...new Set([...events.map((e) => e.createdBy), ...interviews.flatMap((i) => i.interviewerUserIds)].filter((x): x is string => !!x))];
       const users = userIds.length ? await tx.select({ id: userAccount.id, n: userAccount.displayName }).from(userAccount).where(inArray(userAccount.id, userIds)) : [];
       const name = (uid: string | null) => users.find((u) => u.id === uid)?.n ?? null;
-      const docs = staff ? await this.documents.listForCandidate(tx, app.candidateId) : [];
+      const docs = staff ? await this.documents.listForCandidate(tx, principal, app.candidateId) : [];
       const seeSalary = principal.canCompany('recruitment.offers', app.companyId);
       return {
         id: app.id,
         vacancyId: app.vacancyId,
         vacancyTitle: v.title,
         companyId: app.companyId,
-        candidate: this.toCandidate(c!),
+        // Interviewers see the candidate's name and process, not contact details or notes.
+        candidate: staff ? this.toCandidate(c!) : { ...this.toCandidate(c!), email: null, phone: null, notes: '' },
         stage: app.stage,
         outcome: app.outcome,
         employeeId: app.employeeId,
@@ -369,7 +374,8 @@ export class RecruitmentService implements OnModuleInit {
             status: i.status,
             result: i.result,
             score: i.score,
-            feedback: i.feedback,
+            // Each interviewer sees only their own feedback; staff see all of it.
+            feedback: staff || i.recordedBy === principal.userId ? i.feedback : null,
             canRecordResult: i.status !== 'cancelled' && (i.interviewerUserIds.includes(principal.userId) || principal.canCompany('recruitment.manage', app.companyId)),
           }),
         ),
@@ -445,6 +451,8 @@ export class RecruitmentService implements OnModuleInit {
       if (!i) throw ApiError.notFound('Interview');
       if (!i.interviewerUserIds.includes(principal.userId) && !principal.canCompany('recruitment.manage', i.companyId)) throw ApiError.notFound('Interview');
       if (i.status === 'cancelled') throw ApiError.conflict('The interview was cancelled');
+      const [app] = await tx.select({ outcome: jobApplication.outcome }).from(jobApplication).where(eq(jobApplication.id, i.applicationId));
+      if (app?.outcome !== 'open') throw ApiError.conflict('The application is closed');
       await tx
         .update(interview)
         .set({ status: 'done', result: input.result, score: input.score ?? null, feedback: input.feedback, recordedBy: principal.userId, recordedAt: new Date() })
@@ -538,7 +546,7 @@ export class RecruitmentService implements OnModuleInit {
 
   // --- conversion (REC-06) -----------------------------------------------------------------------------
 
-  async convert(principal: Principal, id: string, input: z.infer<typeof convertInput>): Promise<ApplicationDto> {
+  async convert(principal: Principal, id: string, input_: z.infer<typeof convertInput>): Promise<ApplicationDto> {
     const pre = await this.database.tx(principal.rls(), async (tx) => {
       const { app, v } = await this.loadApplication(tx, principal, id);
       this.requireManage(principal, app.companyId);
@@ -549,29 +557,36 @@ export class RecruitmentService implements OnModuleInit {
       return { app, v, c: c!, offer: offer ?? null };
     });
     const { app, v, c, offer } = pre;
-    const emp = await this.employees.create(principal, {
+    const input = {
       personal: { fullNameAr: c.fullNameAr, fullNameEn: c.fullNameEn, email: c.email, phone: c.phone, nationality: c.nationality },
-      hireDate: input.hireDate,
-      probationEndDate: input.probationEndDate ?? null,
+      hireDate: input_.hireDate,
+      probationEndDate: input_.probationEndDate ?? null,
       assignment: {
         companyId: app.companyId,
-        departmentId: input.departmentId !== undefined ? input.departmentId : v.departmentId,
+        departmentId: input_.departmentId !== undefined ? input_.departmentId : v.departmentId,
         jobTitleId: offer?.jobTitleId ?? v.jobTitleId,
-        managerEmployeeId: input.managerEmployeeId ?? null,
+        managerEmployeeId: input_.managerEmployeeId ?? null,
         workLocationId: v.workLocationId,
         employmentCategoryId: v.employmentCategoryId,
         contractTypeId: v.contractTypeId,
       },
-      ...(offer ? { compensation: { baseSalary: Number(offer.baseSalary).toFixed(2), currency: offer.currency, paymentMethod: input.paymentMethod, items: [] } } : {}),
-    });
+      ...(offer ? { compensation: { baseSalary: Number(offer.baseSalary).toFixed(2), currency: offer.currency, paymentMethod: input_.paymentMethod, items: [] } } : {}),
+    };
+    const fmt = await this.employees.prepareCreate(principal, input);
+    const empId = uuidv7();
+    // One transaction with the application and candidate locked: a candidate is hired once (REC-06).
     await this.database.tx(principal.rls(), async (tx) => {
-      await tx.update(jobApplication).set({ employeeId: emp.id, updatedAt: new Date() }).where(eq(jobApplication.id, id));
-      await tx.update(candidate).set({ employeeId: emp.id, updatedAt: new Date() }).where(eq(candidate.id, c.id));
-      const files = await this.documents.linkCandidateFilesToEmployee(tx, c.id, emp.id);
-      await this.event(tx, id, 'converted', null, emp.employeeNo, principal.userId);
+      const [locked] = await tx.select().from(jobApplication).where(eq(jobApplication.id, id)).for('update');
+      const [cand] = await tx.select().from(candidate).where(eq(candidate.id, c.id)).for('update');
+      if (!locked || locked.employeeId || cand?.employeeId) throw ApiError.conflict('This candidate already has an employee record');
+      const employeeNo = await this.employees.createIn(tx, principal, input, fmt, empId);
+      await tx.update(jobApplication).set({ employeeId: empId, updatedAt: new Date() }).where(eq(jobApplication.id, id));
+      await tx.update(candidate).set({ employeeId: empId, updatedAt: new Date() }).where(eq(candidate.id, c.id));
+      const files = await this.documents.linkCandidateFilesToEmployee(tx, c.id, empId);
+      await this.event(tx, id, 'converted', null, employeeNo, principal.userId);
       const hired = await tx.select({ n: sql<number>`count(*)::int` }).from(jobApplication).where(and(eq(jobApplication.vacancyId, v.id), isNotNull(jobApplication.employeeId)));
       if ((hired[0]?.n ?? 0) >= v.openings) await tx.update(vacancy).set({ status: 'filled', updatedAt: new Date() }).where(eq(vacancy.id, v.id));
-      await this.audit.record(tx, { action: 'recruitment.converted', entityType: 'job_application', entityId: id, companyId: app.companyId, details: { employeeId: emp.id, employeeNo: emp.employeeNo, files } });
+      await this.audit.record(tx, { action: 'recruitment.converted', entityType: 'job_application', entityId: id, companyId: app.companyId, details: { employeeId: empId, employeeNo, files } });
     });
     return this.application(principal, id);
   }

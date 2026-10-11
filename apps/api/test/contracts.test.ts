@@ -147,6 +147,7 @@ describe('contracts (CON-01..11)', () => {
     const v = latest(a.body);
     expect(v).toMatchObject({ kind: 'addendum', status: 'draft' });
     expect((await s['hr.a']!.post(`/contracts/${contractId}/addenda`, { templateId: null, effectiveDate: today, body: 'again' })).status).toBe(409);
+    await s['hr.a']!.post(`/contracts/${contractId}/versions/${v.id}/send`);
     const r = await s['hr.a']!.agent
       .post(`${API}/contracts/${contractId}/versions/${v.id}/signed-copy`)
       .set('x-csrf-token', s['hr.a']!.csrf)

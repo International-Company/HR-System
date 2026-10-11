@@ -97,8 +97,9 @@ describe('authentication & sessions (AUTH-01, AUTH-06, AUTH-07)', () => {
     expect(r.status).toBe(201);
     expect((await victim.get('/auth/session')).status).toBe(401);
     const login = await env.anon().post(`${API}/auth/login`).send({ username: 'time.a', password: TEST_PASSWORD });
-    expect(login.status).toBe(403);
-    expect(login.body.code).toBe('AUTH_DISABLED');
+    // Same answer as a wrong password (the correct password of a disabled account is not revealed).
+    expect(login.status).toBe(401);
+    expect(login.body.code).toBe('AUTH_INVALID_CREDENTIALS');
     await admin.post(`/users/${id}/status`, { status: 'active', reason: 'restore' });
   });
 

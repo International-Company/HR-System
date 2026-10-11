@@ -85,7 +85,7 @@ function SettingRow<T>({
             </Group>
           )}
         </Group>
-        <fieldset disabled={!canEdit} style={{ border: 0, padding: 0, margin: 0 }}>
+        <fieldset disabled={!canEdit} aria-label={label} style={{ border: 0, padding: 0, margin: 0 }}>
           {render(draft, setDraft)}
         </fieldset>
         {canEdit && (
@@ -585,7 +585,7 @@ function ModulesPanel({ companies }: { companies: CompanyDto[] }) {
                       />
                     </Table.Td>
                     <Table.Td>
-                      <Select
+                      <Select aria-label={t('settings.modules')}
                         size="xs"
                         w={220}
                         disabled={!canManage}
@@ -654,7 +654,7 @@ function DashboardLayoutEditor({
           <Text w={220} size="sm">
             {t(`widgets.${w.widget}`)}
           </Text>
-          <Select
+          <Select aria-label={t('widgets.size')}
             w={120}
             data={(['small', 'large'] as const).map((x) => ({ value: x, label: t(`widgets.sizes.${x}`) }))}
             value={w.size}
@@ -673,7 +673,7 @@ function DashboardLayoutEditor({
         </Group>
       ))}
       {role && (
-        <Select
+        <Select aria-label={t('widgets.add')}
           w={260}
           placeholder={t('widgets.add')}
           data={WIDGETS.filter((w) => !list.some((x) => x.widget === w)).map((w) => ({ value: w, label: t(`widgets.${w}`) }))}
