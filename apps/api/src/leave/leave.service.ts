@@ -298,7 +298,9 @@ export class LeaveService implements OnModuleInit {
     const { row, current } = await this.visibleEmployee(principal, employeeId);
     if (!current) return [];
     const today = await this.today();
-    return this.database.tx(principal.rls(), (tx) => this.balancesIn(tx, employeeId, row.hireDate, current, today));
+    // Former employees: balances as of their last working day (no accrual afterwards).
+    const asOf = current.validTo && current.validTo < today ? current.validTo : today;
+    return this.database.tx(principal.rls(), (tx) => this.balancesIn(tx, employeeId, row.hireDate, current, asOf));
   }
 
   async ledger(principal: Principal, employeeId: string, leaveTypeId: string): Promise<LedgerEntryDto[]> {
@@ -791,13 +793,15 @@ export class LeaveService implements OnModuleInit {
           departmentId: employeeCurrentAssignment.departmentId,
           contractTypeId: employeeCurrentAssignment.contractTypeId,
           employmentCategoryId: employeeCurrentAssignment.employmentCategoryId,
+          validTo: employeeCurrentAssignment.validTo,
           hireDate: employee.hireDate,
         })
         .from(employeeCurrentAssignment)
         .innerJoin(employee, eq(employee.id, employeeCurrentAssignment.employeeId)),
     );
     let n = 0;
-    for (const { hireDate, ...a } of people) {
+    for (const { hireDate, validTo, ...a } of people) {
+      if (validTo && validTo < today) continue; // left the group: nothing accrues
       if ((await this.modules.access('leave', a.companyId)) === 'hidden') continue;
       n += await this.database.system(async (tx) => {
         const before = await tx.select({ c: sql<number>`count(*)::int` }).from(leaveLedger).where(eq(leaveLedger.employeeId, a.employeeId));

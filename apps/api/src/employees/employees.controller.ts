@@ -8,6 +8,7 @@ import {
   linkUserInput,
   personalUpdateInput,
   qualificationInput,
+  rehireInput,
   statusChangeInput,
 } from '@hrms/shared';
 import { assertUuid, parse } from '../common/errors.js';
@@ -61,6 +62,13 @@ export class EmployeesController {
   @RequirePermission('employee.lifecycle.manage')
   changeStatus(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body() body: unknown) {
     return this.employees.changeStatus(p, eid(id), parse(statusChangeInput, body));
+  }
+
+  /** TRM-07: former employees come back with the same number. */
+  @Post(':id/rehire')
+  @RequirePermission('employee.lifecycle.manage')
+  rehire(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body() body: unknown) {
+    return this.employees.rehire(p, eid(id), parse(rehireInput, body));
   }
 
   @Get(':id/history')

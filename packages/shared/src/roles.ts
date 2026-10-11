@@ -68,6 +68,9 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'contracts.view',
       'contracts.manage',
       'contracts.manual_edit',
+      'separation.request',
+      'separation.view',
+      'separation.manage',
     ],
   },
   {
@@ -90,6 +93,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'contracts.view',
       'payroll.view',
       'payroll.summary.view',
+      'separation.view',
     ],
   },
   {
@@ -109,6 +113,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'contracts.view',
       'contracts.sign',
       'payroll.view',
+      'separation.view',
     ],
   },
   {
@@ -132,6 +137,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'leave.request.view',
       'contracts.view',
       'payroll.payslip.view',
+      'separation.request',
+      'separation.view',
     ],
   },
   {

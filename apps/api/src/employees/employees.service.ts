@@ -18,6 +18,7 @@ import type {
   employeeListQuery,
   personalUpdateInput,
   qualificationInput,
+  rehireInput,
   statusChangeInput,
 } from '@hrms/shared';
 import { DATABASE, ENCRYPTOR } from '../common/tokens.js';
@@ -31,6 +32,7 @@ import {
   employmentAssignment,
   lifecycleEvent,
   qualification,
+  separation,
   userAccount,
 } from '../db/schema.js';
 import { ApiError } from '../common/errors.js';
@@ -644,6 +646,77 @@ export class EmployeesService {
         companyId: current?.companyId ?? null,
         before: { status: row.status },
         after: { status: input.status, effectiveDate: input.effectiveDate, reason: input.reason },
+      });
+    });
+    return this.get(principal, id);
+  }
+
+  // --- rehire (TRM-07) -------------------------------------------------------------------------
+
+  /**
+   * Rehire a former employee: same employee number and full history; a new assignment (and
+   * salary) from the rehire date. Service-based rules (leave, end of service) count from the
+   * rehire date; the original hire date stays in the history.
+   */
+  async rehire(principal: Principal, id: string, input: z.infer<typeof rehireInput>): Promise<EmployeeDto> {
+    const a = input.assignment;
+    if (!principal.canCompany('employee.lifecycle.manage', a.companyId)) throw ApiError.forbidden();
+    if (input.compensation && !principal.canCompany('employee.financial.edit', a.companyId)) {
+      throw ApiError.forbidden('Salary data needs the financial edit permission');
+    }
+    await this.assertManager(a.managerEmployeeId);
+    const today = new Date().toISOString().slice(0, 10);
+    await this.database.tx(principal.rls(), async (tx) => {
+      const { row } = await this.loadVisible(principal, id, tx);
+      if (row.status !== 'terminated') throw ApiError.conflict('Only former employees can be rehired');
+      const [last] = await tx.select().from(employmentAssignment).where(eq(employmentAssignment.employeeId, id)).orderBy(desc(employmentAssignment.validFrom));
+      if (last?.validTo && input.effectiveDate <= last.validTo) {
+        throw ApiError.validation([{ path: 'effectiveDate', message: 'Must be after the last working day' }]);
+      }
+      const [sep] = await tx.select().from(separation).where(and(eq(separation.employeeId, id), eq(separation.status, 'completed'))).orderBy(desc(separation.lastWorkingDay));
+      if (sep && !sep.rehireEligible) {
+        if (!input.overrideIneligible) throw ApiError.conflict('The previous separation marked this person as not eligible for rehire');
+        if (!principal.canCompany('separation.manage', a.companyId)) throw ApiError.forbidden('Overriding rehire eligibility needs the separation permission');
+      }
+      await assertLookups(tx, a.companyId, [
+        { id: a.jobTitleId, kind: 'job_title', field: 'assignment.jobTitleId' },
+        { id: a.employmentCategoryId, kind: 'employment_category', field: 'assignment.employmentCategoryId' },
+        { id: a.contractTypeId, kind: 'contract_type', field: 'assignment.contractTypeId' },
+      ]);
+      const status = input.probationEndDate && input.probationEndDate >= today ? 'probation' : 'active';
+      await tx
+        .update(employee)
+        .set({ status, hireDate: input.effectiveDate, probationEndDate: input.probationEndDate ?? null, updatedBy: principal.userId })
+        .where(eq(employee.id, id));
+      await tx.insert(employmentAssignment).values({
+        id: uuidv7(),
+        employeeId: id,
+        companyId: a.companyId,
+        departmentId: a.departmentId ?? null,
+        jobTitleId: a.jobTitleId ?? null,
+        managerEmployeeId: a.managerEmployeeId ?? null,
+        workLocationId: a.workLocationId ?? null,
+        employmentCategoryId: a.employmentCategoryId ?? null,
+        contractTypeId: a.contractTypeId ?? null,
+        contractStart: a.contractStart ?? null,
+        contractEnd: a.contractEnd ?? null,
+        validFrom: input.effectiveDate,
+        changeReason: 'rehire',
+        createdBy: principal.userId,
+      });
+      if (input.compensation) await this.insertCompensation(tx, principal, id, a.companyId, input.effectiveDate, input.compensation, 'rehire');
+      await this.event(tx, principal, id, a.companyId, 'rehire', input.effectiveDate, {
+        previousHireDate: row.hireDate,
+        reason: input.reason,
+        overrideIneligible: !!(sep && !sep.rehireEligible),
+      });
+      await this.audit.record(tx, {
+        action: 'employee.rehired',
+        entityType: 'employee',
+        entityId: id,
+        companyId: a.companyId,
+        before: { status: row.status, hireDate: row.hireDate },
+        after: { status, hireDate: input.effectiveDate, companyId: a.companyId, reason: input.reason },
       });
     });
     return this.get(principal, id);

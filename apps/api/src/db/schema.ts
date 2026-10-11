@@ -23,6 +23,8 @@ import {
 } from 'drizzle-orm/pg-core';
 import type {
   ContractStatus,
+  SeparationStatus,
+  SeparationType,
   ItemSource,
   PaymentStatus,
   RunStatus,
@@ -974,6 +976,31 @@ export const payrollPayment = pgTable('payroll_payment', {
   createdBy: uuid('created_by').notNull(),
 });
 
+// --- Separation (Phase 8) ----------------------------------------------------------------
+
+export const separation = pgTable('separation', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  type: text('type').$type<SeparationType>().notNull(),
+  status: text('status').$type<SeparationStatus>().notNull().default('pending'),
+  lastWorkingDay: date('last_working_day', { mode: 'string' }).notNull(),
+  reason: text('reason').notNull(),
+  rehireEligible: boolean('rehire_eligible').notNull().default(true),
+  previousValidTo: date('previous_valid_to', { mode: 'string' }),
+  assignmentId: uuid('assignment_id'),
+  settlement: jsonb('settlement').$type<{ amount: number; currency: string; serviceYears: number; explanation: string[] }>(),
+  initiatedBy: uuid('initiated_by').notNull(),
+  initiatedBySelf: boolean('initiated_by_self').notNull().default(false),
+  workflowInstanceId: uuid('workflow_instance_id'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  decidedAt: tstz('decided_at'),
+  completedAt: tstz('completed_at'),
+  cancelledAt: tstz('cancelled_at'),
+  cancelledBy: uuid('cancelled_by'),
+  cancelReason: text('cancel_reason'),
+});
+
 export const schema = {
   companyGroup,
   company,
@@ -1042,4 +1069,5 @@ export const schema = {
   payrollItem,
   payrollManualItem,
   payrollPayment,
+  separation,
 };
