@@ -295,6 +295,15 @@ export class WorkflowService {
     return this.getInstance(principal, instanceId);
   }
 
+  /** Cancels a pending instance inside the caller's transaction; the caller has authorised it. */
+  async cancelWithin(tx: Tx, instanceId: string): Promise<void> {
+    const [inst] = await tx.select().from(workflowInstance).where(eq(workflowInstance.id, instanceId)).for('update');
+    if (!inst) throw ApiError.notFound('Request');
+    if (inst.status !== 'pending') throw ApiError.conflict('Only pending requests can be cancelled');
+    const [def] = await tx.select().from(workflowDefinition).where(eq(workflowDefinition.id, inst.definitionId));
+    await this.complete(tx, inst, 'cancelled', def!.nameAr, def!.nameEn);
+  }
+
   // --- queries ---------------------------------------------------------------------------
 
   async myTasks(principal: Principal, status: 'pending' | 'decided'): Promise<WorkflowInstanceDto[]> {

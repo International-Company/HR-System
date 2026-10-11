@@ -38,6 +38,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { computeDay, type AttendancePolicy } from './compute.js';
 import { addDays, localDate, localTime, zonedToUtc } from './time.js';
 import { DevicesService } from './devices.service.js';
+import { leaveCoverage } from '../leave/leave-query.js';
 
 type DayRow = typeof attendanceDay.$inferSelect;
 type PunchRow = typeof punch.$inferSelect;
@@ -286,6 +287,15 @@ export class AttendanceService implements OnModuleInit {
   // --- calculation ----------------------------------------------------------------------------
 
   /** Recompute and store one attendance day (runs inside the caller's transaction). */
+  /** Recompute stored days after leave decisions (dates after today are computed on display). */
+  async recomputeRange(tx: Tx, employeeId: string, companyId: string, from: string, to: string): Promise<void> {
+    const ctx = await this.contextFor(tx, companyId);
+    const today = localDate(new Date(), ctx.tz);
+    const last = to < today ? to : today;
+    if (from > last) return;
+    for (const d of eachDay(from, last)) await this.recompute(tx, employeeId, companyId, d, ctx);
+  }
+
   async recompute(
     tx: Tx,
     employeeId: string,
@@ -305,6 +315,7 @@ export class AttendanceService implements OnModuleInit {
         ),
       );
     const punches = await this.activePunches(tx, employeeId, workDate, workDate);
+    const coverage = await leaveCoverage(tx, employeeId, workDate, workDate, ctx.tz);
     const [existing] = await tx
       .select()
       .from(attendanceDay)
@@ -318,6 +329,8 @@ export class AttendanceService implements OnModuleInit {
       punches: punches.map((p) => ({ kind: p.kind, at: p.at })),
       policy: ctx.policy,
       review: existing?.reviewStatus ? { status: existing.reviewStatus, note: existing.reviewNote } : null,
+      onLeave: coverage.leaveDates.has(workDate),
+      permissions: coverage.permissions.get(workDate) ?? [],
     });
     const values = {
       companyId: assignment?.companyId ?? companyId,
@@ -378,6 +391,7 @@ export class AttendanceService implements OnModuleInit {
         .where(and(eq(punch.employeeId, employeeId), gte(punch.workDate, from), lte(punch.workDate, to)))
         .orderBy(asc(punch.at));
       const workdays = await this.calendar.resolveWorkdays(tx, employeeId, range);
+      const coverage = await leaveCoverage(tx, employeeId, from, to, tz);
       const assigns = await tx
         .select()
         .from(employmentAssignment)
@@ -412,6 +426,8 @@ export class AttendanceService implements OnModuleInit {
                   punches: ps.filter((x) => !x.v).map((x) => ({ kind: x.p.kind, at: x.p.at })),
                   policy,
                   review: row?.reviewStatus ? { status: row.reviewStatus, note: row.reviewNote } : null,
+                  onLeave: coverage.leaveDates.has(date),
+                  permissions: coverage.permissions.get(date) ?? [],
                 }),
                 reviewNote: row?.reviewNote ?? null,
               };
@@ -454,7 +470,8 @@ export class AttendanceService implements OnModuleInit {
             lte(attendanceDay.workDate, to),
             or(
               inArray(attendanceDay.status, ['absent_pending', 'incomplete']),
-              sql`cardinality(${attendanceDay.flags}) > 0`,
+              // Informational flags (approved leave or permission) are not exceptions.
+              sql`cardinality(array(select unnest(${attendanceDay.flags}) except select unnest(array['on_leave', 'permission']))) > 0`,
             ),
           ),
         )

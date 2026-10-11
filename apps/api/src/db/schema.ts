@@ -21,6 +21,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+import type { LeaveRules, LeaveStatus, LedgerKind } from '@hrms/shared';
 
 export const citext = customType<{ data: string }>({ dataType: () => 'citext' });
 export const bytea = customType<{ data: Buffer; driverData: Buffer | Uint8Array }>({
@@ -719,6 +720,72 @@ export const attendanceCorrection = pgTable('attendance_correction', {
   decidedAt: tstz('decided_at'),
 });
 
+// --- Leave (Phase 5) ----------------------------------------------------------------------
+
+export const leaveType = pgTable('leave_type', {
+  id: uuid('id').primaryKey(),
+  companyId: uuid('company_id'),
+  code: citext('code').notNull(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  paid: boolean('paid').notNull(),
+  rules: jsonb('rules').$type<LeaveRules>().notNull(),
+  status: text('status').$type<'active' | 'inactive'>().notNull().default('active'),
+  ...audited,
+});
+
+export const leaveLedger = pgTable('leave_ledger', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  leaveTypeId: uuid('leave_type_id').notNull(),
+  effectiveDate: date('effective_date', { mode: 'string' }).notNull(),
+  kind: text('kind').$type<LedgerKind>().notNull(),
+  amount: numeric('amount', { precision: 7, scale: 2 }).notNull(),
+  periodKey: text('period_key'),
+  sourceId: uuid('source_id'),
+  note: text('note'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+});
+
+export const leaveRequest = pgTable('leave_request', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  leaveTypeId: uuid('leave_type_id').notNull(),
+  startDate: date('start_date', { mode: 'string' }).notNull(),
+  endDate: date('end_date', { mode: 'string' }).notNull(),
+  days: numeric('days', { precision: 6, scale: 2 }).notNull(),
+  reason: text('reason'),
+  status: text('status').$type<LeaveStatus>().notNull().default('pending'),
+  deducted: boolean('deducted').notNull().default(false),
+  documentId: uuid('document_id'),
+  requestedBy: uuid('requested_by').notNull(),
+  workflowInstanceId: uuid('workflow_instance_id'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  decidedAt: tstz('decided_at'),
+  cancelledAt: tstz('cancelled_at'),
+  cancelledBy: uuid('cancelled_by'),
+  cancelReason: text('cancel_reason'),
+});
+
+export const leavePermission = pgTable('leave_permission', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  workDate: date('work_date', { mode: 'string' }).notNull(),
+  startTime: time('start_time').notNull(),
+  endTime: time('end_time').notNull(),
+  minutes: integer('minutes').notNull(),
+  reason: text('reason').notNull(),
+  status: text('status').$type<LeaveStatus>().notNull().default('pending'),
+  requestedBy: uuid('requested_by').notNull(),
+  workflowInstanceId: uuid('workflow_instance_id'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  decidedAt: tstz('decided_at'),
+});
+
 export const schema = {
   companyGroup,
   company,
@@ -771,4 +838,8 @@ export const schema = {
   punchVoid,
   attendanceDay,
   attendanceCorrection,
+  leaveType,
+  leaveLedger,
+  leaveRequest,
+  leavePermission,
 };

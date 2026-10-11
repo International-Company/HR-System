@@ -41,6 +41,8 @@ import { RestoreService } from './backup/restore.service.js';
 import { AttendanceService } from './attendance/attendance.service.js';
 import { DevicesService } from './attendance/devices.service.js';
 import { AttendanceController } from './attendance/attendance.controller.js';
+import { LeaveService } from './leave/leave.service.js';
+import { LeaveController } from './leave/leave.controller.js';
 
 export interface AppDeps {
   config: AppConfig;
@@ -79,6 +81,8 @@ export function coreProviders(deps: AppDeps) {
     CalendarService,
     DevicesService,
     AttendanceService,
+    DocumentsService,
+    LeaveService,
   ];
 }
 
@@ -103,6 +107,7 @@ export class AppModule {
         WorkflowController,
         CalendarController,
         AttendanceController,
+        LeaveController,
       ],
       providers: [
         ...coreProviders(deps),
@@ -111,7 +116,6 @@ export class AppModule {
         OrgService,
         UsersService,
         LookupsService,
-        DocumentsService,
         { provide: APP_GUARD, useClass: AuthGuard },
         { provide: APP_FILTER, useClass: ProblemFilter },
       ],

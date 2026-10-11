@@ -175,6 +175,15 @@ export const PERMISSIONS = [
     groupOnly: true,
   }),
 
+  // Leave & in-day permissions (Phase 5). Approving is a workflow task and needs no permission.
+  p('leave.request.create', 'leave', 'Submit leave and permission requests', 'تقديم طلبات الإجازة والاستئذان'),
+  p('leave.request.view', 'leave', 'View leave requests and balances', 'عرض طلبات الإجازة والأرصدة'),
+  p('leave.request.manage', 'leave', 'Cancel approved leave and record leave for employees', 'إلغاء الإجازات المعتمدة وتسجيل الإجازات للموظفين'),
+  p('leave.balance.adjust', 'leave', 'Set opening balances and adjust leave balances', 'إدخال الأرصدة الافتتاحية وتعديل أرصدة الإجازات'),
+  p('leave.types.manage', 'leave', 'Configure leave types and rules', 'ضبط أنواع الإجازات وقواعدها', {
+    groupOnly: true,
+  }),
+
   // System backup
   p('system.backup.view', 'system', 'View backups', 'عرض النسخ الاحتياطية', {
     sensitivity: 'security',

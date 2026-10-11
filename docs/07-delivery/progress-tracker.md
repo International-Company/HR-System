@@ -12,7 +12,7 @@ Last updated: 2026-10-10
 | P2 Employees & documents | 🔄 Implementation complete (DL-021) | 101 API tests (26 new) + 2 web tests passing locally; live HTTP smoke test passed | ❓ Owner: Railway bucket for documents (guide 3.7); review of Phase 2 defaults (DL-022); staging walkthrough |
 | P3 Workflow, notifications, schedules, in-app restore | 🔄 Implementation complete (DL-026) | 118 API tests passing locally (+2 server-only in CI, incl. full restore); 2 web tests; live HTTP smoke test passed | ❓ First CI run; restore drill on staging after Backblaze is configured; review of defaults (DL-029) |
 | P4 Attendance | 🔄 Implementation complete (DL-030) | 148 API tests passing locally (+2 server-only in CI) incl. 16 golden cases and 14 attendance integration tests; local HTTP smoke test passed | ❓ Proxy spoof spike on Railway; HR sign-off of golden cases; k6 burst test; review of defaults (DL-031) |
-| P5 Leave | ⏳ | — | Q-28 |
+| P5 Leave | 🔄 Implementation complete (DL-038) | 172 API tests passing locally (+2 server-only in CI) incl. 10 leave-rule golden cases and 13 leave integration tests; migration 0005 applied to an existing database | ❓ HR sign-off of golden cases; review of defaults (DL-038); grant `documents.view.medical` to HR staff who check sick notes |
 | P6 Contracts | ⏳ | — | Q-14, Q-22, Q-28 |
 | P7 Payroll | ⏳ | — | Q-13, Q-24, Q-28 |
 | P8 Separation & rehire | ⏳ | — | Q-27 |
@@ -101,3 +101,23 @@ Last updated: 2026-10-10
 | Calculation | Worked time, scheduled-break deduction, extra breaks, lateness and early departure with grace, automatic overtime with threshold, early-arrival and rest-day policies, holiday work, overnight and split shifts, administrative closure, possible absence |
 | Review | Hourly recompute job with employee notifications, HR review queue (confirm absence, excuse, reopen), correction requests through the workflow (manager → HR), direct HR corrections |
 | Web | Attendance page (punch card, network status, history, corrections, my devices), review page, setup page (networks, devices), policy tab in Settings, attendance tab in the employee profile |
+
+## Phase 5 acceptance criteria (roadmap.md)
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Ledger sum equals the displayed balance (property test) | ✅ | `leave-rules.test.ts` (200 random ledgers, re-run idempotent) |
+| 2 | Golden cases: mid-year hire, carryover cap, cancellation | ✅ code / ⏳ HR sign-off | `leave-rules.test.ts`, `leave.test.ts` |
+| 3 | Approved leave converts potential absence into leave days | ✅ | `leave.test.ts` (absent_pending → excused, removed from the review queue) |
+| 4 | Managers cannot open medical attachments | ✅ | `leave.test.ts` (C-12) |
+
+## Phase 5 deliverables
+
+| Area | Delivered |
+|---|---|
+| Leave types | Group or company types with rules: entitlement, service tiers, yearly/monthly/no balance, working or calendar days, deduction on approval or submission, negative limit, yearly cap, per-request cap, notice, retroactive window, carryover cap and expiry, attachments (category), eligibility by contract type and category |
+| Balances | Append-only ledger (opening, accrual, usage, refund, adjustment, carryover expiry), idempotent daily job, opening balances and audited adjustments by HR, balance history |
+| Requests | Full-day leave through the locked Employee → Manager → HR chain, HR recording for employees (approved by another HR), overlap and balance checks, cancellation (employee while pending, HR after approval with refund) |
+| In-day permissions | Time window on a workday within working hours, daily and monthly limits, approval route (manager → HR), approved time is not lateness or early leave |
+| Attendance | Approved leave marks days as leave (excused); leave and permission flags; worked-on-leave flag |
+| Web | Leave page (balances, requests, permissions), leave management (company requests, record for employee, leave types), leave tab in the profile, in-day permission settings, readable approval summaries |

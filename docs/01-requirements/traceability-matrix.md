@@ -53,13 +53,13 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | ATT-15 | attendance, workflow | P4 | I, D | `corrections.*`, `punch.append-only` | ✅ |
 | ATT-16 | attendance | P4/P5 | U | `conflict-policies.*` | ✅ |
 | ATT-17 | attendance | P4 | U | `holiday-work.not-overtime` | ✅ |
-| LEV-01, LEV-02 | leave | P5 | U (golden cases), D | `leave.accrual.*`, `ledger.sum` | ⏳ |
-| LEV-03 | leave, workflow | P5 | I, A | `leave.chain`, NEG-10 | 🔄 route + engine done (P3); leave requests P5 |
-| LEV-04 | leave | P5 | X | `exclusion.half-day` | ⏳ |
-| LEV-05 | leave, attendance | P5 | U, I | `inday-permission.*` | ⏳ |
-| LEV-06 | leave | P5 | U, I | `leave.policies.*` | ⏳ |
-| LEV-07 | leave, attendance | P5 | I | `leave.attendance-integration` | ⏳ |
-| LEV-08 | leave, documents | P5 | I, A | `leave.attachment-required`, `medical.restricted` | ⏳ |
+| LEV-01, LEV-02 | leave | P5 | U (golden cases), D | `leave.accrual.*`, `ledger.sum` | ✅ `leave-rules.test.ts`, `leave.test.ts` |
+| LEV-03 | leave, workflow | P5 | I, A | `leave.chain`, NEG-10 | ✅ `leave.test.ts` (chain, on behalf, self-approval excluded) |
+| LEV-04 | leave | P5 | X | `exclusion.half-day` | ✅ full days only (no half-day input) |
+| LEV-05 | leave, attendance | P5 | U, I | `inday-permission.*` | ✅ `leave.test.ts` (permission removes lateness, limits) |
+| LEV-06 | leave | P5 | U, I | `leave.policies.*` | ✅ `leave.test.ts` (deduction timing, cancellation, retroactive) |
+| LEV-07 | leave, attendance | P5 | I | `leave.attendance-integration` | ✅ `leave.test.ts` (absence → leave) |
+| LEV-08 | leave, documents | P5 | I, A | `leave.attachment-required`, `medical.restricted` | ✅ `leave.test.ts` (C-12) |
 | PAY-01 | payroll | P7 | U (golden cases) | `payroll.calc.*` | ⏳ |
 | PAY-02 | payroll | P7 | I, A | `payroll.company-run`, `group-summary` | ⏳ |
 | PAY-03 | payroll | P7 | A, E | NEG-01, `payslip.pdf` | ⏳ |

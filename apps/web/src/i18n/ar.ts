@@ -2,6 +2,7 @@ import type { Messages } from './en';
 import { p2Ar } from './p2-ar';
 import { p3Ar } from './p3-ar';
 import { p4Ar } from './p4-ar';
+import { p5Ar } from './p5-ar';
 
 /** نصوص الواجهة العربية — يجب أن تطابق مفاتيح en.ts تماماً. */
 export const ar: Messages = {
@@ -56,6 +57,8 @@ export const ar: Messages = {
     attendance: 'الحضور والانصراف',
     attendanceReview: 'مراجعة الحضور',
     attendanceAdmin: 'إعداد الحضور',
+    leave: 'الإجازات',
+    leaveManage: 'إدارة الإجازات',
     account: 'حسابي',
     logout: 'تسجيل الخروج',
     administration: 'الإدارة',
@@ -108,6 +111,7 @@ export const ar: Messages = {
     CSRF_INVALID: 'رمز الجلسة قديم. أعد تحميل الصفحة.',
     SESSION_STATE: 'أكمل خطوات تسجيل الدخول أولاً.',
     MODULE_DISABLED: 'هذه الوحدة معطّلة.',
+    INSUFFICIENT_BALANCE: 'الرصيد لا يكفي لهذا الطلب.',
     INTERNAL: 'حدث خطأ غير متوقع. حاول مرة أخرى.',
     network: 'تعذّر الاتصال بالخادم.',
     reasons: {
@@ -273,4 +277,5 @@ export const ar: Messages = {
   ...p2Ar,
   ...p3Ar,
   ...p4Ar,
+  ...p5Ar,
 };

@@ -16,6 +16,8 @@ export interface ComputeInput {
   review: { status: 'absent_confirmed' | 'excused'; note: string | null } | null;
   /** Approved full-day leave (Phase 5). */
   onLeave?: boolean;
+  /** Approved in-day permissions of this date (LEV-05): not late, not early departure. */
+  permissions?: { start: Date; end: Date }[];
 }
 
 export interface ComputedDay {
@@ -154,10 +156,11 @@ export function computeDay(input: ComputeInput): ComputedDay {
   let holidayWorkMinutes = 0;
 
   if (dayClass === 'workday' && startAt !== null && endAt !== null && firstIn) {
-    const lateMs = firstIn.getTime() - startAt;
+    const excused: Interval[] = (input.permissions ?? []).map((p) => [p.start.getTime(), p.end.getTime()]);
+    const lateMs = firstIn.getTime() - startAt - overlap([[startAt, firstIn.getTime()]], excused);
     if (lateMs > wd.graceInMinutes * 60_000) lateMinutes = mins(lateMs);
     if (closure === 'normal' && lastOutMs !== null) {
-      const earlyMs = endAt - lastOutMs;
+      const earlyMs = endAt - lastOutMs - overlap([[lastOutMs, endAt]], excused);
       if (earlyMs > wd.graceOutMinutes * 60_000) earlyMinutes = mins(earlyMs);
     }
     if (closure === 'normal') {
@@ -177,6 +180,8 @@ export function computeDay(input: ComputeInput): ComputedDay {
     flags.push(dayClass === 'rest' ? 'rest_day_work' : 'unscheduled_work');
     if (policy.restDayWork === 'overtime' && closure === 'normal') overtimeMinutes = workedMinutes;
   }
+  if (input.permissions?.length) flags.push('permission');
+  if (input.onLeave && sessions.length) flags.push('worked_on_leave');
   if (lateMinutes) flags.push('late');
   if (earlyMinutes) flags.push('early_departure');
   if (overtimeMinutes) flags.push('overtime');
@@ -186,7 +191,10 @@ export function computeDay(input: ComputeInput): ComputedDay {
   else if (sessions.length) status = closure === 'open' && dayOver ? 'incomplete' : 'present';
   else if (input.review) status = input.review.status;
   else if (dayClass === 'workday') {
-    if (input.onLeave) status = 'excused';
+    if (input.onLeave) {
+      status = 'excused';
+      flags.push('on_leave');
+    }
     else status = dayOver || (startAt !== null && nowMs > startAt + 4 * 3_600_000 && localDate(input.now, tz) >= input.workDate) ? 'absent_pending' : 'upcoming';
   } else status = 'not_required';
   if (status === 'absent_pending') flags.push('possible_absence');

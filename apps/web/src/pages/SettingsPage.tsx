@@ -161,6 +161,7 @@ export function SettingsPage() {
           <Tabs.Tab value="security">{t('settings.security')}</Tabs.Tab>
           <Tabs.Tab value="modules">{t('settings.modules')}</Tabs.Tab>
           <Tabs.Tab value="attendance">{t('att.policy')}</Tabs.Tab>
+          <Tabs.Tab value="leave">{t('leave.permissionPolicy')}</Tabs.Tab>
           {can('system.backup.view') && <Tabs.Tab value="backup">{t('settings.backup')}</Tabs.Tab>}
         </Tabs.List>
 
@@ -264,6 +265,27 @@ export function SettingsPage() {
                   onChange={(x) => set({ ...v, restDayWork: (x ?? v.restDayWork) as AttendancePolicy['restDayWork'] })}
                   allowDeselect={false}
                 />
+              </SimpleGrid>
+            );
+          })}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="leave">
+          {row<SettingValue<'leave.permissions'>>('leave.permissions', t('leave.permissionPolicy'), (v, set) => {
+            const f = (k: string) => t(`leave.permissionFields.${k}`);
+            return (
+              <SimpleGrid cols={{ base: 1, md: 2 }}>
+                <Switch label={f('enabled')} checked={v.enabled} onChange={(e) => set({ ...v, enabled: e.currentTarget.checked })} />
+                <Select
+                  label={f('unit')}
+                  data={(['hours', 'minutes', 'both'] as const).map((x) => ({ value: x, label: f(`units.${x}`) }))}
+                  value={v.unit}
+                  onChange={(x) => set({ ...v, unit: (x ?? v.unit) as typeof v.unit })}
+                  allowDeselect={false}
+                />
+                <NumberInput label={f('maxMinutesPerDay')} min={15} max={720} value={v.maxMinutesPerDay} onChange={(x) => set({ ...v, maxMinutesPerDay: Number(x) || 15 })} />
+                <NumberInput label={f('maxMinutesPerMonth')} min={0} max={10000} value={v.maxMinutesPerMonth} onChange={(x) => set({ ...v, maxMinutesPerMonth: Number(x) || 0 })} />
+                <NumberInput label={f('retroactiveDays')} min={0} max={60} value={v.retroactiveDays} onChange={(x) => set({ ...v, retroactiveDays: Number(x) || 0 })} />
               </SimpleGrid>
             );
           })}

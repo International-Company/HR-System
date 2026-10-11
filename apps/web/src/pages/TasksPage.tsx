@@ -12,11 +12,21 @@ import { EmptyRow, ErrorAlert, PageHeader, StatusBadge, notifyError, notifySaved
 const statusColor: Record<string, string> = { pending: 'requested', approved: 'success', rejected: 'failed', cancelled: 'inactive', skipped: 'inactive' };
 
 function SummaryLine({ summary }: { summary: Record<string, unknown> }) {
-  const entries = Object.entries(summary).filter(([, v]) => typeof v === 'string' || typeof v === 'number');
+  const { t } = useTranslation();
+  const { settings } = useAuth();
+  const text = (v: unknown): string | null => {
+    if (typeof v === 'string' || typeof v === 'number') return String(v);
+    // Bilingual values such as a leave type name.
+    if (v && typeof v === 'object' && 'ar' in v && 'en' in v) return String((v as Record<string, unknown>)[settings.language === 'ar' ? 'ar' : 'en']);
+    return null;
+  };
+  const entries = Object.entries(summary)
+    .map(([k, v]) => [k, text(v)] as const)
+    .filter((e): e is readonly [string, string] => e[1] !== null);
   if (!entries.length) return null;
   return (
     <Text size="xs" c="dimmed">
-      {entries.map(([k, v]) => `${k}: ${String(v)}`).join(' · ')}
+      {entries.map(([k, v]) => `${t(`summary.${k}`, { defaultValue: k })}: ${v}`).join(' · ')}
     </Text>
   );
 }

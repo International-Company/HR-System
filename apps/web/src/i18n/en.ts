@@ -1,6 +1,7 @@
 import { p2En } from './p2-en';
 import { p3En } from './p3-en';
 import { p4En } from './p4-en';
+import { p5En } from './p5-en';
 
 /** English UI strings. ar.ts must provide exactly the same keys (checked by a test). */
 export const en = {
@@ -55,6 +56,8 @@ export const en = {
     attendance: 'Attendance',
     attendanceReview: 'Attendance review',
     attendanceAdmin: 'Attendance setup',
+    leave: 'Leave',
+    leaveManage: 'Leave management',
     account: 'My account',
     logout: 'Sign out',
     administration: 'Administration',
@@ -107,6 +110,7 @@ export const en = {
     CSRF_INVALID: 'Your session token is out of date. Reload the page.',
     SESSION_STATE: 'Complete the sign-in steps first.',
     MODULE_DISABLED: 'This module is disabled.',
+    INSUFFICIENT_BALANCE: 'Not enough balance for this request.',
     INTERNAL: 'Something went wrong. Please try again.',
     network: 'Cannot reach the server.',
     reasons: {
@@ -272,6 +276,7 @@ export const en = {
   ...p2En,
   ...p3En,
   ...p4En,
+  ...p5En,
 };
 
 export type Messages = typeof en;
