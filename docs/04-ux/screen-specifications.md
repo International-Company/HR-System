@@ -10,7 +10,7 @@ Status: **Proposed**. Covers UX-01 to UX-04 and I18N-01/02. Wireframes are low-f
 | Surface | White `#FFFFFF`, page background `#F5F7FB`, borders `#E2E8F0` | |
 | Text | `#0F172A` main, `#475569` secondary | |
 | Status colours | success `#15803D`, warning `#B45309`, danger `#B91C1C`, info `#0369A1`, neutral `#64748B` | Status is always shown with **text + colour**, never colour alone |
-| Typography | Arabic: **IBM Plex Sans Arabic**, English: **IBM Plex Sans** (both open licence, matching design family) | Self-hosted fonts, no external CDN |
+| Typography | **Cairo** (variable weight, Arabic + Latin in one family, open licence; DL-034, chosen by the owner) | Self-hosted fonts, no external CDN |
 | Icons | Tabler Icons (outline, simple). Direction-sensitive icons (arrows, chevrons) mirror in RTL | |
 | Spacing / radius | 4-px grid. Radius 8 px. Light shadows only on popovers | |
 | Accessibility | WCAG 2.2 AA target: keyboard navigation, visible focus, labels on every input, 44 px touch targets on mobile, reduced-motion support | |

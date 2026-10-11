@@ -4,10 +4,7 @@ import { DirectionProvider, Loader, Center, MantineProvider } from '@mantine/cor
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router';
-import '@fontsource/ibm-plex-sans-arabic/400.css';
-import '@fontsource/ibm-plex-sans-arabic/600.css';
-import '@fontsource/ibm-plex-sans/400.css';
-import '@fontsource/ibm-plex-sans/600.css';
+import '@fontsource-variable/cairo';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import './i18n';
