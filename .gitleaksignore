@@ -1,0 +1,10 @@
+# Reviewed false positives (test fixtures, not secrets). One line per finding fingerprint.
+# Fake Web Push subscription key in a test.
+e2d5143d694675b0a42bdb45628403504704bbe1:apps/api/test/security-fixes.test.ts:generic-api-key:84
+# Deny-list of common passwords the system rejects.
+1e8b7c7c7b7d63b44e7647a8dc3829d2683c14ae:apps/api/src/auth/common-passwords.ts:generic-api-key:10
+# Temporary passwords used only inside the auth tests.
+1e8b7c7c7b7d63b44e7647a8dc3829d2683c14ae:apps/api/test/auth.test.ts:generic-api-key:110
+1e8b7c7c7b7d63b44e7647a8dc3829d2683c14ae:apps/api/test/auth.test.ts:generic-api-key:119
+1e8b7c7c7b7d63b44e7647a8dc3829d2683c14ae:apps/api/test/auth.test.ts:generic-api-key:122
+1e8b7c7c7b7d63b44e7647a8dc3829d2683c14ae:apps/api/test/auth.test.ts:generic-api-key:126

@@ -1,0 +1,56 @@
+name: Pilot defect / ملاحظة التجربة
+description: A problem found during the pilot or UAT / مشكلة أثناء التجربة التشغيلية
+labels: [pilot, defect]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **No personal data.** Do not write real names, salaries, ID numbers, bank details or screenshots that show them. Use the employee number instead.
+        **لا بيانات شخصية.** لا تكتب أسماء حقيقية أو رواتب أو أرقام هوية أو حسابات بنكية، ولا صورًا تظهرها. استخدم رقم الموظف بدل الاسم.
+  - type: input
+    id: scenario
+    attributes:
+      label: Scenario / رقم السيناريو
+      placeholder: E5
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: Role / الدور
+      options: [System administrator, HR, Finance, Department manager, Company manager, Timekeeping officer, Employee]
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser / الجهاز والمتصفح
+      placeholder: iPhone, Safari
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps / الخطوات
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected / المتوقع
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual / الفعلي
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity (set by QA) / الخطورة
+      options: [S1 Critical, S2 High, S3 Medium, S4 Low, Not set]
+      default: 4
+  - type: input
+    id: requirement
+    attributes:
+      label: Requirement ID (optional) / رقم المتطلب

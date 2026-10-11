@@ -2,6 +2,8 @@
 
 Status: **Draft — needs the owner's input (Q-23) and approval before Phase 13.** Covers QA-06.
 
+Working documents for the pilot (Arabic, for testers and HR): [step-by-step test scripts per role](pilot-test-scripts-ar.md) · [company onboarding checklist](pilot-onboarding-checklist-ar.md). Defects use the GitHub issue form *Pilot defect* (no personal data; repository must be private first).
+
 ## 1. Participants (to be confirmed)
 
 | Proposal | Detail |
@@ -16,7 +18,7 @@ Status: **Draft — needs the owner's input (Q-23) and approval before Phase 13.
 | # | Scenario | Success criteria |
 |---|---|---|
 | U01 | Admin configures the company, schedules, holidays, leave types and roles | Done without developer help, using the admin guide |
-| U02 | HR creates employees (incl. import), links user accounts | Numbers generated correctly. Data validated |
+| U02 | HR creates employees (entered in the app; no import, DL-013), links user accounts | Numbers generated correctly. Data validated |
 | U03 | Employees punch daily from office network on PC and phone. Biometric/PIN enrolment | ≥ 98% punches succeed first try. Outside-network attempts blocked |
 | U04 | Late/early/overtime/absence detection vs a manual timesheet | 100% agreement or every difference explained by configuration |
 | U05 | Leave request → manager → HR. In-day permission | Balances match HR's manual calculation |
