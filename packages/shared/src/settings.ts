@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { endOfServiceSchema, payrollPolicySchema } from './payroll.js';
 import type { PermissionKey } from './permissions.js';
 
 /**
@@ -125,6 +126,31 @@ export const SETTINGS = {
     },
     companyOverride: true,
     permission: 'attendance.policy.manage',
+    public: false,
+  },
+  'payroll.policy': {
+    schema: payrollPolicySchema,
+    default: {
+      dayRateBasis: 'fixed_30' as const,
+      hoursPerDay: 8,
+      overtimeMultiplier: 1.25,
+      holidayWorkMultiplier: 1.5,
+      latenessDeduction: 'none' as const,
+      latenessToleranceMinutes: 60,
+      absenceDeduction: 'confirmed' as const,
+      unpaidLeaveDeduction: true,
+      payDay: 28,
+      notifyEmployees: true,
+    },
+    companyOverride: true,
+    permission: 'payroll.settings.manage',
+    public: false,
+  },
+  'payroll.endOfService': {
+    schema: endOfServiceSchema,
+    default: { method: 'none' as const, bands: [], monthsPerYear: 0, minYears: 0, capMonths: null },
+    companyOverride: true,
+    permission: 'payroll.settings.manage',
     public: false,
   },
   'contracts.policy': {

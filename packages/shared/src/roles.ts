@@ -88,6 +88,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'attendance.record.view',
       'leave.request.view',
       'contracts.view',
+      'payroll.view',
+      'payroll.summary.view',
     ],
   },
   {
@@ -106,6 +108,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'leave.request.view',
       'contracts.view',
       'contracts.sign',
+      'payroll.view',
     ],
   },
   {
@@ -128,6 +131,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'leave.request.create',
       'leave.request.view',
       'contracts.view',
+      'payroll.payslip.view',
     ],
   },
   {
@@ -139,6 +143,10 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'org.department.view',
       'employee.profile.view',
       'employee.financial.view',
+      'payroll.view',
+      'payroll.prepare',
+      'payroll.payments.manage',
+      'payroll.payslip.view',
     ],
   },
   {

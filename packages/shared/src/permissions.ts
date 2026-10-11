@@ -193,6 +193,18 @@ export const PERMISSIONS = [
     groupOnly: true,
   }),
 
+  // Payroll (Phase 7). Approval is a workflow task (no permission); preparer cannot approve.
+  p('payroll.view', 'payroll', 'View payroll runs', 'عرض مسيرات الرواتب', { sensitivity: 'financial' }),
+  p('payroll.prepare', 'payroll', 'Prepare and calculate payroll', 'إعداد الرواتب واحتسابها', { sensitivity: 'financial' }),
+  p('payroll.reopen', 'payroll', 'Reopen an approved payroll (audited)', 'إعادة فتح مسير معتمد (مع التدقيق)', { sensitivity: 'financial' }),
+  p('payroll.payments.manage', 'payroll', 'Record salary payments', 'تسجيل صرف الرواتب', { sensitivity: 'financial' }),
+  p('payroll.payslip.view', 'payroll', 'View payslips', 'عرض قسائم الرواتب', { sensitivity: 'financial' }),
+  p('payroll.summary.view', 'payroll', 'View group payroll summaries', 'عرض ملخصات رواتب المجموعة', { sensitivity: 'financial' }),
+  // Configuration only (no personal data): part of the System Administrator role.
+  p('payroll.settings.manage', 'payroll', 'Configure payroll rules and end of service', 'ضبط قواعد الرواتب ونهاية الخدمة', {
+    groupOnly: true,
+  }),
+
   // System backup
   p('system.backup.view', 'system', 'View backups', 'عرض النسخ الاحتياطية', {
     sensitivity: 'security',

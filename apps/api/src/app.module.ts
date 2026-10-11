@@ -45,6 +45,8 @@ import { LeaveService } from './leave/leave.service.js';
 import { LeaveController } from './leave/leave.controller.js';
 import { ContractsService } from './contracts/contracts.service.js';
 import { ContractsController } from './contracts/contracts.controller.js';
+import { PayrollService } from './payroll/payroll.service.js';
+import { PayrollController } from './payroll/payroll.controller.js';
 
 export interface AppDeps {
   config: AppConfig;
@@ -86,6 +88,7 @@ export function coreProviders(deps: AppDeps) {
     DocumentsService,
     LeaveService,
     ContractsService,
+    PayrollService,
   ];
 }
 
@@ -112,6 +115,7 @@ export class AppModule {
         AttendanceController,
         LeaveController,
         ContractsController,
+        PayrollController,
       ],
       providers: [
         ...coreProviders(deps),

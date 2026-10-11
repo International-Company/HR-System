@@ -23,6 +23,9 @@ import {
 } from 'drizzle-orm/pg-core';
 import type {
   ContractStatus,
+  ItemSource,
+  PaymentStatus,
+  RunStatus,
   ContractTypePolicy,
   LeaveRules,
   LeaveStatus,
@@ -894,6 +897,83 @@ export const contractAlert = pgTable(
   (t) => [primaryKey({ columns: [t.contractId, t.kind, t.daysBefore, t.dueDate] })],
 );
 
+// --- Payroll (Phase 7) -------------------------------------------------------------------
+
+export const payrollRun = pgTable('payroll_run', {
+  id: uuid('id').primaryKey(),
+  companyId: uuid('company_id').notNull(),
+  period: text('period').notNull(),
+  periodStart: date('period_start', { mode: 'string' }).notNull(),
+  periodEnd: date('period_end', { mode: 'string' }).notNull(),
+  revision: integer('revision').notNull().default(1),
+  revisionOfId: uuid('revision_of_id'),
+  status: text('status').$type<RunStatus>().notNull().default('draft'),
+  fxRates: jsonb('fx_rates').$type<Record<string, number>>().notNull().default({}),
+  workflowInstanceId: uuid('workflow_instance_id'),
+  calculatedAt: tstz('calculated_at'),
+  lockedAt: tstz('locked_at'),
+  reopenReason: text('reopen_reason'),
+  reopenedBy: uuid('reopened_by'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by').notNull(),
+});
+
+export const payrollLine = pgTable('payroll_line', {
+  id: uuid('id').primaryKey(),
+  runId: uuid('run_id').notNull(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  currency: char('currency', { length: 3 }).notNull(),
+  daysPaid: integer('days_paid').notNull(),
+  periodDays: integer('period_days').notNull(),
+  gross: numeric('gross', { precision: 18, scale: 2 }).notNull(),
+  deductions: numeric('deductions', { precision: 18, scale: 2 }).notNull(),
+  net: numeric('net', { precision: 18, scale: 2 }).notNull(),
+  warnings: text('warnings').array().notNull().default([]),
+  inputs: jsonb('inputs').$type<Record<string, unknown>>().notNull(),
+});
+
+export const payrollItem = pgTable('payroll_item', {
+  id: uuid('id').primaryKey(),
+  lineId: uuid('line_id').notNull(),
+  kind: text('kind').$type<'earning' | 'deduction'>().notNull(),
+  source: text('source').$type<ItemSource>().notNull(),
+  code: text('code').notNull(),
+  label: text('label').notNull(),
+  quantity: numeric('quantity', { precision: 12, scale: 2 }),
+  rate: numeric('rate', { precision: 18, scale: 4 }),
+  amount: numeric('amount', { precision: 18, scale: 2 }).notNull(),
+  explanation: text('explanation').notNull(),
+  manualItemId: uuid('manual_item_id'),
+  seq: integer('seq').notNull(),
+});
+
+export const payrollManualItem = pgTable('payroll_manual_item', {
+  id: uuid('id').primaryKey(),
+  runId: uuid('run_id').notNull(),
+  employeeId: uuid('employee_id').notNull(),
+  kind: text('kind').$type<'earning' | 'deduction'>().notNull(),
+  label: text('label').notNull(),
+  amount: numeric('amount', { precision: 18, scale: 2 }).notNull(),
+  note: text('note'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by').notNull(),
+});
+
+export const payrollPayment = pgTable('payroll_payment', {
+  id: uuid('id').primaryKey(),
+  lineId: uuid('line_id').notNull(),
+  status: text('status').$type<PaymentStatus>().notNull(),
+  method: text('method').$type<'bank_transfer' | 'cash' | 'cheque'>().notNull(),
+  reference: text('reference'),
+  paidOn: date('paid_on', { mode: 'string' }),
+  amount: numeric('amount', { precision: 18, scale: 2 }).notNull(),
+  currency: char('currency', { length: 3 }).notNull(),
+  note: text('note'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by').notNull(),
+});
+
 export const schema = {
   companyGroup,
   company,
@@ -957,4 +1037,9 @@ export const schema = {
   contractVersion,
   contractSignature,
   contractAlert,
+  payrollRun,
+  payrollLine,
+  payrollItem,
+  payrollManualItem,
+  payrollPayment,
 };
