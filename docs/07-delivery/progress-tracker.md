@@ -15,7 +15,7 @@ Last updated: 2026-10-10
 | P5 Leave | 🔄 Implementation complete (DL-038) | 172 API tests passing locally (+2 server-only in CI) incl. 10 leave-rule golden cases and 13 leave integration tests; migration 0005 applied to an existing database | ❓ HR sign-off of golden cases; review of defaults (DL-038); grant `documents.view.medical` to HR staff who check sick notes |
 | P6 Contracts | 🔄 Implementation complete (DL-040) | 184 API tests passing locally (+2 server-only in CI) incl. 14 contract tests; migration 0006 applied to an existing database | ❓ Legal review of in-app signing (DL-042); Arabic print check signed off; review of defaults (DL-043) |
 | P7 Payroll | 🔄 Implementation complete (DL-044) | 203 API tests passing locally (+2 server-only in CI) incl. 9 payroll golden cases and 10 payroll integration tests; migration 0007 applied to an existing database | ❓ HR/Finance golden cases signed off; Q-24 statutory deductions (DL-045); Q-28 country; performance test on the largest company |
-| P8 Separation & rehire | ⏳ | — | Q-27 |
+| P8 Separation & rehire | 🔄 Implementation complete (DL-049) | 208 API tests passing locally (+2 server-only in CI) incl. 5 separation tests; migration 0008 applied to an existing database | ❓ Review of defaults (DL-051); end-of-service method depends on Q-28 |
 | P9 Recruitment | ⏳ | — | Q-11 |
 | P10 Commitment evaluation | ⏳ | — | — |
 | P11 Reports, search, dashboards | ⏳ | — | — |
@@ -160,3 +160,20 @@ Last updated: 2026-10-10
 | Payments and payslips | Payment history per employee (status, method, reference, date), payslips for employees (own and approved only), printable payslip, notification when ready |
 | Group | Summary per company and currency with optional conversion; end-of-service calculator with configurable methods |
 | Web | Payroll page (runs, group summary, end of service), run page with lines, items, manual entries, payments, rates, submit and reopen; My payslips; payroll and end-of-service settings |
+
+## Phase 8 acceptance criteria (roadmap.md)
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | After the last working day the account is disabled, sessions and devices revoked per policy (NEG-05) | ✅ | `separation.test.ts` (old cookie → 401, sign-in refused) |
+| 2 | History is intact | ✅ | `separation.test.ts` (events, still visible to HR; nothing deleted) |
+| 3 | Rehire creates a new assignment with the same employee number | ✅ | `separation.test.ts` |
+
+## Phase 8 deliverables
+
+| Area | Delivered |
+|---|---|
+| Separation | Resignation (self-service with notice), termination, end of contract, retirement, other; each with its own editable approval route; reasons; last working day; cancellation (restores the employment); rehire eligibility |
+| Exit | Daily completion after the last working day: terminated status, account disabled or limited to self-service, sessions/roles/devices ended, salary and contract closed, later leave cancelled, end-of-service settlement recorded |
+| Rehire | Same employee number and history, new assignment and optional salary, audited override of ineligibility |
+| Web | Separations page and detail, Separation tab in the profile (start, resign, cancel, eligibility, rehire), separation settings |

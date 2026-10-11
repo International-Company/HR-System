@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { endOfServiceSchema, payrollPolicySchema } from './payroll.js';
+import { separationPolicySchema } from './separation.js';
 import type { PermissionKey } from './permissions.js';
 
 /**
@@ -126,6 +127,21 @@ export const SETTINGS = {
     },
     companyOverride: true,
     permission: 'attendance.policy.manage',
+    public: false,
+  },
+  'separation.policy': {
+    schema: separationPolicySchema,
+    default: {
+      selfResignation: true,
+      resignationNoticeDays: 30,
+      accountOnExit: 'disable' as const,
+      revokeDevices: true,
+      cancelFutureLeave: true,
+      endContract: true,
+      settlement: true,
+    },
+    companyOverride: true,
+    permission: 'settings.manage.general',
     public: false,
   },
   'payroll.policy': {

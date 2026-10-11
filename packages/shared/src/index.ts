@@ -10,3 +10,4 @@ export * from './attendance.js';
 export * from './leave.js';
 export * from './contracts.js';
 export * from './payroll.js';
+export * from './separation.js';

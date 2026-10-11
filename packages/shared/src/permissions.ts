@@ -205,6 +205,11 @@ export const PERMISSIONS = [
     groupOnly: true,
   }),
 
+  // Separation & rehire (Phase 8). Rehire itself uses employee.lifecycle.manage.
+  p('separation.request', 'separation', 'Start a separation (own resignation, or for employees)', 'بدء إنهاء خدمة (استقالة ذاتية أو لموظف)'),
+  p('separation.view', 'separation', 'View separations', 'عرض حالات إنهاء الخدمة'),
+  p('separation.manage', 'separation', 'Cancel approved separations and decide rehire eligibility', 'إلغاء إنهاء الخدمة المعتمد وتحديد أهلية إعادة التوظيف'),
+
   // System backup
   p('system.backup.view', 'system', 'View backups', 'عرض النسخ الاحتياطية', {
     sensitivity: 'security',

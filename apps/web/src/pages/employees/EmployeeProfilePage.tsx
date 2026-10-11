@@ -25,6 +25,7 @@ import { Link, useParams } from 'react-router';
 import { EmployeeAttendanceTab } from '../attendance/EmployeeAttendanceTab';
 import { EmployeeLeaveTab } from '../leave/LeavePages';
 import { EmployeeContractsTab } from '../contracts/ContractPages';
+import { EmployeeSeparationTab } from '../separation/SeparationPages';
 import { useTranslation } from 'react-i18next';
 import {
   ASSIGNMENT_EVENTS,
@@ -184,6 +185,7 @@ export function EmployeeProfilePage() {
           {(can('attendance.record.view') || e.access.self) && <Tabs.Tab value="attendance">{t('att.title')}</Tabs.Tab>}
           {(can('leave.request.view') || e.access.self) && <Tabs.Tab value="leave">{t('leave.title')}</Tabs.Tab>}
           {(can('contracts.view') || can('contracts.manage')) && contractsDisplay.data?.showInProfile && <Tabs.Tab value="contracts">{t('ctr.title')}</Tabs.Tab>}
+          {(can('separation.view') || can('separation.request')) && <Tabs.Tab value="separation">{t('sep.tab')}</Tabs.Tab>}
           {can('employee.account.link') && <Tabs.Tab value="account">{t('emp.sections.account')}</Tabs.Tab>}
         </Tabs.List>
 
@@ -220,6 +222,9 @@ export function EmployeeProfilePage() {
         </Tabs.Panel>
         <Tabs.Panel value="contracts">
           <EmployeeContractsTab employeeId={e.id} />
+        </Tabs.Panel>
+        <Tabs.Panel value="separation">
+          <EmployeeSeparationTab employee={e} />
         </Tabs.Panel>
         <Tabs.Panel value="account">
           <AccountTab e={e} onSaved={refresh} />
