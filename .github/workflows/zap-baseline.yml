@@ -33,7 +33,7 @@ jobs:
           mkdir -p zap && chmod 777 zap
           docker run --rm -v "$PWD/zap:/zap/wrk" ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py -t "$TARGET" -m 5 -I -r report.html -J report.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: zap-report
