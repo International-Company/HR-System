@@ -10,7 +10,7 @@ import {
   type SettingValue,
 } from '@hrms/shared';
 import { DATABASE } from '../common/tokens.js';
-import type { Database } from '../db/database.js';
+import type { Database, Tx } from '../db/database.js';
 import { companyGroup, settingValue } from '../db/schema.js';
 import { ApiError, parse } from '../common/errors.js';
 import { uuidv7 } from '../common/ids.js';
@@ -54,6 +54,22 @@ export class SettingsService {
     const value = (checked.success ? checked.data : def.default) as SettingValue<K>;
     this.cache.set(cacheKey, { value, at: Date.now() });
     return value;
+  }
+
+  /**
+   * Same resolution as get(), but inside an existing transaction (for code that already runs
+   * in one, e.g. workflow completion handlers). Uses the caller's RLS scope.
+   */
+  async getWith<K extends SettingKey>(tx: Tx, key: K, companyId?: string | null): Promise<SettingValue<K>> {
+    const def = SETTINGS[key];
+    const rows = await tx
+      .select({ companyId: settingValue.companyId, value: settingValue.value })
+      .from(settingValue)
+      .where(eq(settingValue.key, key));
+    const groupRow = rows.find((r) => r.companyId === null);
+    const companyRow = def.companyOverride && companyId ? rows.find((r) => r.companyId === companyId) : undefined;
+    const checked = def.schema.safeParse(companyRow?.value ?? groupRow?.value ?? def.default);
+    return (checked.success ? checked.data : def.default) as SettingValue<K>;
   }
 
   async publicSettings(): Promise<PublicSettings> {

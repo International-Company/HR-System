@@ -38,6 +38,9 @@ import { WorkflowController } from './workflow/workflow.controller.js';
 import { CalendarService } from './calendar/calendar.service.js';
 import { CalendarController } from './calendar/calendar.controller.js';
 import { RestoreService } from './backup/restore.service.js';
+import { AttendanceService } from './attendance/attendance.service.js';
+import { DevicesService } from './attendance/devices.service.js';
+import { AttendanceController } from './attendance/attendance.controller.js';
 
 export interface AppDeps {
   config: AppConfig;
@@ -72,6 +75,10 @@ export function coreProviders(deps: AppDeps) {
     NotificationsService,
     RestoreService,
     WorkflowService,
+    EmployeesService,
+    CalendarService,
+    DevicesService,
+    AttendanceService,
   ];
 }
 
@@ -95,6 +102,7 @@ export class AppModule {
         NotificationsController,
         WorkflowController,
         CalendarController,
+        AttendanceController,
       ],
       providers: [
         ...coreProviders(deps),
@@ -103,9 +111,7 @@ export class AppModule {
         OrgService,
         UsersService,
         LookupsService,
-        EmployeesService,
         DocumentsService,
-        CalendarService,
         { provide: APP_GUARD, useClass: AuthGuard },
         { provide: APP_FILTER, useClass: ProblemFilter },
       ],

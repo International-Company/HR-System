@@ -6,3 +6,4 @@ export * from './schemas.js';
 export * from './api-types.js';
 export * from './employees.js';
 export * from './workflow-calendar.js';
+export * from './attendance.js';

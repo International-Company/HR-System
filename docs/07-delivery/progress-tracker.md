@@ -11,7 +11,7 @@ Last updated: 2026-10-10
 | P1 Foundation | 🔄 Implementation complete; deployment-dependent acceptance items pending | 74 API + 2 web tests passing locally (embedded PostgreSQL); real-PostgreSQL CI run pending | ❓ Owner: GitHub repository URL, Railway staging setup, Backblaze B2 bucket (guide: [railway-setup-guide-ar.md](../08-operations/railway-setup-guide-ar.md)) |
 | P2 Employees & documents | 🔄 Implementation complete (DL-021) | 101 API tests (26 new) + 2 web tests passing locally; live HTTP smoke test passed | ❓ Owner: Railway bucket for documents (guide 3.7); review of Phase 2 defaults (DL-022); staging walkthrough |
 | P3 Workflow, notifications, schedules, in-app restore | 🔄 Implementation complete (DL-026) | 118 API tests passing locally (+2 server-only in CI, incl. full restore); 2 web tests; live HTTP smoke test passed | ❓ First CI run; restore drill on staging after Backblaze is configured; review of defaults (DL-029) |
-| P4 Attendance | ⏳ | — | Q-04, Q-09, Q-17 |
+| P4 Attendance | 🔄 Implementation complete (DL-030) | 148 API tests passing locally (+2 server-only in CI) incl. 16 golden cases and 14 attendance integration tests; local HTTP smoke test passed | ❓ Proxy spoof spike on Railway; HR sign-off of golden cases; k6 burst test; review of defaults (DL-031) |
 | P5 Leave | ⏳ | — | Q-28 |
 | P6 Contracts | ⏳ | — | Q-14, Q-22, Q-28 |
 | P7 Payroll | ⏳ | — | Q-13, Q-24, Q-28 |
@@ -80,3 +80,24 @@ Last updated: 2026-10-10
 | 4 | Schedule history "as of" a date; holidays group/company | ✅ | `calendar.test.ts` (5 tests) |
 | 5 | No e-mail is sent | ✅ | DisabledMailer test |
 | 6 | Restore: preview, MFA, failed checks leave production untouched, switch + undo, audit survives, only System Administrator | ✅ unit (PGlite) / ⏳ full swap test runs in CI and staging drill |
+
+## Phase 4 acceptance criteria (roadmap.md)
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | All golden cases pass | ✅ code / ⏳ HR sign-off | `attendance-compute.test.ts` (16 cases) |
+| 2 | NEG-06 (forged client IP) and NEG-14 (PIN guessing) pass | ✅ local / ⏳ Railway spike | `attendance.test.ts` (forged X-Forwarded-For, five wrong PINs) |
+| 3 | Auto-closed days produce no overtime (C-02) | ✅ | `attendance-compute.test.ts` |
+| 4 | Holiday work is not overtime | ✅ | `attendance-compute.test.ts` |
+| 5 | Absence detection respects approved leave and holidays | ✅ (leave input ready; leave requests arrive in P5) | `attendance-compute.test.ts`, `attendance.test.ts` |
+| 6 | Corrections keep the original punches | ✅ | `attendance.test.ts` (void + append-only) |
+| 7 | Punch p95 < 1 s under a k6 burst test | ⏳ staging | — |
+
+## Phase 4 deliverables
+
+| Area | Delivered |
+|---|---|
+| Punching | Check in/out and breaks from computer or phone, server time, authorised networks per company/location, optional device biometrics (WebAuthn platform authenticators) or device-bound PIN, device approval, idempotent requests, audited refusals |
+| Calculation | Worked time, scheduled-break deduction, extra breaks, lateness and early departure with grace, automatic overtime with threshold, early-arrival and rest-day policies, holiday work, overnight and split shifts, administrative closure, possible absence |
+| Review | Hourly recompute job with employee notifications, HR review queue (confirm absence, excuse, reopen), correction requests through the workflow (manager → HR), direct HR corrections |
+| Web | Attendance page (punch card, network status, history, corrections, my devices), review page, setup page (networks, devices), policy tab in Settings, attendance tab in the employee profile |

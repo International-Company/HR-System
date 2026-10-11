@@ -22,6 +22,7 @@ import {
 import { IconLock, IconPlus } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router';
+import { EmployeeAttendanceTab } from '../attendance/EmployeeAttendanceTab';
 import { useTranslation } from 'react-i18next';
 import {
   ASSIGNMENT_EVENTS,
@@ -173,6 +174,7 @@ export function EmployeeProfilePage() {
           {(e.access.financial || e.access.self) && <Tabs.Tab value="bank">{t('emp.sections.bank')}</Tabs.Tab>}
           <Tabs.Tab value="qualifications">{t('emp.sections.qualifications')}</Tabs.Tab>
           {can('documents.view') && <Tabs.Tab value="documents">{t('emp.sections.documents')}</Tabs.Tab>}
+          {(can('attendance.record.view') || e.access.self) && <Tabs.Tab value="attendance">{t('att.title')}</Tabs.Tab>}
           {can('employee.account.link') && <Tabs.Tab value="account">{t('emp.sections.account')}</Tabs.Tab>}
         </Tabs.List>
 
@@ -200,6 +202,9 @@ export function EmployeeProfilePage() {
         </Tabs.Panel>
         <Tabs.Panel value="documents">
           <DocumentsTab employeeId={e.id} canManage={e.access.editPersonal} />
+        </Tabs.Panel>
+        <Tabs.Panel value="attendance">
+          <EmployeeAttendanceTab employeeId={e.id} />
         </Tabs.Panel>
         <Tabs.Panel value="account">
           <AccountTab e={e} onSaved={refresh} />

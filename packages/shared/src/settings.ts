@@ -56,6 +56,25 @@ const restoreSchema = z.object({
   /** When true and another active System Administrator exists, a second one must approve. */
   requireSecondApprover: z.boolean(),
 });
+/** Attendance rules (ATT-10, ATT-11, ATT-12, ATT-16). Company-overridable. */
+const attendancePolicySchema = z.object({
+  /** Punching only from the company's authorised networks (ATT-01). */
+  requireNetwork: z.boolean(),
+  /** Extra proof at punch time: device biometrics (WebAuthn) and/or a device-bound PIN. */
+  verification: z.enum(['none', 'webauthn', 'pin', 'webauthn_or_pin']),
+  /** Devices must be approved by HR/timekeeping before they can be used. */
+  deviceApproval: z.boolean(),
+  /** Administrative check-out at scheduled end when the employee forgot (C-02: never overtime). */
+  autoCheckout: z.boolean(),
+  /** Overtime after the scheduled end counts only from this many minutes on (0 = every minute). */
+  overtimeMinMinutes: z.number().int().min(0).max(240),
+  /** Arriving before the scheduled start: ignored, or counted as overtime. */
+  earlyArrival: z.enum(['ignore', 'overtime']),
+  /** Work on a rest/unscheduled day: recorded and flagged, or counted as overtime. */
+  restDayWork: z.enum(['flag', 'overtime']),
+  /** Employees may request corrections up to this many days back. */
+  correctionWindowDays: z.number().int().min(0).max(365),
+});
 const documentLimitsSchema = z.object({
   maxUploadMb: z.number().int().min(1).max(50),
 });
@@ -66,6 +85,22 @@ export const SETTINGS = {
     default: { prefix: 'EMP-', padding: 6 },
     companyOverride: false,
     permission: 'settings.manage.general',
+    public: false,
+  },
+  'attendance.policy': {
+    schema: attendancePolicySchema,
+    default: {
+      requireNetwork: true,
+      verification: 'none' as const,
+      deviceApproval: false,
+      autoCheckout: false,
+      overtimeMinMinutes: 15,
+      earlyArrival: 'ignore' as const,
+      restDayWork: 'flag' as const,
+      correctionWindowDays: 30,
+    },
+    companyOverride: true,
+    permission: 'attendance.policy.manage',
     public: false,
   },
   'documents.limits': {

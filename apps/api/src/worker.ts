@@ -10,6 +10,7 @@ import { BackupService } from './backup/backup.service.js';
 import { AuditService } from './audit/audit.service.js';
 import { NotificationsService } from './notifications/notifications.service.js';
 import { RestoreService } from './backup/restore.service.js';
+import { AttendanceService } from './attendance/attendance.service.js';
 import { assertNoSeedAccounts } from './provisioning.js';
 
 /**
@@ -28,6 +29,7 @@ async function main() {
   const audit = ctx.get(AuditService);
   const notifications = ctx.get(NotificationsService);
   const restores = ctx.get(RestoreService);
+  const attendance = ctx.get(AttendanceService);
 
   const guarded = (name: string, fn: () => Promise<void>) => async () => {
     try {
@@ -38,6 +40,10 @@ async function main() {
   };
 
   const jobs = [
+    // Attendance: recompute the last two days hourly (absence detection, auto-closure).
+    new Cron('20 * * * *', { protect: true }, guarded('attendance', async () => {
+      await attendance.dailyRecompute(2);
+    })),
     // Web Push delivery of new notifications, every 15 seconds.
     new Cron('*/15 * * * * *', { protect: true }, guarded('push', async () => {
       await notifications.dispatchPush();

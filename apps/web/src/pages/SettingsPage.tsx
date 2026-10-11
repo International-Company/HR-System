@@ -16,7 +16,7 @@ import {
 } from '@mantine/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { BUSINESS_MODULES, type CompanyDto, type ModuleDto, type RoleDto, type SettingDto } from '@hrms/shared';
+import { BUSINESS_MODULES, type SettingValue, type CompanyDto, type ModuleDto, type RoleDto, type SettingDto } from '@hrms/shared';
 import { del, get, patch, put } from '../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { ErrorAlert, PageHeader, localName, notifyError, notifySaved } from '../components/common';
@@ -28,6 +28,8 @@ const TIME_ZONES: string[] = (() => {
     return ['UTC', 'Europe/Amsterdam', 'Europe/Berlin', 'Europe/Paris', 'Europe/Madrid', 'Europe/Rome', 'Europe/Athens', 'Europe/Lisbon'];
   }
 })();
+
+type AttendancePolicy = SettingValue<'attendance.policy'>;
 
 function useSettingSaver(companyId: string | null) {
   const { t } = useTranslation();
@@ -158,6 +160,7 @@ export function SettingsPage() {
           <Tabs.Tab value="general">{t('settings.general')}</Tabs.Tab>
           <Tabs.Tab value="security">{t('settings.security')}</Tabs.Tab>
           <Tabs.Tab value="modules">{t('settings.modules')}</Tabs.Tab>
+          <Tabs.Tab value="attendance">{t('att.policy')}</Tabs.Tab>
           {can('system.backup.view') && <Tabs.Tab value="backup">{t('settings.backup')}</Tabs.Tab>}
         </Tabs.List>
 
@@ -228,6 +231,42 @@ export function SettingsPage() {
 
         <Tabs.Panel value="modules">
           <ModulesPanel companies={companies.data ?? []} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="attendance">
+          {row<AttendancePolicy>('attendance.policy', t('att.policy'), (v, set) => {
+            const f = (k: string) => t(`att.policyFields.${k}`);
+            return (
+              <SimpleGrid cols={{ base: 1, md: 2 }}>
+                <Switch label={f('requireNetwork')} checked={v.requireNetwork} onChange={(e) => set({ ...v, requireNetwork: e.currentTarget.checked })} />
+                <Switch label={f('deviceApproval')} checked={v.deviceApproval} onChange={(e) => set({ ...v, deviceApproval: e.currentTarget.checked })} />
+                <Switch label={f('autoCheckout')} checked={v.autoCheckout} onChange={(e) => set({ ...v, autoCheckout: e.currentTarget.checked })} />
+                <Select
+                  label={f('verification')}
+                  data={(['none', 'webauthn', 'pin', 'webauthn_or_pin'] as const).map((x) => ({ value: x, label: f(`verifications.${x}`) }))}
+                  value={v.verification}
+                  onChange={(x) => set({ ...v, verification: (x ?? v.verification) as AttendancePolicy['verification'] })}
+                  allowDeselect={false}
+                />
+                <NumberInput label={f('overtimeMinMinutes')} min={0} max={240} value={v.overtimeMinMinutes} onChange={(x) => set({ ...v, overtimeMinMinutes: Number(x) || 0 })} />
+                <NumberInput label={f('correctionWindowDays')} min={0} max={365} value={v.correctionWindowDays} onChange={(x) => set({ ...v, correctionWindowDays: Number(x) || 0 })} />
+                <Select
+                  label={f('earlyArrival')}
+                  data={(['ignore', 'overtime'] as const).map((x) => ({ value: x, label: f(`earlyArrivals.${x}`) }))}
+                  value={v.earlyArrival}
+                  onChange={(x) => set({ ...v, earlyArrival: (x ?? v.earlyArrival) as AttendancePolicy['earlyArrival'] })}
+                  allowDeselect={false}
+                />
+                <Select
+                  label={f('restDayWork')}
+                  data={(['flag', 'overtime'] as const).map((x) => ({ value: x, label: f(`restDayWorks.${x}`) }))}
+                  value={v.restDayWork}
+                  onChange={(x) => set({ ...v, restDayWork: (x ?? v.restDayWork) as AttendancePolicy['restDayWork'] })}
+                  allowDeselect={false}
+                />
+              </SimpleGrid>
+            );
+          })}
         </Tabs.Panel>
 
         <Tabs.Panel value="backup">
