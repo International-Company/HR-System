@@ -20,7 +20,7 @@ describe('payroll (PAY-01..11)', () => {
   const d = (day: number) => `${period}-${String(day).padStart(2, '0')}`;
   const daysInPeriod = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
 
-  const lineOf = (run: { lines: { employeeId: string }[] }, id: string) => run.lines.find((l) => l.employeeId === id) as { id: string; gross: number; deductions: number; net: number; items: { id: string; code: string; amount: number; source: string; explanation: string }[] };
+  const lineOf = (run: { lines: { employeeId: string }[] }, id: string) => run.lines.find((l) => l.employeeId === id) as unknown as { id: string; gross: number; deductions: number; net: number; items: { id: string; code: string; amount: number; source: string; explanation: string }[] };
   const item = (line: ReturnType<typeof lineOf>, code: string) => line.items.find((i) => i.code === code)?.amount;
 
   beforeAll(async () => {
@@ -33,7 +33,7 @@ describe('payroll (PAY-01..11)', () => {
     await s['hr.a']!.post('/schedule-assignments', { scheduleId: sched.body.id, targetType: 'company', companyId: A, validFrom: '2020-01-01' });
     // Attendance and unpaid leave facts for the period (normally produced by Phases 4 and 5).
     await env.database.system(async (tx) => {
-      const base = { employeeId: emp, companyId: A, dayClass: 'workday' as const, scheduledStart: '08:00', scheduledEnd: '16:00' };
+      const base = { employeeId: emp, companyId: A, dayClass: 'workday' as const, scheduledStart: '08:00', scheduledEnd: '16:00', flags: [] as string[] };
       await tx.insert(attendanceDay).values([
         { id: uuidv7(), ...base, workDate: d(3), status: 'present', workedMinutes: 600, overtimeMinutes: 120, lateMinutes: 0 },
         { id: uuidv7(), ...base, workDate: d(4), status: 'present', workedMinutes: 400, lateMinutes: 80 },
