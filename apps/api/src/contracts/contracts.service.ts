@@ -96,6 +96,7 @@ export class ContractsService {
   // --- configuration (CON-01, CON-04) ----------------------------------------------------------
 
   async typePolicies(principal: Principal): Promise<{ contractTypeId: string; policy: ContractTypePolicy }[]> {
+    this.requireSetupReader(principal);
     return this.database.tx(principal.rls(), async (tx) => {
       const types = await tx.select({ id: lookupValue.id }).from(lookupValue).where(eq(lookupValue.kind, 'contract_type'));
       const rows = await tx.select().from(contractTypePolicy);
@@ -123,7 +124,13 @@ export class ContractsService {
     return contractTypePolicySchema.parse(row?.policy ?? DEFAULT_CONTRACT_TYPE_POLICY);
   }
 
+  /** Templates, clauses and type rules are for staff who prepare contracts (not for employees). */
+  private requireSetupReader(principal: Principal) {
+    if (!principal.has('contracts.manage') && !principal.has('contracts.templates.manage')) throw ApiError.forbidden();
+  }
+
   async listTemplates(principal: Principal): Promise<ContractTemplateDto[]> {
+    this.requireSetupReader(principal);
     return this.database.tx(principal.rls(), async (tx) =>
       (await tx.select().from(contractTemplate).orderBy(asc(contractTemplate.code))).map((t) => ({
         id: t.id,
@@ -170,6 +177,7 @@ export class ContractsService {
   }
 
   async listClauses(principal: Principal): Promise<ContractClauseDto[]> {
+    this.requireSetupReader(principal);
     return this.database.tx(principal.rls(), async (tx) =>
       (await tx.select().from(contractClause).orderBy(asc(contractClause.code))).map((c) => ({
         id: c.id,
@@ -301,8 +309,9 @@ export class ContractsService {
     return c;
   }
 
-  private requireManage(principal: Principal, c: Pick<ContractRow, 'companyId'>) {
+  private requireManage(principal: Principal, c: Pick<ContractRow, 'companyId' | 'employeeId'>) {
     if (!principal.canCompany('contracts.manage', c.companyId)) throw ApiError.forbidden();
+    if (principal.employeeId && principal.employeeId === c.employeeId) throw ApiError.forbidden('You cannot manage your own contract');
   }
 
   private async canView(tx: Tx, principal: Principal, c: ContractRow): Promise<'staff' | 'self' | null> {
@@ -319,7 +328,7 @@ export class ContractsService {
   async create(principal: Principal, input: z.infer<typeof contractCreateInput>): Promise<ContractDto> {
     const { current } = await this.employees.loadVisible(principal, input.employeeId);
     if (!current) throw ApiError.conflict('The employee has no current employment');
-    this.requireManage(principal, current);
+    this.requireManage(principal, { companyId: current.companyId, employeeId: input.employeeId });
     if ((await this.modules.access('contracts', current.companyId)) !== 'enabled') {
       throw new ApiError(403, 'MODULE_DISABLED', 'Contracts are disabled for this company');
     }
@@ -507,8 +516,11 @@ export class ContractsService {
     const pre = await this.database.tx(principal.rls(), async (tx) => {
       const c = await this.load(tx, id);
       this.requireManage(principal, c);
+      // The uploader completes the company signature: they must be a company signer, and not
+      // the employee of this contract (CON-03).
+      if (!this.maySign(principal, 'company', c)) throw ApiError.forbidden('Uploading a signed copy needs the company signing permission');
       const [v] = await tx.select().from(contractVersion).where(and(eq(contractVersion.id, versionId), eq(contractVersion.contractId, id)));
-      if (!v || !['draft', 'awaiting_signature'].includes(v.status)) throw ApiError.conflict('This version is already signed or cancelled');
+      if (!v || v.status !== 'awaiting_signature') throw ApiError.conflict('Send the version for signature first');
       return { c, v };
     });
     const doc = await this.documents.upload(principal, pre.c.employeeId, { categoryId: '', title: `${pre.c.contractNo} v${pre.v.versionNo} (signed)` }, file, { categoryCode: 'employment' });
@@ -516,7 +528,7 @@ export class ContractsService {
     await this.database.tx(principal.rls(), async (tx) => {
       const c = await this.load(tx, id);
       const [v] = await tx.select().from(contractVersion).where(eq(contractVersion.id, versionId)).for('update');
-      if (!v || !['draft', 'awaiting_signature'].includes(v.status)) throw ApiError.conflict('This version is already signed or cancelled');
+      if (!v || v.status !== 'awaiting_signature') throw ApiError.conflict('This version is already signed or cancelled');
       const policy = await this.policyOf(tx, c.contractTypeId);
       const existing = await tx.select().from(contractSignature).where(eq(contractSignature.versionId, v.id));
       for (const r of policy.signers) {
@@ -524,7 +536,8 @@ export class ContractsService {
       }
       await tx
         .update(contractSignature)
-        .set({ status: 'signed', method: 'upload', signerUserId: principal.userId, signedAt: new Date(), documentHash: fileHash })
+        // The fingerprint of the version text is recorded; the file's own hash is in the audit log.
+        .set({ status: 'signed', method: 'upload', signerUserId: principal.userId, signedAt: new Date(), documentHash: v.bodySha256 })
         .where(and(eq(contractSignature.versionId, v.id), eq(contractSignature.status, 'pending')));
       await tx.update(contractVersion).set({ status: 'awaiting_signature', signedCopyId: doc.id }).where(eq(contractVersion.id, v.id));
       await this.audit.record(tx, { action: 'contracts.signed_copy_uploaded', entityType: 'contract', entityId: c.id, companyId: c.companyId, details: { version: v.versionNo, documentId: doc.id, fileSha256: fileHash } });

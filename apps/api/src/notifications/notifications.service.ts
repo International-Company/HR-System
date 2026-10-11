@@ -165,6 +165,7 @@ export class NotificationsService {
   }
 
   async subscribe(principal: Principal, sub: { endpoint: string; keys: { p256dh: string; auth: string } }, userAgent: string | null) {
+    if (!isPushServiceUrl(sub.endpoint)) throw ApiError.validation([{ path: 'endpoint', message: 'Not a browser push service' }]);
     await this.database.tx(principal.rls(), async (tx) => {
       // An endpoint belongs to one browser: re-subscribing moves it to the current user.
       const updated = await tx
@@ -218,7 +219,7 @@ export class NotificationsService {
       );
       // Payload contains only titles and a relative link; no personal data beyond the title.
       const payload = JSON.stringify({ id: n.id, title: { ar: n.titleAr, en: n.titleEn }, link: n.link ?? '/notifications' });
-      for (const s of subs) {
+      for (const s of subs.filter((x) => isPushServiceUrl(x.endpoint))) {
         const result = await this.push.send(s, payload, vapid);
         await this.database.system((tx) =>
           tx
@@ -261,4 +262,18 @@ export class DisabledMailer implements MailPort {
   async send(): Promise<void> {
     // Intentionally a no-op: e-mail is out of scope for the initial release.
   }
+}
+
+/** Push endpoints of the browsers' push services (Chrome/Edge, Firefox, Safari, Windows). */
+const PUSH_HOSTS = ['fcm.googleapis.com', 'updates.push.services.mozilla.com', 'push.services.mozilla.com', 'web.push.apple.com', 'push.apple.com', 'notify.windows.com'];
+
+export function isPushServiceUrl(endpoint: string): boolean {
+  let u: URL;
+  try {
+    u = new URL(endpoint);
+  } catch {
+    return false;
+  }
+  if (u.protocol !== 'https:' || u.port !== '') return false;
+  return PUSH_HOSTS.some((h) => u.hostname === h || u.hostname.endsWith(`.${h}`));
 }

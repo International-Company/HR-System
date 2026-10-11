@@ -285,18 +285,34 @@ export class EmployeesService {
   // --- create (hire) -----------------------------------------------------------------------
 
   async create(principal: Principal, input: z.infer<typeof employeeCreateInput>): Promise<EmployeeDto> {
+    const fmt = await this.prepareCreate(principal, input);
+    const id = uuidv7();
+    await this.database.tx(principal.rls(), (tx) => this.createIn(tx, principal, input, fmt, id));
+    return this.get(principal, id);
+  }
+
+  /** Authorization and settings, read before any transaction (single-connection safety). */
+  async prepareCreate(principal: Principal, input: z.infer<typeof employeeCreateInput>): Promise<{ prefix: string; padding: number }> {
     const a = input.assignment;
     if (!principal.canCompany('employee.profile.create', a.companyId)) throw ApiError.notFound('Company');
     if ((input.compensation || input.bankAccount) && !principal.canCompany('employee.financial.edit', a.companyId)) {
       throw ApiError.forbidden('Salary and bank data need the financial edit permission');
     }
     await this.assertManager(a.managerEmployeeId);
-    const fmt = await this.settings.get('employee.numberFormat');
-    const id = uuidv7();
+    return this.settings.get('employee.numberFormat');
+  }
+
+  /** Inserts the employee inside the caller's transaction (also used when hiring a candidate). */
+  async createIn(
+    tx: Tx,
+    principal: Principal,
+    input: z.infer<typeof employeeCreateInput>,
+    fmt: { prefix: string; padding: number },
+    id: string,
+  ): Promise<string> {
+    const a = input.assignment;
     const today = new Date().toISOString().slice(0, 10);
     const status = input.probationEndDate && input.probationEndDate >= today ? 'probation' : 'active';
-
-    await this.database.tx(principal.rls(), async (tx) => {
       await assertLookups(tx, a.companyId, [
         { id: a.jobTitleId, kind: 'job_title', field: 'assignment.jobTitleId' },
         { id: a.employmentCategoryId, kind: 'employment_category', field: 'assignment.employmentCategoryId' },
@@ -369,8 +385,7 @@ export class EmployeesService {
           withBankAccount: !!input.bankAccount,
         },
       });
-    });
-    return this.get(principal, id);
+    return employeeNo;
   }
 
   /** Sequential, group-wide numbers (EMP-06). A format change affects only new numbers. */
@@ -953,8 +968,16 @@ export class EmployeesService {
       const [before] = await tx.select({ id: userAccount.id }).from(userAccount).where(eq(userAccount.employeeId, id));
       if (before) await tx.update(userAccount).set({ employeeId: null, updatedBy: principal.userId }).where(eq(userAccount.id, before.id));
       if (userId) {
+        if (userId === principal.userId) throw ApiError.forbidden('You cannot link your own account to an employee record');
         const [u] = await tx.select().from(userAccount).where(eq(userAccount.id, userId));
         if (!u) throw ApiError.validation([{ path: 'userId', message: 'Unknown user' }]);
+        // Administrator accounts stay out of employee self-service (separation of duties, DL-024).
+        const admin = await tx.execute<{ n: number }>(
+          sql`select count(*)::int as n from role_assignment a join role r on r.id = a.role_id where a.user_id = ${userId} and r.key = 'system_admin' and a.ended_at is null`,
+        );
+        if (((admin as unknown as { rows: { n: number }[] }).rows[0]?.n ?? 0) > 0) {
+          throw ApiError.forbidden('Administrator accounts cannot be linked to employee records');
+        }
         if (u.employeeId && u.employeeId !== id) throw ApiError.conflict('This account is already linked to another employee');
         await tx.update(userAccount).set({ employeeId: id, updatedBy: principal.userId }).where(eq(userAccount.id, userId));
       }

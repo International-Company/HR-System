@@ -301,6 +301,7 @@ export class PayrollService implements OnModuleInit {
   }
 
   async addManual(principal: Principal, runId: string, employeeId: string, input: z.infer<typeof manualItemInput>): Promise<PayRunDetailDto> {
+    if (employeeId === principal.employeeId) throw ApiError.forbidden('You cannot add items to your own pay');
     await this.database.tx(principal.rls(), async (tx) => {
       const run = await this.loadRun(tx, principal, runId, true);
       this.requirePrepare(principal, run);
@@ -349,7 +350,10 @@ export class PayrollService implements OnModuleInit {
       if (!lines[0]?.n) throw ApiError.conflict('The payroll has no employees');
       const totals = await this.totals(tx, [runId]);
       await tx.update(payrollRun).set({ status: 'submitted' }).where(eq(payrollRun.id, runId));
+      // Everyone who prepared this payroll (created it or entered items) is excluded from approving.
+      const preparers = await tx.selectDistinct({ u: payrollManualItem.createdBy }).from(payrollManualItem).where(eq(payrollManualItem.runId, runId));
       const inst = await this.workflow.start(tx, principal, {
+        excludeUserIds: [run.createdBy, ...preparers.map((x) => x.u)],
         definitionKey: 'payroll.run',
         companyId: run.companyId,
         subjectType: 'payroll_run',

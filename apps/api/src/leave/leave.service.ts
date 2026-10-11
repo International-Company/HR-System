@@ -599,6 +599,17 @@ export class LeaveService implements OnModuleInit {
     return this.database.tx(principal.rls(), async (tx) => {
       const [r] = await tx.select().from(leaveRequest).where(eq(leaveRequest.id, id));
       if (!r) throw ApiError.notFound('Leave request');
+      const [a] = await tx.select({ d: employeeCurrentAssignment.departmentId }).from(employeeCurrentAssignment).where(eq(employeeCurrentAssignment.employeeId, r.employeeId));
+      const participant = r.workflowInstanceId
+        ? ((await tx.execute<{ ok: boolean }>(sql`select app_is_workflow_participant(${r.workflowInstanceId}::uuid) as ok`)) as unknown as { rows: { ok: boolean }[] }).rows[0]?.ok
+        : false;
+      const allowed =
+        r.employeeId === principal.employeeId ||
+        r.requestedBy === principal.userId ||
+        principal.canDepartment('leave.request.view', r.companyId, a?.d ?? '') ||
+        principal.canCompany('leave.request.manage', r.companyId) ||
+        participant;
+      if (!allowed) throw ApiError.notFound('Leave request');
       return (await this.toRequestDtos(tx, principal, [r]))[0]!;
     });
   }

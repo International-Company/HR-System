@@ -63,7 +63,7 @@ describe('notification centre and push (NOT-01..06)', () => {
     const raw = await env.database.owner.query<{ v: string }>(`select encode(value_enc, 'escape') as v from system_secret where key = 'vapid'`);
     expect(raw[0]!.v).not.toContain(key.body.publicKey);
 
-    const endpoint = 'https://push.example.test/abc';
+    const endpoint = 'https://fcm.googleapis.com/fcm/send/abc';
     expect((await s['employee.a']!.post('/notifications/push/subscribe', { endpoint, keys: { p256dh: 'BKey', auth: 'auth' } })).status).toBe(204);
     await env.database.system((tx) =>
       env.app.get(NotificationsService).notify(tx, { userIds: [env.seeded.users['employee.a']!], eventType: 'x', title: { ar: 'أ', en: 'A' } }),

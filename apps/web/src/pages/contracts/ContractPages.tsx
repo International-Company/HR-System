@@ -437,13 +437,15 @@ export function ContractDetailPage() {
                       {t('ctr.send')}
                     </Button>
                   )}
-                  <FileButton onChange={(f) => void uploadCopy(v.id, f)} accept="application/pdf,image/jpeg,image/png">
-                    {(props) => (
-                      <Button size="xs" variant="default" {...props}>
-                        {t('ctr.uploadSigned')}
-                      </Button>
-                    )}
-                  </FileButton>
+                  {v.status === 'awaiting_signature' && (
+                    <FileButton onChange={(f) => void uploadCopy(v.id, f)} accept="application/pdf,image/jpeg,image/png">
+                      {(props) => (
+                        <Button size="xs" variant="default" {...props}>
+                          {t('ctr.uploadSigned')}
+                        </Button>
+                      )}
+                    </FileButton>
+                  )}
                   <Button size="xs" variant="subtle" color="red" onClick={() => void act(`/contracts/${id}/versions/${v.id}/cancel`)}>
                     {t('ctr.cancelVersion')}
                   </Button>
@@ -584,7 +586,7 @@ function EditDraftModal({ contract: c, onClose }: { contract: ContractDto; onClo
             <TextInput key={f.key} label={f.label} required={f.required} value={form.fieldValues[f.key] ?? ''} onChange={(e) => setForm({ ...form, fieldValues: { ...form.fieldValues, [f.key]: e.currentTarget.value } })} />
           ))}
         {can('contracts.manual_edit') && <Switch label={t('ctr.manualText')} checked={form.manual} onChange={(e) => setForm({ ...form, manual: e.currentTarget.checked })} />}
-        {form.manual && <Textarea autosize minRows={12} value={form.body} onChange={(e) => setForm({ ...form, body: e.currentTarget.value })} dir={v.language === 'ar' ? 'rtl' : 'ltr'} />}
+        {form.manual && <Textarea aria-label={t('ctr.body')} autosize minRows={12} value={form.body} onChange={(e) => setForm({ ...form, body: e.currentTarget.value })} dir={v.language === 'ar' ? 'rtl' : 'ltr'} />}
         <Group justify="flex-end">
           <Button variant="default" onClick={onClose}>
             {t('app.cancel')}

@@ -315,7 +315,7 @@ export function MfaSetupFlow({ onDone }: { onDone: () => void }) {
       )}
       <Text size="sm">{t('auth.setupStep2')}</Text>
       <Center dir="ltr">
-        <PinInput length={6} type="number" oneTimeCode value={code} onChange={setCode} onComplete={(v) => void confirm(v)} />
+        <PinInput aria-label={t('auth.setupStep2')} length={6} type="number" oneTimeCode value={code} onChange={setCode} onComplete={(v) => void confirm(v)} />
       </Center>
       <Button loading={busy} disabled={code.length !== 6} onClick={() => void confirm()}>
         {t('auth.verify')}

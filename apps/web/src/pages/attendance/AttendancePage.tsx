@@ -245,7 +245,7 @@ export function AttendancePage() {
         <Stack>
           <ErrorAlert error={error} />
           <Center dir="ltr">
-            <PinInput length={4} type="number" mask value={pin} onChange={setPin} onComplete={(v) => pinFor && doPunch.mutate({ kind: pinFor, pinValue: v })} autoFocus />
+            <PinInput aria-label={t('att.verifyPin')} length={4} type="number" mask value={pin} onChange={setPin} onComplete={(v) => pinFor && doPunch.mutate({ kind: pinFor, pinValue: v })} autoFocus />
           </Center>
           <Button loading={doPunch.isPending} disabled={pin.length !== 4} onClick={() => pinFor && doPunch.mutate({ kind: pinFor, pinValue: pin })}>
             {pinFor ? t(`att.kinds.${pinFor}`) : ''}
@@ -295,14 +295,14 @@ function CorrectionModal({ day, onClose }: { day: AttendanceDayDto | null; onClo
           ))}
           {add.map((a, i) => (
             <Group key={i} align="flex-end" gap="xs">
-              <Select
+              <Select aria-label={t('att.addPunch')}
                 w={170}
                 data={PUNCH_KINDS.map((k) => ({ value: k, label: t(`att.kinds.${k}`) }))}
                 value={a.kind}
                 onChange={(v) => setAdd(add.map((x, n) => (n === i ? { ...x, kind: (v ?? 'in') as PunchKind } : x)))}
                 allowDeselect={false}
               />
-              <TextInput w={110} type="time" value={a.time} onChange={(e) => setAdd(add.map((x, n) => (n === i ? { ...x, time: e.currentTarget.value } : x)))} />
+              <TextInput aria-label={t('att.time')} w={110} type="time" value={a.time} onChange={(e) => setAdd(add.map((x, n) => (n === i ? { ...x, time: e.currentTarget.value } : x)))} />
               <ActionIcon variant="subtle" color="red" mb={4} onClick={() => setAdd(add.filter((_, n) => n !== i))} aria-label={t('emp.remove')}>
                 <IconTrash size={14} />
               </ActionIcon>

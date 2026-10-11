@@ -69,11 +69,11 @@ export class AuditController {
           entityType: r.entityType,
           entityId: r.entityId,
           companyId: r.companyId,
-          before: r.before,
-          after: r.after,
+          before: redact(p, r.companyId, r.before),
+          after: redact(p, r.companyId, r.after),
           ip: r.ip,
           outcome: r.outcome,
-          details: r.details,
+          details: redact(p, r.companyId, r.details),
         })),
         nextCursor: rows.length > q.limit ? String(page.at(-1)!.id) : null,
       };
@@ -99,4 +99,24 @@ export class AuditController {
       return { ok, checked: Number(row.checked), firstBadId: row.first_bad_id ? Number(row.first_bad_id) : null };
     });
   }
+}
+
+const FINANCIAL = /salary|amount|settlement|gross|deduction|net$|^net|bonus|rates|payment|iban|account/i;
+const IDENTITY = /idnumber|id_number|birthdate|birth_date/i;
+
+/** Audit entries keep the values; readers without the matching permission see them masked. */
+function redact(p: Principal, companyId: string | null, value: unknown): unknown {
+  const financial = companyId ? p.canCompany('employee.financial.view', companyId) : p.hasGroup('employee.financial.view');
+  const identity = companyId ? p.canCompany('employee.identity.view', companyId) : p.hasGroup('employee.identity.view');
+  const walk = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(walk);
+    if (!v || typeof v !== 'object') return v;
+    return Object.fromEntries(
+      Object.entries(v as Record<string, unknown>).map(([k, x]) => {
+        if ((!financial && FINANCIAL.test(k)) || (!identity && IDENTITY.test(k))) return [k, x === null ? null : '•••'];
+        return [k, walk(x)];
+      }),
+    );
+  };
+  return walk(value);
 }

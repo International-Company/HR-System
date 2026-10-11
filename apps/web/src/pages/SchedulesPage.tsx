@@ -210,7 +210,7 @@ export function SchedulesPage() {
                           {d.breaks.map((b, bi) => (
                             <Group key={bi} gap={4} align="flex-end">
                               <TextInput w={100} type="time" label={t('cal.breaks')} value={b.startTime} onChange={(e) => setDay(i, { breaks: d.breaks.map((x, n) => (n === bi ? { ...x, startTime: e.currentTarget.value } : x)) })} />
-                              <TextInput w={100} type="time" value={b.endTime} onChange={(e) => setDay(i, { breaks: d.breaks.map((x, n) => (n === bi ? { ...x, endTime: e.currentTarget.value } : x)) })} />
+                              <TextInput aria-label={t('cal.breaks')} w={100} type="time" value={b.endTime} onChange={(e) => setDay(i, { breaks: d.breaks.map((x, n) => (n === bi ? { ...x, endTime: e.currentTarget.value } : x)) })} />
                               <ActionIcon variant="subtle" color="red" mb={4} onClick={() => setDay(i, { breaks: d.breaks.filter((_, n) => n !== bi) })} aria-label={t('emp.remove')}>
                                 <IconTrash size={14} />
                               </ActionIcon>
