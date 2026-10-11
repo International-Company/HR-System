@@ -35,7 +35,8 @@ export class AuditController {
     if (q.from) conditions.push(gte(auditEvent.at, new Date(q.from)));
     if (q.to) conditions.push(lte(auditEvent.at, new Date(q.to)));
     if (q.actorUserId) conditions.push(eq(auditEvent.actorUserId, q.actorUserId));
-    if (q.action) conditions.push(like(auditEvent.action, `${q.action.replace(/[%_\\]/g, '')}%`));
+    // Escape LIKE wildcards (action names contain underscores) rather than stripping them.
+    if (q.action) conditions.push(like(auditEvent.action, `${q.action.replace(/[%_\\]/g, (c) => `\\${c}`)}%`));
     if (q.entityType) conditions.push(eq(auditEvent.entityType, q.entityType));
     if (q.entityId) conditions.push(eq(auditEvent.entityId, q.entityId));
     if (q.companyId) {

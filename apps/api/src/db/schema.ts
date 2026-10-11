@@ -6,6 +6,7 @@ import {
   bigint,
   boolean,
   char,
+  cidr,
   customType,
   date,
   inet,
@@ -592,6 +593,132 @@ export const restoreRequest = pgTable('restore_request', {
   updatedAt: tstz('updated_at').notNull().defaultNow(),
 });
 
+// --- Phase 4: attendance -----------------------------------------------------------
+
+export const networkRange = pgTable('network_range', {
+  id: uuid('id').primaryKey(),
+  companyId: uuid('company_id').notNull(),
+  workLocationId: uuid('work_location_id'),
+  cidr: cidr('cidr').notNull(),
+  label: text('label').notNull(),
+  status: text('status').$type<'active' | 'inactive'>().notNull().default('active'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+});
+
+export const attendanceDevice = pgTable('attendance_device', {
+  id: uuid('id').primaryKey(),
+  userId: uuid('user_id').notNull(),
+  employeeId: uuid('employee_id'),
+  companyId: uuid('company_id'),
+  label: text('label').notNull(),
+  kind: text('kind').$type<'webauthn' | 'pin'>().notNull(),
+  status: text('status').$type<'pending' | 'approved' | 'revoked'>().notNull().default('approved'),
+  tokenHash: bytea('token_hash'),
+  pinHash: text('pin_hash'),
+  pinFailures: integer('pin_failures').notNull().default(0),
+  userAgent: text('user_agent'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  approvedBy: uuid('approved_by'),
+  approvedAt: tstz('approved_at'),
+  revokedBy: uuid('revoked_by'),
+  revokedAt: tstz('revoked_at'),
+  lastUsedAt: tstz('last_used_at'),
+});
+
+export const webauthnCredential = pgTable('webauthn_credential', {
+  id: uuid('id').primaryKey(),
+  deviceId: uuid('device_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  credentialId: text('credential_id').notNull(),
+  publicKey: bytea('public_key').notNull(),
+  counter: bigint('counter', { mode: 'number' }).notNull().default(0),
+  transports: text('transports').array().notNull(),
+  rpId: text('rp_id').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  lastUsedAt: tstz('last_used_at'),
+});
+
+export const authChallenge = pgTable('auth_challenge', {
+  id: uuid('id').primaryKey(),
+  userId: uuid('user_id').notNull(),
+  purpose: text('purpose').$type<'register' | 'authenticate'>().notNull(),
+  challenge: text('challenge').notNull(),
+  expiresAt: tstz('expires_at').notNull(),
+  usedAt: tstz('used_at'),
+});
+
+export const punch = pgTable('punch', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  workDate: date('work_date', { mode: 'string' }).notNull(),
+  kind: text('kind').$type<'in' | 'out' | 'break_start' | 'break_end'>().notNull(),
+  at: tstz('at').notNull(),
+  source: text('source').$type<'pwa' | 'correction'>().notNull(),
+  method: text('method').$type<'session' | 'webauthn' | 'pin' | 'correction'>().notNull(),
+  ip: inet('ip'),
+  deviceId: uuid('device_id'),
+  userAgent: text('user_agent'),
+  idempotencyKey: text('idempotency_key'),
+  correctionId: uuid('correction_id'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+});
+
+export const punchVoid = pgTable('punch_void', {
+  punchId: uuid('punch_id').primaryKey(),
+  correctionId: uuid('correction_id').notNull(),
+  voidedAt: tstz('voided_at').notNull().defaultNow(),
+  voidedBy: uuid('voided_by'),
+});
+
+export const attendanceDay = pgTable('attendance_day', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  workDate: date('work_date', { mode: 'string' }).notNull(),
+  dayClass: text('day_class').$type<'workday' | 'rest' | 'holiday' | 'unscheduled' | 'not_employed'>().notNull(),
+  status: text('status')
+    .$type<'present' | 'incomplete' | 'absent_pending' | 'absent_confirmed' | 'excused' | 'not_required' | 'upcoming'>()
+    .notNull(),
+  scheduledStart: time('scheduled_start'),
+  scheduledEnd: time('scheduled_end'),
+  firstIn: tstz('first_in'),
+  lastOut: tstz('last_out'),
+  workedMinutes: integer('worked_minutes').notNull().default(0),
+  breakMinutes: integer('break_minutes').notNull().default(0),
+  lateMinutes: integer('late_minutes').notNull().default(0),
+  earlyMinutes: integer('early_minutes').notNull().default(0),
+  overtimeMinutes: integer('overtime_minutes').notNull().default(0),
+  holidayWorkMinutes: integer('holiday_work_minutes').notNull().default(0),
+  closure: text('closure').$type<'normal' | 'administrative' | 'open' | 'none'>().notNull().default('none'),
+  flags: text('flags').array().notNull(),
+  reviewStatus: text('review_status').$type<'absent_confirmed' | 'excused'>(),
+  reviewNote: text('review_note'),
+  reviewedBy: uuid('reviewed_by'),
+  reviewedAt: tstz('reviewed_at'),
+  calcVersion: integer('calc_version').notNull().default(1),
+  computedAt: tstz('computed_at').notNull().defaultNow(),
+});
+
+export const attendanceCorrection = pgTable('attendance_correction', {
+  id: uuid('id').primaryKey(),
+  employeeId: uuid('employee_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  workDate: date('work_date', { mode: 'string' }).notNull(),
+  changes: jsonb('changes')
+    .$type<{ add: { kind: 'in' | 'out' | 'break_start' | 'break_end'; time: string }[]; voidPunchIds: string[] }>()
+    .notNull(),
+  reason: text('reason').notNull(),
+  status: text('status').$type<'pending' | 'approved' | 'rejected' | 'cancelled'>().notNull().default('pending'),
+  direct: boolean('direct').notNull().default(false),
+  requestedBy: uuid('requested_by').notNull(),
+  workflowInstanceId: uuid('workflow_instance_id'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  decidedAt: tstz('decided_at'),
+});
+
 export const schema = {
   companyGroup,
   company,
@@ -636,4 +763,12 @@ export const schema = {
   scheduleAssignment,
   holiday,
   restoreRequest,
+  networkRange,
+  attendanceDevice,
+  webauthnCredential,
+  authChallenge,
+  punch,
+  punchVoid,
+  attendanceDay,
+  attendanceCorrection,
 };

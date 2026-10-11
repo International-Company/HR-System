@@ -56,6 +56,11 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'schedules.view',
       'schedules.manage',
       'holidays.manage',
+      'attendance.record.view',
+      'attendance.record.correct',
+      'attendance.review',
+      'attendance.network.manage',
+      'attendance.device.manage',
     ],
   },
   {
@@ -73,6 +78,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'documents.view',
       'workflow.instances.view',
       'schedules.view',
+      'attendance.record.view',
     ],
   },
   {
@@ -87,13 +93,14 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'documents.view',
       'workflow.instances.view',
       'schedules.view',
+      'attendance.record.view',
     ],
   },
   {
     key: 'department_manager',
     name: { ar: 'مدير قسم', en: 'Department Manager' },
     defaultScope: 'DEPARTMENT',
-    permissions: ['org.company.view', 'org.department.view', 'employee.profile.view'],
+    permissions: ['org.company.view', 'org.department.view', 'employee.profile.view', 'attendance.record.view'],
   },
   {
     key: 'employee',
@@ -101,7 +108,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
     defaultScope: 'SELF',
     // SELF scope: own profile, own current salary and own documents in employee-visible
     // categories (EMP-10).
-    permissions: ['employee.profile.view', 'documents.view'],
+    permissions: ['employee.profile.view', 'documents.view', 'attendance.punch', 'attendance.record.view'],
   },
   {
     key: 'finance',
@@ -125,6 +132,11 @@ export const SYSTEM_ROLES: readonly SystemRoleDef[] = [
       'employee.profile.view',
       'schedules.view',
       'schedules.manage',
+      'attendance.record.view',
+      'attendance.record.correct',
+      'attendance.review',
+      'attendance.network.manage',
+      'attendance.device.manage',
     ],
   },
 ];

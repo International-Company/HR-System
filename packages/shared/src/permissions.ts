@@ -160,6 +160,21 @@ export const PERMISSIONS = [
   p('schedules.manage', 'calendar', 'Manage and assign work schedules', 'إدارة جداول الدوام وإسنادها'),
   p('holidays.manage', 'calendar', 'Manage official holidays', 'إدارة العطل الرسمية'),
 
+  // Attendance (Phase 4)
+  p('attendance.punch', 'attendance', 'Record own attendance', 'تسجيل الحضور الشخصي'),
+  p('attendance.record.view', 'attendance', 'View attendance records', 'عرض سجلات الحضور'),
+  p('attendance.record.correct', 'attendance', 'Correct attendance directly', 'تصحيح الحضور مباشرة'),
+  p('attendance.review', 'attendance', 'Review absences and exceptions', 'مراجعة الغياب والاستثناءات'),
+  p('attendance.network.manage', 'attendance', 'Manage authorised networks', 'إدارة الشبكات المسموح بها', {
+    sensitivity: 'security',
+  }),
+  p('attendance.device.manage', 'attendance', 'Approve and revoke attendance devices', 'اعتماد وإلغاء أجهزة الحضور', {
+    sensitivity: 'security',
+  }),
+  p('attendance.policy.manage', 'attendance', 'Configure attendance policies', 'ضبط سياسات الحضور', {
+    groupOnly: true,
+  }),
+
   // System backup
   p('system.backup.view', 'system', 'View backups', 'عرض النسخ الاحتياطية', {
     sensitivity: 'security',
