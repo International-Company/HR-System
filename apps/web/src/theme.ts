@@ -18,8 +18,8 @@ export const theme = createTheme({
   primaryColor: 'brand',
   primaryShade: 6,
   colors: { brand },
-  fontFamily: '"IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, sans-serif',
-  headings: { fontFamily: '"IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, sans-serif', fontWeight: '600' },
+  fontFamily: '"Cairo Variable", system-ui, sans-serif',
+  headings: { fontFamily: '"Cairo Variable", system-ui, sans-serif', fontWeight: '600' },
   defaultRadius: 'md',
   cursorType: 'pointer',
   components: {
