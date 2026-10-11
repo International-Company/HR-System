@@ -12,7 +12,6 @@ import {
   Stack,
   Table,
   Text,
-  TextInput,
   Textarea,
   Title,
 } from '@mantine/core';
@@ -23,7 +22,7 @@ import type { LeaveBalanceDto, LeaveRequestDto, LeaveTypeDto, LedgerEntryDto, Pe
 import { get, post, upload } from '../../lib/api';
 import { useAuth } from '../../auth/AuthContext';
 import { EmptyRow, ErrorAlert, StatusBadge, notifySaved } from '../../components/common';
-import { DateField } from '../../components/DateFields';
+import { DateField, TimeField } from '../../components/DateFields';
 
 export const LEAVE_STATUS_COLOR: Record<string, string> = { pending: 'requested', approved: 'success', rejected: 'failed', cancelled: 'inactive' };
 const today = () => new Date().toISOString().slice(0, 10);
@@ -191,8 +190,8 @@ export function PermissionModal({ opened, onClose, employeeId, onBehalf }: { ope
         <ErrorAlert error={submit.error} />
         <DateField label={t('leave.date')} value={form.date} onChange={(v) => setForm({ ...form, date: v })} required />
         <Group grow>
-          <TextInput type="time" label={t('leave.start')} value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.currentTarget.value })} required />
-          <TextInput type="time" label={t('leave.end')} value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.currentTarget.value })} required />
+          <TimeField label={t('leave.start')} value={form.startTime} onChange={(v) => setForm({ ...form, startTime: v })} required />
+          <TimeField label={t('leave.end')} value={form.endTime} onChange={(v) => setForm({ ...form, endTime: v })} required />
         </Group>
         <Textarea label={t('leave.reason')} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.currentTarget.value })} required autosize minRows={2} />
         <Group justify="flex-end">

@@ -23,7 +23,7 @@ import { get, patch, post } from '../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { employeeName, useCompanies, useDepartments, useEmployeeOptions } from '../lib/refdata';
 import { EmptyRow, ErrorAlert, PageHeader, StatusBadge, localName, notifySaved } from '../components/common';
-import { DateField } from '../components/DateFields';
+import { DateField, TimeField } from '../components/DateFields';
 
 type Draft = Omit<ScheduleDto, 'id' | 'version' | 'status'> & { id?: string; version?: number; status: 'active' | 'inactive' };
 
@@ -201,8 +201,8 @@ export function SchedulesPage() {
                       <Checkbox w={130} label={t(`cal.weekdays.${d.isoWeekday}`)} checked={d.isWorkday} onChange={(e) => setDay(i, { isWorkday: e.currentTarget.checked, startTime: d.startTime ?? '08:00', endTime: d.endTime ?? '16:00' })} />
                       {d.isWorkday ? (
                         <>
-                          <TextInput w={110} type="time" label={t('cal.start')} value={d.startTime ?? ''} onChange={(e) => setDay(i, { startTime: e.currentTarget.value })} />
-                          <TextInput w={110} type="time" label={t('cal.end')} value={d.endTime ?? ''} onChange={(e) => setDay(i, { endTime: e.currentTarget.value })} />
+                          <TimeField w={130} label={t('cal.start')} value={d.startTime ?? ''} onChange={(v) => setDay(i, { startTime: v })} />
+                          <TimeField w={130} label={t('cal.end')} value={d.endTime ?? ''} onChange={(v) => setDay(i, { endTime: v })} />
                           {d.startTime && d.endTime && d.endTime <= d.startTime && (
                             <Text size="xs" c="orange">
                               {t('cal.overnight')}
@@ -210,8 +210,8 @@ export function SchedulesPage() {
                           )}
                           {d.breaks.map((b, bi) => (
                             <Group key={bi} gap={4} align="flex-end">
-                              <TextInput w={100} type="time" label={t('cal.breaks')} value={b.startTime} onChange={(e) => setDay(i, { breaks: d.breaks.map((x, n) => (n === bi ? { ...x, startTime: e.currentTarget.value } : x)) })} />
-                              <TextInput aria-label={t('cal.breaks')} w={100} type="time" value={b.endTime} onChange={(e) => setDay(i, { breaks: d.breaks.map((x, n) => (n === bi ? { ...x, endTime: e.currentTarget.value } : x)) })} />
+                              <TimeField w={130} label={t('cal.breaks')} value={b.startTime} onChange={(v) => setDay(i, { breaks: d.breaks.map((x, n) => (n === bi ? { ...x, startTime: v } : x)) })} />
+                              <TimeField aria-label={t('cal.breaks')} w={130} value={b.endTime} onChange={(v) => setDay(i, { breaks: d.breaks.map((x, n) => (n === bi ? { ...x, endTime: v } : x)) })} />
                               <ActionIcon variant="subtle" color="red" mb={4} onClick={() => setDay(i, { breaks: d.breaks.filter((_, n) => n !== bi) })} aria-label={t('emp.remove')}>
                                 <IconTrash size={14} />
                               </ActionIcon>
