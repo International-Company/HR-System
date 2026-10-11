@@ -6,6 +6,8 @@ import {
   IconChecklist,
   IconClockHour4,
   IconFingerprint,
+  IconBeach,
+  IconCalendarStats,
   IconClipboardCheck,
   IconWifi,
   IconRoute,
@@ -60,6 +62,11 @@ export function AppLayout() {
       ? [{ to: '/attendance', label: t('nav.attendance'), icon: IconFingerprint }]
       : []),
     { to: '/attendance/review', label: t('nav.attendanceReview'), icon: IconClipboardCheck, permission: 'attendance.review' },
+    ...(session?.user.employeeId && can('leave.request.create') ? [{ to: '/leave', label: t('nav.leave'), icon: IconBeach }] : []),
+    // Managers see their scope's requests; plain employees only have their own page.
+    ...(can('leave.request.manage') || can('leave.types.manage') || (can('leave.request.view') && !!session?.roles.some((r) => r.scopeType !== 'SELF'))
+      ? [{ to: '/leave/manage', label: t('nav.leaveManage'), icon: IconCalendarStats }]
+      : []),
     { to: '/tasks', label: t('nav.tasks'), icon: IconChecklist },
   ].filter((i) => !('permission' in i) || !i.permission || can(i.permission));
   const admin: Item[] = [
@@ -85,7 +92,7 @@ export function AppLayout() {
       ? location.pathname === '/'
       : to === '/employees' && location.pathname === ownProfile
         ? false
-        : to === '/attendance' ? location.pathname === to : location.pathname.startsWith(to);
+        : to === '/attendance' || to === '/leave' ? location.pathname === to : location.pathname.startsWith(to);
   const width = collapsed ? 72 : 260;
 
   const renderItem = (item: Item) => {

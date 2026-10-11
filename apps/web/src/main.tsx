@@ -33,6 +33,7 @@ import { HolidaysPage } from './pages/HolidaysPage';
 import { WorkflowDefinitionsPage } from './pages/WorkflowDefinitionsPage';
 import { AttendancePage } from './pages/attendance/AttendancePage';
 import { AttendanceAdminPage, AttendanceReviewPage } from './pages/attendance/AttendanceStaffPages';
+import { LeaveManagePage, LeavePage } from './pages/leave/LeavePages';
 import { registerServiceWorker } from './lib/push';
 
 const queryClient = new QueryClient({
@@ -72,6 +73,8 @@ const router = createBrowserRouter([
       { path: 'attendance', element: <AttendancePage /> },
       { path: 'attendance/review', element: <AttendanceReviewPage /> },
       { path: 'attendance/admin', element: <AttendanceAdminPage /> },
+      { path: 'leave', element: <LeavePage /> },
+      { path: 'leave/manage', element: <LeaveManagePage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
