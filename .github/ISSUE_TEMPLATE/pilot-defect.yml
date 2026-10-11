@@ -18,7 +18,16 @@ body:
     id: role
     attributes:
       label: Role / الدور
-      options: [System administrator, HR, Finance, Department manager, Company manager, Timekeeping officer, Employee]
+      options:
+        [
+          System administrator,
+          HR,
+          Finance,
+          Department manager,
+          Company manager,
+          Timekeeping officer,
+          Employee,
+        ]
     validations:
       required: true
   - type: input
