@@ -12,3 +12,4 @@ export * from './contracts.js';
 export * from './payroll.js';
 export * from './separation.js';
 export * from './recruitment.js';
+export * from './evaluation.js';

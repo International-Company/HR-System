@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { endOfServiceSchema, payrollPolicySchema } from './payroll.js';
 import { separationPolicySchema } from './separation.js';
 import { DEFAULT_RECRUITMENT_STAGES, recruitmentStagesSchema } from './recruitment.js';
+import { DEFAULT_EVALUATION_POLICY, evaluationPolicySchema } from './evaluation.js';
 import type { PermissionKey } from './permissions.js';
 
 /**
@@ -128,6 +129,13 @@ export const SETTINGS = {
     },
     companyOverride: true,
     permission: 'attendance.policy.manage',
+    public: false,
+  },
+  'evaluation.policy': {
+    schema: evaluationPolicySchema,
+    default: DEFAULT_EVALUATION_POLICY,
+    companyOverride: true,
+    permission: 'evaluation.settings.manage',
     public: false,
   },
   'recruitment.stages': {

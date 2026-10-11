@@ -216,6 +216,11 @@ export const PERMISSIONS = [
   p('recruitment.offers', 'recruitment', 'Prepare job offers (salary)', 'إعداد عروض العمل (الراتب)', { sensitivity: 'financial' }),
   p('recruitment.settings.manage', 'recruitment', 'Configure candidate stages and retention', 'ضبط مراحل المرشحين ومدة الاحتفاظ', { groupOnly: true }),
 
+  // Attendance commitment evaluation (Phase 10). Attendance data only (CEV-03).
+  p('evaluation.view', 'evaluation', 'View commitment evaluations', 'عرض تقييمات الالتزام'),
+  p('evaluation.manage', 'evaluation', 'Calculate, finalise and recalculate evaluations', 'احتساب التقييمات واعتمادها وإعادة احتسابها'),
+  p('evaluation.settings.manage', 'evaluation', 'Configure the commitment evaluation', 'ضبط تقييم الالتزام', { groupOnly: true }),
+
   // System backup
   p('system.backup.view', 'system', 'View backups', 'عرض النسخ الاحتياطية', {
     sensitivity: 'security',
