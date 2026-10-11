@@ -6,6 +6,7 @@ import { p5Ar } from './p5-ar';
 import { p6Ar } from './p6-ar';
 import { p7Ar } from './p7-ar';
 import { p8Ar } from './p8-ar';
+import { p9Ar } from './p9-ar';
 
 /** نصوص الواجهة العربية — يجب أن تطابق مفاتيح en.ts تماماً. */
 export const ar: Messages = {
@@ -67,6 +68,7 @@ export const ar: Messages = {
     payroll: 'الرواتب',
     payslips: 'قسائم راتبي',
     separations: 'إنهاء الخدمة',
+    recruitment: 'التوظيف',
     account: 'حسابي',
     logout: 'تسجيل الخروج',
     administration: 'الإدارة',
@@ -289,4 +291,5 @@ export const ar: Messages = {
   ...p6Ar,
   ...p7Ar,
   ...p8Ar,
+  ...p9Ar,
 };

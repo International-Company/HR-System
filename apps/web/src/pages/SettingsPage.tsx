@@ -165,6 +165,7 @@ export function SettingsPage() {
           <Tabs.Tab value="contracts">{t('ctr.policy')}</Tabs.Tab>
           <Tabs.Tab value="payroll">{t('pay.policy')}</Tabs.Tab>
           <Tabs.Tab value="separation">{t('sep.policy')}</Tabs.Tab>
+          <Tabs.Tab value="recruitment">{t('rec.stagesSetting')}</Tabs.Tab>
           {can('system.backup.view') && <Tabs.Tab value="backup">{t('settings.backup')}</Tabs.Tab>}
         </Tabs.List>
 
@@ -428,6 +429,37 @@ export function SettingsPage() {
               </SimpleGrid>
             );
           })}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="recruitment">
+          {row<SettingValue<'recruitment.stages'>>('recruitment.stages', t('rec.stagesSetting'), (v, set) => (
+            <Stack>
+              {v.stages.map((s, i) => (
+                <Group key={i} gap="xs" align="flex-end" wrap="wrap">
+                  <TextInput w={140} label={t('rec.stageKey')} dir="ltr" value={s.key} onChange={(e) => set({ ...v, stages: v.stages.map((x, n) => (n === i ? { ...x, key: e.currentTarget.value.toLowerCase().replace(/[^a-z0-9_]/g, '') } : x)) })} />
+                  <TextInput w={160} label={t('rec.nameAr')} value={s.nameAr} onChange={(e) => set({ ...v, stages: v.stages.map((x, n) => (n === i ? { ...x, nameAr: e.currentTarget.value } : x)) })} />
+                  <TextInput w={160} label={t('rec.nameEn')} value={s.nameEn} onChange={(e) => set({ ...v, stages: v.stages.map((x, n) => (n === i ? { ...x, nameEn: e.currentTarget.value } : x)) })} />
+                  <Select
+                    w={150}
+                    label={t('rec.outcome')}
+                    data={(['open', 'accepted', 'rejected', 'withdrawn'] as const).map((o) => ({ value: o, label: t(`rec.outcomes.${o}`) }))}
+                    value={s.outcome}
+                    onChange={(x) => set({ ...v, stages: v.stages.map((y, n) => (n === i ? { ...y, outcome: (x ?? y.outcome) as typeof y.outcome } : y)) })}
+                    allowDeselect={false}
+                  />
+                  <Button size="compact-xs" variant="subtle" color="red" mb={6} onClick={() => set({ ...v, stages: v.stages.filter((_, n) => n !== i) })}>
+                    ✕
+                  </Button>
+                </Group>
+              ))}
+              <Group>
+                <Button size="xs" variant="light" onClick={() => set({ ...v, stages: [...v.stages, { key: `stage_${v.stages.length + 1}`, nameAr: '', nameEn: '', outcome: 'open' }] })}>
+                  {t('rec.addStage')}
+                </Button>
+              </Group>
+              <NumberInput w={320} label={t('rec.retentionMonths')} min={1} max={120} value={v.retentionMonths} onChange={(x) => set({ ...v, retentionMonths: Number(x) || 12 })} />
+            </Stack>
+          ))}
         </Tabs.Panel>
 
         <Tabs.Panel value="backup">

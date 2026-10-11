@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { endOfServiceSchema, payrollPolicySchema } from './payroll.js';
 import { separationPolicySchema } from './separation.js';
+import { DEFAULT_RECRUITMENT_STAGES, recruitmentStagesSchema } from './recruitment.js';
 import type { PermissionKey } from './permissions.js';
 
 /**
@@ -127,6 +128,13 @@ export const SETTINGS = {
     },
     companyOverride: true,
     permission: 'attendance.policy.manage',
+    public: false,
+  },
+  'recruitment.stages': {
+    schema: recruitmentStagesSchema,
+    default: DEFAULT_RECRUITMENT_STAGES,
+    companyOverride: false,
+    permission: 'recruitment.settings.manage',
     public: false,
   },
   'separation.policy': {

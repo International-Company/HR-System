@@ -11,3 +11,4 @@ export * from './leave.js';
 export * from './contracts.js';
 export * from './payroll.js';
 export * from './separation.js';
+export * from './recruitment.js';

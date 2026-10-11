@@ -16,7 +16,7 @@ Last updated: 2026-10-10
 | P6 Contracts | 🔄 Implementation complete (DL-040) | 184 API tests passing locally (+2 server-only in CI) incl. 14 contract tests; migration 0006 applied to an existing database | ❓ Legal review of in-app signing (DL-042); Arabic print check signed off; review of defaults (DL-043) |
 | P7 Payroll | 🔄 Implementation complete (DL-044) | 203 API tests passing locally (+2 server-only in CI) incl. 9 payroll golden cases and 10 payroll integration tests; migration 0007 applied to an existing database | ❓ HR/Finance golden cases signed off; Q-24 statutory deductions (DL-045); Q-28 country; performance test on the largest company |
 | P8 Separation & rehire | 🔄 Implementation complete (DL-049) | 208 API tests passing locally (+2 server-only in CI) incl. 5 separation tests; migration 0008 applied to an existing database | ❓ Review of defaults (DL-051); end-of-service method depends on Q-28 |
-| P9 Recruitment | ⏳ | — | Q-11 |
+| P9 Recruitment | 🔄 Implementation complete (DL-053) | 214 API tests passing locally (+2 server-only in CI) incl. 6 recruitment tests; migration 0009 applied to an existing database | ❓ Q-11 public portal (DL-054); retention of candidate data (C-20); optional malware scanning for candidate uploads (security plan) |
 | P10 Commitment evaluation | ⏳ | — | — |
 | P11 Reports, search, dashboards | ⏳ | — | — |
 | P12 Hardening | ⏳ | — | — |
@@ -177,3 +177,23 @@ Last updated: 2026-10-10
 | Exit | Daily completion after the last working day: terminated status, account disabled or limited to self-service, sessions/roles/devices ended, salary and contract closed, later leave cancelled, end-of-service settlement recorded |
 | Rehire | Same employee number and history, new assignment and optional salary, audited override of ineligibility |
 | Web | Separations page and detail, Separation tab in the profile (start, resign, cancel, eligibility, rehire), separation settings |
+
+## Phase 9 acceptance criteria (roadmap.md)
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Conversion pre-fills an employee record without duplicate creation | ✅ | `recruitment.test.ts` (second conversion refused; DB unique index) |
+| 2 | Candidate documents follow the category policies | ✅ | `recruitment.test.ts` (medical refused, encrypted store, linked to the employee on hiring) |
+| 3 | No hardcoded mandatory documents | ✅ | Required categories chosen per vacancy (REC-07) |
+
+## Phase 9 deliverables
+
+| Area | Delivered |
+|---|---|
+| Vacancies | Per company, department/job/category/contract type, openings, status, required document categories, counts of applications and hires, automatically "filled" |
+| Candidates | Names (AR/EN), contact, nationality, source, notes, encrypted files (CV and other categories), duplicate e-mail check, retention date |
+| Applications | Configurable stages with outcomes, append-only history (stage changes, notes, interviews, offers, hiring), required documents tracked |
+| Interviews | Scheduling with interviewers (notified), results with score and feedback by the interviewer |
+| Offers | Salary and start date, approval through the workflow, sent / accepted / declined / withdrawn |
+| Hiring | One-click employee record from candidate, vacancy and accepted offer; files added to the profile |
+| Web | Recruitment page (vacancies, candidates), vacancy board by stage, application page, stage settings |

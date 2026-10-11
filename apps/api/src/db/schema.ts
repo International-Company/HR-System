@@ -23,6 +23,9 @@ import {
 } from 'drizzle-orm/pg-core';
 import type {
   ContractStatus,
+  OfferStatus,
+  StageOutcome,
+  VacancyStatus,
   SeparationStatus,
   SeparationType,
   ItemSource,
@@ -426,7 +429,7 @@ export const documentLink = pgTable(
   'document_link',
   {
     documentId: uuid('document_id').notNull(),
-    entityType: text('entity_type').$type<'employee'>().notNull(),
+    entityType: text('entity_type').$type<'employee' | 'candidate'>().notNull(),
     entityId: uuid('entity_id').notNull(),
   },
   (t) => [primaryKey({ columns: [t.documentId, t.entityType, t.entityId] })],
@@ -1001,6 +1004,103 @@ export const separation = pgTable('separation', {
   cancelReason: text('cancel_reason'),
 });
 
+// --- Recruitment (Phase 9) ----------------------------------------------------------------
+
+export const vacancy = pgTable('vacancy', {
+  id: uuid('id').primaryKey(),
+  companyId: uuid('company_id').notNull(),
+  departmentId: uuid('department_id'),
+  jobTitleId: uuid('job_title_id'),
+  employmentCategoryId: uuid('employment_category_id'),
+  contractTypeId: uuid('contract_type_id'),
+  workLocationId: uuid('work_location_id'),
+  title: text('title').notNull(),
+  description: text('description').notNull().default(''),
+  openings: integer('openings').notNull(),
+  status: text('status').$type<VacancyStatus>().notNull().default('draft'),
+  requiredDocumentCategoryIds: uuid('required_document_category_ids').array().notNull().default([]),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+  updatedBy: uuid('updated_by'),
+});
+
+export const candidate = pgTable('candidate', {
+  id: uuid('id').primaryKey(),
+  companyId: uuid('company_id').notNull(),
+  fullNameAr: text('full_name_ar').notNull(),
+  fullNameEn: text('full_name_en').notNull(),
+  email: citext('email'),
+  phone: text('phone'),
+  nationality: text('nationality'),
+  source: text('source').$type<'direct' | 'referral' | 'agency' | 'website' | 'other'>().notNull(),
+  notes: text('notes').notNull().default(''),
+  employeeId: uuid('employee_id'),
+  retainUntil: date('retain_until', { mode: 'string' }).notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+  updatedBy: uuid('updated_by'),
+});
+
+export const jobApplication = pgTable('job_application', {
+  id: uuid('id').primaryKey(),
+  vacancyId: uuid('vacancy_id').notNull(),
+  candidateId: uuid('candidate_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  stage: text('stage').notNull(),
+  outcome: text('outcome').$type<StageOutcome>().notNull().default('open'),
+  employeeId: uuid('employee_id'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+});
+
+export const applicationEvent = pgTable('application_event', {
+  id: uuid('id').primaryKey(),
+  applicationId: uuid('application_id').notNull(),
+  kind: text('kind').$type<'stage' | 'note' | 'interview' | 'offer' | 'converted'>().notNull(),
+  stage: text('stage'),
+  text: text('text'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+});
+
+export const interview = pgTable('interview', {
+  id: uuid('id').primaryKey(),
+  applicationId: uuid('application_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  scheduledAt: tstz('scheduled_at').notNull(),
+  durationMinutes: integer('duration_minutes').notNull(),
+  mode: text('mode').$type<'in_person' | 'phone' | 'video'>().notNull(),
+  location: text('location'),
+  interviewerUserIds: uuid('interviewer_user_ids').array().notNull(),
+  status: text('status').$type<'scheduled' | 'done' | 'cancelled'>().notNull().default('scheduled'),
+  result: text('result').$type<'pass' | 'fail' | 'hold'>(),
+  score: integer('score'),
+  feedback: text('feedback'),
+  recordedBy: uuid('recorded_by'),
+  recordedAt: tstz('recorded_at'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+});
+
+export const jobOffer = pgTable('job_offer', {
+  id: uuid('id').primaryKey(),
+  applicationId: uuid('application_id').notNull(),
+  companyId: uuid('company_id').notNull(),
+  baseSalary: numeric('base_salary', { precision: 18, scale: 4 }).notNull(),
+  currency: char('currency', { length: 3 }).notNull(),
+  startDate: date('start_date', { mode: 'string' }).notNull(),
+  jobTitleId: uuid('job_title_id'),
+  notes: text('notes'),
+  status: text('status').$type<OfferStatus>().notNull().default('draft'),
+  workflowInstanceId: uuid('workflow_instance_id'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+});
+
 export const schema = {
   companyGroup,
   company,
@@ -1070,4 +1170,10 @@ export const schema = {
   payrollManualItem,
   payrollPayment,
   separation,
+  vacancy,
+  candidate,
+  jobApplication,
+  applicationEvent,
+  interview,
+  jobOffer,
 };
