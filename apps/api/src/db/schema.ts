@@ -21,7 +21,16 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import type { LeaveRules, LeaveStatus, LedgerKind } from '@hrms/shared';
+import type {
+  ContractStatus,
+  ContractTypePolicy,
+  LeaveRules,
+  LeaveStatus,
+  LedgerKind,
+  SignerRole,
+  VersionKind,
+  VersionStatus,
+} from '@hrms/shared';
 
 export const citext = customType<{ data: string }>({ dataType: () => 'citext' });
 export const bytea = customType<{ data: Buffer; driverData: Buffer | Uint8Array }>({
@@ -786,6 +795,105 @@ export const leavePermission = pgTable('leave_permission', {
   decidedAt: tstz('decided_at'),
 });
 
+// --- Contracts (Phase 6) ------------------------------------------------------------------
+
+export const contractTypePolicy = pgTable('contract_type_policy', {
+  contractTypeId: uuid('contract_type_id').primaryKey(),
+  policy: jsonb('policy').$type<ContractTypePolicy>().notNull(),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+  updatedBy: uuid('updated_by'),
+});
+
+export const contractClause = pgTable('contract_clause', {
+  id: uuid('id').primaryKey(),
+  companyId: uuid('company_id'),
+  code: citext('code').notNull(),
+  title: text('title').notNull(),
+  language: text('language').$type<'ar' | 'en'>().notNull(),
+  body: text('body').notNull(),
+  status: text('status').$type<'active' | 'inactive'>().notNull().default('active'),
+  ...audited,
+});
+
+export const contractTemplate = pgTable('contract_template', {
+  id: uuid('id').primaryKey(),
+  companyId: uuid('company_id'),
+  contractTypeId: uuid('contract_type_id').notNull(),
+  code: citext('code').notNull(),
+  name: text('name').notNull(),
+  language: text('language').$type<'ar' | 'en'>().notNull(),
+  body: text('body').notNull(),
+  fields: jsonb('fields').$type<{ key: string; label: string; required: boolean }[]>().notNull().default([]),
+  status: text('status').$type<'active' | 'inactive'>().notNull().default('active'),
+  ...audited,
+});
+
+export const contract = pgTable('contract', {
+  id: uuid('id').primaryKey(),
+  contractNo: text('contract_no').notNull(),
+  companyId: uuid('company_id').notNull(),
+  employeeId: uuid('employee_id').notNull(),
+  contractTypeId: uuid('contract_type_id').notNull(),
+  templateId: uuid('template_id'),
+  status: text('status').$type<ContractStatus>().notNull().default('draft'),
+  startDate: date('start_date', { mode: 'string' }).notNull(),
+  endDate: date('end_date', { mode: 'string' }),
+  probationEnd: date('probation_end', { mode: 'string' }),
+  probationOutcome: text('probation_outcome').$type<'confirmed' | 'extended' | 'not_confirmed'>(),
+  probationNote: text('probation_note'),
+  renewalOfId: uuid('renewal_of_id'),
+  endReason: text('end_reason'),
+  endedAt: tstz('ended_at'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+  updatedBy: uuid('updated_by'),
+});
+
+export const contractVersion = pgTable('contract_version', {
+  id: uuid('id').primaryKey(),
+  contractId: uuid('contract_id').notNull(),
+  versionNo: integer('version_no').notNull(),
+  kind: text('kind').$type<VersionKind>().notNull(),
+  status: text('status').$type<VersionStatus>().notNull().default('draft'),
+  language: text('language').$type<'ar' | 'en'>().notNull(),
+  body: text('body').notNull(),
+  bodySha256: text('body_sha256').notNull(),
+  fieldValues: jsonb('field_values').$type<Record<string, string>>().notNull().default({}),
+  effectiveDate: date('effective_date', { mode: 'string' }).notNull(),
+  endDate: date('end_date', { mode: 'string' }),
+  signedCopyId: uuid('signed_copy_id'),
+  lockedAt: tstz('locked_at'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: uuid('created_by'),
+});
+
+export const contractSignature = pgTable('contract_signature', {
+  id: uuid('id').primaryKey(),
+  versionId: uuid('version_id').notNull(),
+  role: text('role').$type<SignerRole>().notNull(),
+  status: text('status').$type<'pending' | 'signed'>().notNull().default('pending'),
+  method: text('method').$type<'in_app' | 'upload' | 'system'>(),
+  signerUserId: uuid('signer_user_id'),
+  typedName: text('typed_name'),
+  signedAt: tstz('signed_at'),
+  ip: inet('ip'),
+  userAgent: text('user_agent'),
+  documentHash: text('document_hash'),
+});
+
+export const contractAlert = pgTable(
+  'contract_alert',
+  {
+    contractId: uuid('contract_id').notNull(),
+    kind: text('kind').$type<'expiry' | 'probation'>().notNull(),
+    daysBefore: integer('days_before').notNull(),
+    dueDate: date('due_date', { mode: 'string' }).notNull(),
+    sentAt: tstz('sent_at').notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.contractId, t.kind, t.daysBefore, t.dueDate] })],
+);
+
 export const schema = {
   companyGroup,
   company,
@@ -842,4 +950,11 @@ export const schema = {
   leaveLedger,
   leaveRequest,
   leavePermission,
+  contractTypePolicy,
+  contractClause,
+  contractTemplate,
+  contract,
+  contractVersion,
+  contractSignature,
+  contractAlert,
 };

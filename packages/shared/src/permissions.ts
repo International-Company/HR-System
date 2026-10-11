@@ -184,6 +184,15 @@ export const PERMISSIONS = [
     groupOnly: true,
   }),
 
+  // Contracts (Phase 6)
+  p('contracts.view', 'contracts', 'View contracts', 'عرض العقود'),
+  p('contracts.manage', 'contracts', 'Prepare, send, renew and end contracts', 'إعداد العقود وإرسالها وتجديدها وإنهاؤها'),
+  p('contracts.manual_edit', 'contracts', 'Edit the text of draft contracts', 'تعديل نص مسودات العقود'),
+  p('contracts.sign', 'contracts', 'Sign contracts for the company', 'توقيع العقود عن الشركة'),
+  p('contracts.templates.manage', 'contracts', 'Manage contract templates, clauses and type rules', 'إدارة قوالب العقود والبنود وقواعد الأنواع', {
+    groupOnly: true,
+  }),
+
   // System backup
   p('system.backup.view', 'system', 'View backups', 'عرض النسخ الاحتياطية', {
     sensitivity: 'security',

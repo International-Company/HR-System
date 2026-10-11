@@ -8,3 +8,4 @@ export * from './employees.js';
 export * from './workflow-calendar.js';
 export * from './attendance.js';
 export * from './leave.js';
+export * from './contracts.js';

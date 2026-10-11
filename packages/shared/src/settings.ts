@@ -56,6 +56,19 @@ const restoreSchema = z.object({
   /** When true and another active System Administrator exists, a second one must approve. */
   requireSecondApprover: z.boolean(),
 });
+/** Contract alerts and display (CON-08..CON-10). Company-overridable. */
+const contractsPolicySchema = z.object({
+  numberPrefix: z.string().max(10),
+  /** Days before the end date when alerts are sent (CON-08). */
+  expiryAlertDays: z.array(z.number().int().min(1).max(365)).max(5),
+  probationAlertDays: z.array(z.number().int().min(1).max(180)).max(5),
+  /** Who is alerted: HR of the company, the direct manager, the employee. */
+  alertRecipients: z.array(z.enum(['hr', 'direct_manager', 'employee'])).min(1),
+  /** Contract ending while the employee is on approved leave (CON-09). */
+  expiryDuringLeave: z.enum(['expire', 'hold_until_return']),
+  /** Where contracts are shown (CON-10). */
+  showInProfile: z.boolean(),
+});
 /** In-day permissions (LEV-05). Company-overridable. */
 const leavePermissionsSchema = z.object({
   enabled: z.boolean(),
@@ -112,6 +125,20 @@ export const SETTINGS = {
     },
     companyOverride: true,
     permission: 'attendance.policy.manage',
+    public: false,
+  },
+  'contracts.policy': {
+    schema: contractsPolicySchema,
+    default: {
+      numberPrefix: 'CTR-',
+      expiryAlertDays: [60, 30, 7],
+      probationAlertDays: [14, 3],
+      alertRecipients: ['hr', 'direct_manager'] as ('hr' | 'direct_manager' | 'employee')[],
+      expiryDuringLeave: 'expire' as const,
+      showInProfile: true,
+    },
+    companyOverride: true,
+    permission: 'contracts.templates.manage',
     public: false,
   },
   'leave.permissions': {
