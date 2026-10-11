@@ -12,6 +12,7 @@ import {
   IconCash,
   IconReceipt,
   IconDoorExit,
+  IconUserSearch,
   IconCalendarStats,
   IconClipboardCheck,
   IconWifi,
@@ -76,6 +77,7 @@ export function AppLayout() {
     ...(session?.user.employeeId && can('payroll.payslip.view') ? [{ to: '/payslips', label: t('nav.payslips'), icon: IconReceipt }] : []),
     ...(can('payroll.view') || can('payroll.prepare') || can('payroll.summary.view') ? [{ to: '/payroll', label: t('nav.payroll'), icon: IconCash }] : []),
     ...(can('separation.view') && !!session?.roles.some((r) => r.scopeType !== 'SELF') ? [{ to: '/separations', label: t('nav.separations'), icon: IconDoorExit }] : []),
+    ...(can('recruitment.view') || can('recruitment.manage') ? [{ to: '/recruitment', label: t('nav.recruitment'), icon: IconUserSearch }] : []),
     { to: '/tasks', label: t('nav.tasks'), icon: IconChecklist },
   ].filter((i) => !('permission' in i) || !i.permission || can(i.permission));
   const admin: Item[] = [

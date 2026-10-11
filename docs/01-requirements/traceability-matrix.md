@@ -30,10 +30,10 @@ Test codes: **U** unit · **I** integration · **A** authorization matrix · **R
 | EMP-09 | employees | P2 | A | NEG-03, `financial-fields.*` | ✅ P2 |
 | EMP-10 | employees, payroll | P2/P7 | A | NEG-01, `self.salary` | ✅ P2 |
 | EMP-11 | employees, documents | P2 | I | `employee.documents` | ✅ P2 |
-| REC-01…REC-05 | recruitment | P9 | I, E | `recruitment.*` | ⏳ |
-| REC-06 | recruitment, employees | P9 | I, D | `recruitment.convert` | ⏳ |
-| REC-07 | recruitment, documents | P9 | I, X | `recruitment.no-hardcoded-docs` | ⏳ |
-| REC-08 | recruitment | P9 | — | Pending Q-11 | ❓ |
+| REC-01…REC-05 | recruitment | P9 | I, E | `recruitment.*` | ✅ `recruitment.test.ts` |
+| REC-06 | recruitment, employees | P9 | I, D | `recruitment.convert` | ✅ `recruitment.test.ts` |
+| REC-07 | recruitment, documents | P9 | I, X | `recruitment.no-hardcoded-docs` | ✅ required categories per vacancy |
+| REC-08 | recruitment | P9 | — | Pending Q-11 | ➖ internal only by default (DL-054) |
 | SCH-01, SCH-02 | calendar | P3 | U, I, D | `schedule.*`, `schedule.as-of` | ✅ P3 |
 | SCH-03 | calendar | P3 | X | `exclusion.shift-roster` | ✅ P3 |
 | SCH-04 | calendar | P3 | I | `holidays.group-company` | ✅ P3 |
