@@ -71,8 +71,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await post('/auth/logout');
     } finally {
-      qc.clear();
+      // Signal "signed out" on the existing session query first, so the screen switches to the
+      // login page at once. qc.clear() would drop that query and leave the screen subscribed to
+      // a removed entry (the user stayed "signed in" until a reload).
+      await qc.cancelQueries();
       qc.setQueryData(['session'], null);
+      setCsrfToken(null);
+      // Then drop every other cached response (personal data must not survive the session).
+      qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'session' && q.queryKey[0] !== 'public-settings' });
     }
   }, [qc]);
 
