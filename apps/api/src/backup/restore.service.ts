@@ -21,6 +21,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { SettingsService } from '../settings/settings.service.js';
 import { PasswordService } from '../auth/password.service.js';
 import { verifyTotp } from '../auth/totp.js';
+import { LockoutService } from '../auth/lockout.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { BackupService, pgEnv, run } from './backup.service.js';
 
@@ -52,6 +53,7 @@ export class RestoreService {
     @Inject(SettingsService) private readonly settings: SettingsService,
     @Inject(PasswordService) private readonly passwords: PasswordService,
     @Inject(NotificationsService) private readonly notifications: NotificationsService,
+    @Inject(LockoutService) private readonly lockout: LockoutService,
   ) {}
 
   get supported(): boolean {
@@ -72,7 +74,10 @@ export class RestoreService {
     const okPassword = await this.passwords.verify(u.passwordHash, password);
     const step = verifyTotp(this.encryptor.decryptString(u.totpSecretEnc, `totp:${u.id}`), code, { lastUsedStep: u.totpLastStep });
     if (!okPassword || step === null) {
-      await this.audit.recordStandalone({ action: 'system.restore.step_up_failed', outcome: 'failure' });
+      // Counts toward the account lockout; at the limit the account is locked and signed out.
+      if (await this.lockout.failedSecret(principal, 'system.restore.step_up_failed')) {
+        throw new ApiError(401, 'AUTH_REQUIRED', 'Too many failed attempts. The account is temporarily locked.');
+      }
       throw new ApiError(400, 'PASSWORD_INCORRECT', 'Password or verification code is incorrect');
     }
     await this.database.system((tx) => tx.update(userAccount).set({ totpLastStep: step }).where(eq(userAccount.id, u.id)));

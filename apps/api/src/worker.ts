@@ -15,6 +15,7 @@ import { LeaveService } from './leave/leave.service.js';
 import { ContractsService } from './contracts/contracts.service.js';
 import { SeparationService } from './separation/separation.service.js';
 import { ReportsService } from './reports/reports.service.js';
+import { pruneRateLimits } from './common/rate-limit.js';
 import { assertNoSeedAccounts } from './provisioning.js';
 
 /**
@@ -70,6 +71,10 @@ async function main() {
     })),
     new Cron('30 4 * * *', { protect: true }, guarded('report-files', async () => {
       await reports.pruneOutputs();
+    })),
+    // Expired login rate-limit windows, daily.
+    new Cron('35 4 * * *', { protect: true }, guarded('rate-limit-prune', async () => {
+      await pruneRateLimits(database);
     })),
     // Web Push delivery of new notifications, every 15 seconds.
     new Cron('*/15 * * * * *', { protect: true }, guarded('push', async () => {

@@ -50,7 +50,7 @@ For the technical administrator. Each runbook covers: symptoms → checks → fi
 **Fix**
 - Memory restarts: increase the service memory (needs owner approval if the plan changes).
 - Database not ready: see RB-04.
-- Many 429 responses: the login rate limiter is working. Check the **Audit log** for `auth.login_failed` from one address.
+- Many 429 responses: the login rate limit is working (30 attempts per address and 15 per username in 5 minutes, shared by all servers). Check the **Audit log** for `auth.login` events with outcome *failure* or *denied* (`rate_limited`).
 
 ## RB-04 Database full or unavailable
 

@@ -29,8 +29,8 @@ Date: 2026-10-11 · Scope: API (all modules), database row-level security, web h
 | ID | Risk | Why accepted / mitigation | Owner action |
 |---|---|---|---|
 | R1 | An administrator can still create a separate ordinary account and link it to an employee, then read that employee's self-service data | Administrators are fully trusted for accounts by design; every link is in the audit log (`employee.account_linked`). Dual control can be added later | Review account-link events monthly |
-| R2 | Login rate limiting is kept in memory per server process | Correct for the current single API instance; accounts also lock in the database | Move to the database or Redis before running several API replicas |
-| R3 | Password change and the restore step-up have no own attempt counter | Both need an active signed-in session; restore also needs a second administrator and MFA | — |
+| R2 | ~~Login rate limiting kept in memory per server process~~ | **Closed (2026-10-12):** limits are kept in the database (migration 0013, hashed keys), shared by all processes and replicas; `rate-limit.test.ts` | — |
+| R3 | ~~Password change and the restore step-up have no own attempt counter~~ | **Closed (2026-10-12):** wrong passwords or codes when changing the password, turning MFA off or confirming a restore count toward the account lockout; at the limit the account locks and all its sessions end. Device PIN failures are counted atomically; `rate-limit.test.ts` | — |
 | R4 | Contract text may contain the salary; readers with `contracts.view` (built-in roles that already see salaries) can read it | Built-in roles are consistent; only a custom role could expose more | Keep salary placeholders out of templates for custom-role readers |
 | R5 | Scheduled reports run with the owner's permissions at run time even if the owner has not yet enabled MFA required later | Permissions and scope are re-checked at each run | — |
 | R6 | No malware scanning of uploaded files (optional ClamAV worker, security plan) | Files are type-checked by content, size-limited, encrypted, and served with `nosniff` and a sandbox CSP | Decide before candidates upload files at scale |
