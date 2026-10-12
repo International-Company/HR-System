@@ -25,6 +25,8 @@ For the technical administrator. Each runbook covers: symptoms → checks → fi
 - Variable error: correct the variable in Railway and redeploy.
 - To go back to the previous version: Deployments → previous successful one → *Redeploy*. Allowed only when no newer migration has been applied. Migrations are additive, so older code normally keeps working.
 
+**Deployment skipped ("No changes to watched files"):** both app services must watch `/apps/**`, `/packages/**`, `/package.json`, `/package-lock.json`, `/tsconfig.base.json`, `/Dockerfile` and `/.dockerignore` (Railway → service → Settings → Watch Paths). The web service runs the API and the migrations, so it must also rebuild on API-only changes. Check the running version with `GET /api/v1/health/ready` (`version` = commit).
+
 **Escalate:** if the database migration failed, go to RB-02.
 
 ## RB-02 Migration failed (pre-deploy)
