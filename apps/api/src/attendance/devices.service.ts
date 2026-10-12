@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, gt, inArray, isNull, ne } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray, isNull, ne, sql } from 'drizzle-orm';
 import {
   generateAuthenticationOptions,
   generateRegistrationOptions,
@@ -278,14 +278,18 @@ export class DevicesService {
     if (!d || d.status !== 'approved') throw ApiError.forbidden('This device is not approved for attendance');
     const ok = await this.passwords.verify(d.pinHash!, `${pin}:${token}`);
     if (!ok) {
-      const failures = d.pinFailures + 1;
-      const disable = failures >= MAX_PIN_FAILURES;
-      await this.database.tx(principal.rls(), async (tx) => {
-        await tx
+      // Atomic increment: parallel wrong PINs cannot reuse an old count.
+      const disable = await this.database.tx(principal.rls(), async (tx) => {
+        const [r] = await tx
           .update(attendanceDevice)
-          .set(disable ? { pinFailures: failures, status: 'revoked', revokedAt: new Date() } : { pinFailures: failures })
-          .where(eq(attendanceDevice.id, d.id));
+          .set({ pinFailures: sql`${attendanceDevice.pinFailures} + 1` })
+          .where(eq(attendanceDevice.id, d.id))
+          .returning({ n: attendanceDevice.pinFailures });
+        const failures = r?.n ?? MAX_PIN_FAILURES;
+        const disable = failures >= MAX_PIN_FAILURES;
+        if (disable) await tx.update(attendanceDevice).set({ status: 'revoked', revokedAt: new Date() }).where(eq(attendanceDevice.id, d.id));
         await this.audit.record(tx, { action: 'attendance.pin_failed', outcome: 'failure', entityType: 'attendance_device', entityId: d.id, details: { failures, disabled: disable } });
+        return disable;
       });
       throw new ApiError(403, 'FORBIDDEN', disable ? 'Too many wrong PINs: the PIN was disabled on this device' : 'Wrong PIN', {
         meta: { reason: disable ? 'pin_disabled' : 'pin_wrong' },

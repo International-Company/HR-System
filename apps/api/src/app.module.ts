@@ -15,6 +15,7 @@ import { ModulesService } from './settings/modules.service.js';
 import { SettingsController } from './settings/settings.controller.js';
 import { PasswordService } from './auth/password.service.js';
 import { SessionService } from './auth/session.service.js';
+import { LockoutService } from './auth/lockout.service.js';
 import { AuthService } from './auth/auth.service.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthGuard } from './auth/auth.guard.js';
@@ -86,6 +87,7 @@ export function coreProviders(deps: AppDeps) {
     ModulesService,
     PasswordService,
     SessionService,
+    LockoutService,
     BackupService,
     NotificationsService,
     RestoreService,

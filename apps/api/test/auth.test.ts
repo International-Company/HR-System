@@ -10,9 +10,9 @@ describe('authentication & sessions (AUTH-01, AUTH-06, AUTH-07)', () => {
     env = await setup();
   });
   afterAll(async () => env.close());
-  beforeEach(() => {
-    env.app.get(AuthService).ipLimiter.reset();
-    env.app.get(AuthService).userLimiter.reset();
+  beforeEach(async () => {
+    await env.app.get(AuthService).ipLimiter.reset();
+    await env.app.get(AuthService).userLimiter.reset();
   });
 
   const resetUser = (username: string) =>

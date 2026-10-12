@@ -14,6 +14,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { SettingsService } from '../settings/settings.service.js';
 import { PasswordService } from './password.service.js';
 import { SessionService, type UserRow } from './session.service.js';
+import { LockoutService } from './lockout.service.js';
 import { generateTotpSecret, otpauthUrl, verifyTotp } from './totp.js';
 
 const MAX_MFA_ATTEMPTS = 5;
@@ -26,8 +27,8 @@ export interface ClientMeta {
 
 @Injectable()
 export class AuthService {
-  readonly ipLimiter = new RateLimiter(30, 5 * 60_000);
-  readonly userLimiter = new RateLimiter(15, 5 * 60_000);
+  readonly ipLimiter: RateLimiter;
+  readonly userLimiter: RateLimiter;
 
   constructor(
     @Inject(DATABASE) private readonly database: Database,
@@ -37,12 +38,17 @@ export class AuthService {
     @Inject(SessionService) private readonly sessions: SessionService,
     @Inject(SettingsService) private readonly settings: SettingsService,
     @Inject(AuditService) private readonly audit: AuditService,
-  ) {}
+    @Inject(LockoutService) private readonly lockout: LockoutService,
+  ) {
+    // Shared across processes (database), so the limits hold with several replicas.
+    this.ipLimiter = new RateLimiter(database, config.SESSION_SECRET, 'login-ip', 30, 5 * 60_000);
+    this.userLimiter = new RateLimiter(database, config.SESSION_SECRET, 'login-user', 15, 5 * 60_000);
+  }
 
   /** AUTH-01, AUTH-06: password login with lockout. Returns the new session token. */
   async login(username: string, password: string, meta: ClientMeta): Promise<{ token: string }> {
     const uname = username.trim().toLowerCase();
-    if (!this.ipLimiter.hit(meta.ip ?? 'unknown') || !this.userLimiter.hit(uname)) {
+    if (!(await this.ipLimiter.hit(meta.ip ?? 'unknown')) || !(await this.userLimiter.hit(uname))) {
       await this.audit.recordStandalone({
         action: 'auth.login',
         outcome: 'denied',
@@ -81,15 +87,14 @@ export class AuthService {
 
     const ok = await this.passwords.verify(user.passwordHash, password);
     if (!ok) {
-      const lockout = await this.settings.get('security.lockout'); // read before opening the tx
+      const lockout = await this.lockout.policy(); // read before opening the tx
       let failures = 0;
       let lock = false;
       let lockedUntil: Date | null = null;
       await this.database.system(async (tx) => {
-        failures = await this.countFailure(tx, user.id);
-        lock = failures >= lockout.maxFailures;
-        lockedUntil = lock ? new Date(Date.now() + lockout.lockMinutes * 60_000) : null;
-        if (lock) await tx.update(userAccount).set({ failedLoginCount: 0, lockedUntil }).where(eq(userAccount.id, user.id));
+        failures = await this.lockout.countFailure(tx, user.id);
+        lockedUntil = await this.lockout.lockIfReached(tx, user.id, failures, lockout);
+        lock = !!lockedUntil;
         await this.audit.record(tx, {
           action: 'auth.login',
           outcome: 'failure',
@@ -201,11 +206,7 @@ export class AuthService {
   ): Promise<void> {
     const user = await this.loadUser(principal.userId);
     if (!(await this.passwords.verify(user.passwordHash, currentPassword))) {
-      await this.audit.recordStandalone({
-        action: 'auth.password_change',
-        outcome: 'failure',
-        details: { reason: 'bad_current_password' },
-      });
+      await this.wrongSecret(principal, 'auth.password_change');
       throw new ApiError(400, 'PASSWORD_INCORRECT', 'The current password is incorrect');
     }
     const policy = await this.settings.get('security.passwordPolicy');
@@ -223,6 +224,7 @@ export class AuthService {
           passwordHash,
           passwordChangedAt: new Date(),
           mustChangePassword: false,
+          failedLoginCount: 0,
           updatedBy: user.id,
         })
         .where(eq(userAccount.id, user.id));
@@ -297,14 +299,11 @@ export class AuthService {
     return { recoveryCodes };
   }
 
-  /** Atomic failed-attempt counter (concurrent requests cannot reuse an old value). */
-  private async countFailure(tx: Tx, userId: string): Promise<number> {
-    const [r] = await tx
-      .update(userAccount)
-      .set({ failedLoginCount: sql`${userAccount.failedLoginCount} + 1` })
-      .where(eq(userAccount.id, userId))
-      .returning({ n: userAccount.failedLoginCount });
-    return r?.n ?? 0;
+  /** A wrong password or code inside a session: counts toward the lockout (ends all sessions at the limit). */
+  private async wrongSecret(principal: Principal, action: string): Promise<void> {
+    if (await this.lockout.failedSecret(principal, action)) {
+      throw new ApiError(401, 'AUTH_REQUIRED', 'Too many failed attempts. The account is temporarily locked.');
+    }
   }
 
   async verifyMfa(
@@ -341,7 +340,7 @@ export class AuthService {
     }
 
     if (!ok) {
-      const lockout = await this.settings.get('security.lockout');
+      const lockout = await this.lockout.policy();
       const revoked = await this.database.system(async (tx) => {
         const [s] = await tx
           .update(session)
@@ -350,11 +349,8 @@ export class AuthService {
           .returning({ attempts: session.mfaFailedAttempts });
         const attempts = s?.attempts ?? MAX_MFA_ATTEMPTS;
         // Wrong codes also count toward the account lockout (no unlimited retries by signing in again).
-        const accountFailures = await this.countFailure(tx, user.id);
-        const lockAccount = accountFailures >= lockout.maxFailures;
-        if (lockAccount) {
-          await tx.update(userAccount).set({ failedLoginCount: 0, lockedUntil: new Date(Date.now() + lockout.lockMinutes * 60_000) }).where(eq(userAccount.id, user.id));
-        }
+        const accountFailures = await this.lockout.countFailure(tx, user.id);
+        const lockAccount = !!(await this.lockout.lockIfReached(tx, user.id, accountFailures, lockout));
         const kill = attempts >= MAX_MFA_ATTEMPTS || lockAccount;
         if (kill) await this.sessions.revoke(tx, principal.sessionId, lockAccount ? 'account_locked' : 'mfa_attempts_exceeded');
         await this.audit.record(tx, {
@@ -388,10 +384,12 @@ export class AuthService {
       throw new ApiError(403, 'MFA_REQUIRED_BY_POLICY', 'MFA is required for your role');
     }
     if (!(await this.passwords.verify(user.passwordHash, password))) {
+      await this.wrongSecret(principal, 'auth.mfa_disable');
       throw new ApiError(400, 'PASSWORD_INCORRECT', 'The current password is incorrect');
     }
     const secret = this.encryptor.decryptString(user.totpSecretEnc, `totp:${user.id}`);
     if (verifyTotp(secret, code, { lastUsedStep: user.totpLastStep }) === null) {
+      await this.wrongSecret(principal, 'auth.mfa_disable');
       throw new ApiError(400, 'MFA_INVALID', 'The code is not valid');
     }
     await this.database.system(async (tx) => {

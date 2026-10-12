@@ -109,8 +109,8 @@ export async function setup(
   const server = app.getHttpServer();
 
   const login = async (username: string, password = TEST_PASSWORD): Promise<Session> => {
-    app.get(AuthService).ipLimiter.reset();
-    app.get(AuthService).userLimiter.reset();
+    await app.get(AuthService).ipLimiter.reset();
+    await app.get(AuthService).userLimiter.reset();
     const agent = request.agent(server);
     const res = await agent.post(`${API}/auth/login`).send({ username, password });
     if (res.status !== 204) throw new Error(`login ${username} failed: ${res.status} ${res.text}`);
