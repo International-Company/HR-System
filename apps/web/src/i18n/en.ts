@@ -75,6 +75,13 @@ export const en = {
     account: 'My account',
     logout: 'Sign out',
     administration: 'Administration',
+    groupSelf: 'My services',
+    groupPeople: 'People',
+    groupFinance: 'Payroll & reports',
+    groupOrg: 'Organisation & access',
+    groupSetup: 'Work setup',
+    groupSystem: 'System',
+    pendingCount: '{{count}} waiting for you',
   },
   auth: {
     title: 'Sign in',

@@ -76,6 +76,13 @@ export const ar: Messages = {
     account: 'حسابي',
     logout: 'تسجيل الخروج',
     administration: 'الإدارة',
+    groupSelf: 'خدماتي',
+    groupPeople: 'شؤون الموظفين',
+    groupFinance: 'الرواتب والتقارير',
+    groupOrg: 'المؤسسة والصلاحيات',
+    groupSetup: 'إعدادات العمل',
+    groupSystem: 'النظام',
+    pendingCount: '{{count}} بانتظار قرارك',
   },
   auth: {
     title: 'تسجيل الدخول',
