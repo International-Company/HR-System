@@ -61,8 +61,10 @@ describe('security review fixes (P12)', () => {
     expect(run.status, run.text).toBe(201);
     await s['finance.a']!.post(`/payroll/runs/${run.body.id}/employees/${emp}/items`, { kind: 'earning', label: 'Bonus', amount: 777 });
     const audit = await s['admin']!.get('/audit-events?action=payroll.manual_item_added');
-    expect(audit.body.items[0].after.amount).toBe('•••');
-    expect(JSON.stringify(audit.body.items[0])).not.toContain('777');
+    const item = audit.body.items[0];
+    expect(item.after.amount).toBe('•••');
+    // Only the data fields: the hash and timestamp of the record may contain "777" by chance.
+    expect(JSON.stringify({ before: item.before, after: item.after, details: item.details })).not.toMatch(/\b777\b/);
     expect(hr).toBeTruthy();
   });
 
