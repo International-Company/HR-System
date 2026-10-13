@@ -14,6 +14,7 @@ export const en = {
   app: {
     title: 'HR Management System',
     loading: 'Loading…',
+    clipboardBlocked: 'Copying and pasting are turned off in this app.',
     save: 'Save',
     cancel: 'Cancel',
     create: 'Create',

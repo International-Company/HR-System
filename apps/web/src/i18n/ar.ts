@@ -15,6 +15,7 @@ export const ar: Messages = {
   app: {
     title: 'نظام إدارة الموارد البشرية',
     loading: 'جارٍ التحميل…',
+    clipboardBlocked: 'النسخ واللصق غير متاحين داخل البرنامج.',
     save: 'حفظ',
     cancel: 'إلغاء',
     create: 'إنشاء',

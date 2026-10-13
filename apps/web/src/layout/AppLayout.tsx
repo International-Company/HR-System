@@ -39,11 +39,13 @@ import { useAuth } from '../auth/AuthContext';
 import { NotificationBell } from '../pages/NotificationsPages';
 import { GlobalSearch } from '../components/GlobalSearch';
 import { SideNav, type NavItem, type NavSection } from './SideNav';
+import { useClipboardGuard } from './clipboardGuard';
 
 export function AppLayout() {
   const { t } = useTranslation();
   const { session, can, logout, settings } = useAuth();
   const [mobileOpen, { toggle: toggleMobile, close: closeMobile }] = useDisclosure(false);
+  useClipboardGuard();
   // Collapsed state is a per-viewer convenience only.
   const [collapsed, setCollapsed] = useLocalStorage({ key: 'hrms.nav.collapsed', defaultValue: false });
   const location = useLocation();
