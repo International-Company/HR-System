@@ -1,0 +1,13 @@
+/* No text selection in the signed-in app; fields stay editable (caret and selection inside inputs). */
+.hrms-no-copy {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.hrms-no-copy input,
+.hrms-no-copy textarea,
+.hrms-no-copy [contenteditable='true'] {
+  -webkit-user-select: text;
+  user-select: text;
+}
