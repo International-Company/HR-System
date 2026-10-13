@@ -1,6 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { API, TEST_PASSWORD, setup, type TestEnv } from './helpers.js';
 import { currentStep, totpAt, verifyTotp, base32Decode, base32Encode, hotp } from '../src/auth/totp.js';
+import { eq } from 'drizzle-orm';
+import { AuthService, normalizeRecoveryCode, recoveryCandidates } from '../src/auth/auth.service.js';
+import { uuidv7 } from '../src/common/ids.js';
+import { mfaRecoveryCode, userAccount } from '../src/db/schema.js';
 
 describe('TOTP primitives (RFC 6238)', () => {
   it('matches the RFC 6238 SHA-1 test vector', () => {
@@ -65,6 +69,26 @@ describe('multi-factor authentication (AUTH-04, AUTH-05)', () => {
     const s4 = await env.login('hr.a');
     expect((await s4.post('/auth/mfa/verify', { recoveryCode: recovery[0] })).status).toBe(400);
     expect((await s4.post('/auth/mfa/verify', { recoveryCode: recovery[1] })).status).toBe(204);
+
+    // New codes avoid look-alike characters.
+    for (const c of recovery) expect(c).toMatch(/^[2-9A-HJKMNP-TW-Z]{5}-[2-9A-HJKMNP-TW-Z]{5}$/);
+    // Typed in lower case, with spaces and without the dash.
+    const s5 = await env.login('hr.a');
+    expect((await s5.post('/auth/mfa/verify', { recoveryCode: ` ${recovery[2]!.replace('-', ' ').toLowerCase()} ` })).status).toBe(204);
+  });
+
+  it('accepts look-alike characters and Arabic digits for codes issued before the safe alphabet', async () => {
+    expect(normalizeRecoveryCode('ab٣۴-x y')).toBe('AB34XY');
+    expect(recoveryCandidates('O1A')).toHaveLength(6);
+    const auth = env.app.get(AuthService);
+    const [u] = await env.database.system((tx) => tx.select().from(userAccount).where(eq(userAccount.username, 'hr.a')));
+    // A code of the old format containing O, I and L.
+    await env.database.system((tx) => tx.insert(mfaRecoveryCode).values({ id: uuidv7(), userId: u!.id, codeHash: auth.hashRecoveryCode('OIL23-AB4CD') }));
+    const s = await env.login('hr.a');
+    // Typed with zero for O, one for I and L, and Arabic-Indic digits.
+    expect((await s.post('/auth/mfa/verify', { recoveryCode: '011٢٣-ab٤cd' })).status).toBe(204);
+    const again = await env.login('hr.a');
+    expect((await again.post('/auth/mfa/verify', { recoveryCode: 'OIL23-AB4CD' })).status).toBe(400);
   });
 
   it('revokes the session after too many wrong codes', async () => {

@@ -5,6 +5,7 @@ import {
   Button,
   Center,
   Code,
+  CopyButton,
   Group,
   List,
   Paper,
@@ -146,7 +147,19 @@ export function MfaVerifyPage() {
         <Stack>
           <ErrorAlert error={error} />
           {recovery ? (
-            <TextInput label={t('auth.recoveryCode')} value={code} onChange={(e) => setCode(e.currentTarget.value)} dir="ltr" autoFocus />
+            <TextInput
+              label={t('auth.recoveryCode')}
+              description={t('auth.recoveryHint')}
+              placeholder="XXXXX-XXXXX"
+              value={code}
+              onChange={(e) => setCode(e.currentTarget.value.toUpperCase())}
+              dir="ltr"
+              autoComplete="one-time-code"
+              autoCapitalize="characters"
+              spellCheck={false}
+              autoFocus
+              styles={{ input: { fontFamily: 'ui-monospace, Consolas, monospace', letterSpacing: '0.08em' } }}
+            />
           ) : (
             <Center dir="ltr">
               <PinInput
@@ -291,6 +304,13 @@ export function MfaSetupFlow({ onDone }: { onDone: () => void }) {
             </Code>
           ))}
         </SimpleGrid>
+        <CopyButton value={codes.join('\n')}>
+          {({ copied, copy }) => (
+            <Button variant="light" onClick={copy}>
+              {copied ? t('auth.recoveryCopied') : t('auth.recoveryCopy')}
+            </Button>
+          )}
+        </CopyButton>
         <Button onClick={onDone}>{t('auth.recoverySaved')}</Button>
       </Stack>
     );
