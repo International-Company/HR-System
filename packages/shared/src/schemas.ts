@@ -37,10 +37,11 @@ export const totpCodeInput = z.object({
 export const mfaVerifyInput = z.union([
   z.object({ code: z.string().trim().regex(/^\d{6}$/) }),
   z.object({
+    // Spaces, dashes, lower case and Arabic-Indic digits are accepted and normalised by the server.
     recoveryCode: z
       .string()
       .trim()
-      .regex(/^[A-Za-z0-9-]{8,32}$/),
+      .regex(/^[A-Za-z0-9\-\s\u0660-\u0669\u06f0-\u06f9]{8,40}$/),
   }),
 ]);
 

@@ -1,12 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { randomInt } from 'node:crypto';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { SessionDto, SessionInfo } from '@hrms/shared';
 import { CONFIG, DATABASE, ENCRYPTOR } from '../common/tokens.js';
 import type { AppConfig } from '../config.js';
 import type { Database, Tx } from '../db/database.js';
 import { mfaRecoveryCode, session, userAccount } from '../db/schema.js';
 import { ApiError } from '../common/errors.js';
-import { hmacSha256, randomToken, type Encryptor } from '../common/crypto.js';
+import { hmacSha256, type Encryptor } from '../common/crypto.js';
 import { uuidv7 } from '../common/ids.js';
 import { RateLimiter } from '../common/rate-limit.js';
 import type { Principal } from '../access/principal.js';
@@ -322,18 +323,20 @@ export class AuthService {
       ok = usedStep !== null;
     } else {
       method = 'recovery_code';
-      const hash = this.hashRecoveryCode(input.recoveryCode);
+      // Typed codes may mix up look-alike characters (O/0, I/1/L): every reading is tried.
+      const hashes = recoveryCandidates(normalizeRecoveryCode(input.recoveryCode)).map((c) => this.hashRecoveryCode(c));
       ok = await this.database.system(async (tx) => {
+        const [match] = await tx
+          .select({ id: mfaRecoveryCode.id })
+          .from(mfaRecoveryCode)
+          .where(and(eq(mfaRecoveryCode.userId, user.id), inArray(mfaRecoveryCode.codeHash, hashes), isNull(mfaRecoveryCode.usedAt)))
+          .limit(1)
+          .for('update');
+        if (!match) return false;
         const used = await tx
           .update(mfaRecoveryCode)
           .set({ usedAt: new Date() })
-          .where(
-            and(
-              eq(mfaRecoveryCode.userId, user.id),
-              eq(mfaRecoveryCode.codeHash, hash),
-              isNull(mfaRecoveryCode.usedAt),
-            ),
-          )
+          .where(and(eq(mfaRecoveryCode.id, match.id), isNull(mfaRecoveryCode.usedAt)))
           .returning({ id: mfaRecoveryCode.id });
         return used.length === 1;
       });
@@ -430,8 +433,7 @@ export class AuthService {
   }
 
   hashRecoveryCode(code: string): Buffer {
-    const normalized = code.replace(/-/g, '').toUpperCase();
-    return hmacSha256(this.config.SESSION_SECRET, `recovery:${normalized}`);
+    return hmacSha256(this.config.SESSION_SECRET, `recovery:${normalizeRecoveryCode(code)}`);
   }
 }
 
@@ -446,9 +448,33 @@ export async function clearTotp(tx: Tx, userId: string): Promise<void> {
     .where(and(eq(mfaRecoveryCode.userId, userId), isNull(mfaRecoveryCode.usedAt)));
 }
 
+/** Characters that cannot be mistaken for one another when read or typed (no 0/O, 1/I/L, U/V). */
+const RECOVERY_ALPHABET = '23456789ABCDEFGHJKMNPQRSTWXYZ';
+
 function formatRecoveryCode(): string {
-  const raw = randomToken(8).replace(/[^A-Za-z0-9]/g, '').toUpperCase().padEnd(10, 'X').slice(0, 10);
+  const raw = Array.from({ length: 10 }, () => RECOVERY_ALPHABET[randomInt(RECOVERY_ALPHABET.length)]).join('');
   return `${raw.slice(0, 5)}-${raw.slice(5)}`;
+}
+
+/** Upper case, Western digits (Arabic-Indic and Persian digits accepted), letters and digits only. */
+export function normalizeRecoveryCode(code: string): string {
+  return code
+    .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[\u06f0-\u06f9]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+}
+
+/** The typed code plus its look-alike readings (codes issued before the safe alphabet contain them). */
+export function recoveryCandidates(normalized: string): string[] {
+  const groups: Record<string, string[]> = { '0': ['0', 'O'], O: ['0', 'O'], '1': ['1', 'I', 'L'], I: ['1', 'I', 'L'], L: ['1', 'I', 'L'] };
+  let out = [''];
+  for (const ch of normalized) {
+    const options = groups[ch] ?? [ch];
+    out = out.flatMap((prefix) => options.map((o) => prefix + o));
+    if (out.length > 512) return [normalized];
+  }
+  return out;
 }
 
 export function toSessionDto(s: typeof session.$inferSelect, currentId?: string): SessionDto {
